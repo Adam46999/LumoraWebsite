@@ -1,5 +1,5 @@
 import { X, Search, ShoppingCart, User } from "lucide-react";
-import { useLanguage } from "../../../context/LanguageContext";
+import { useLanguage } from "../context/LanguageContext";
 
 export default function SidebarMenu({ menuOpen, setMenuOpen, navItems }) {
   const { lang, setLang } = useLanguage();

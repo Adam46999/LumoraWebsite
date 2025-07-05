@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { Menu, X, Search, ShoppingCart, User } from "lucide-react";
 import { useLanguage } from "../context/LanguageContext";
-import SidebarMenu from "../components/layout/header/SidebarMenu";
-import DesktopNav from "./layout/header/DesktopNav";
+import SidebarMenu from "../header/SidebarMenu";
+import DesktopNav from "../header/DesktopNav";
 
 export default function Header() {
   const { lang, setLang } = useLanguage();
