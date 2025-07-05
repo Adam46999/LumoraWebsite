@@ -1,6 +1,6 @@
 // src/components/layout/header/DesktopNav.jsx
 
-import { useLanguage } from "../../context/LanguageContext";
+import { useLanguage } from "../../../context/LanguageContext";
 
 export default function DesktopNav({ navItems, activeId }) {
   const { lang } = useLanguage();
