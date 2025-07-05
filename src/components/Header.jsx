@@ -59,7 +59,7 @@ export default function Header() {
 
   return (
     
-    <header className="bg-white shadow-sm fixed top-0 left-0 w-full z-50">
+    <header className="bg-[#F3F4F6] shadow-sm fixed top-0 left-0 w-full z-50"> 
       <div className="max-w-7xl mx-auto px-5 py-3 flex justify-between items-center">
 
         {/* شعار */}
