@@ -1,16 +1,23 @@
 import Header from "./components/Header"
 import Hero from "./components/hero/Hero";
+import ContactSection from "./components/contact/ContactSection";
+import { useState } from "react";
+import ServiceModal from "./components/hero/ServiceModal";
 
 
 function App() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   return (
     <div className="font-sans">
       <Header />
-      {/* باقي مكونات الموقع */}
       <Hero />
+      <ContactSection onOpenModal={() => setIsModalOpen(true)} />
+      <ServiceModal open={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </div>
   );
 }
+
 
 
 export default App

@@ -94,19 +94,19 @@ export default function Header() {
         onClick={() => { setLang("ar"); setDropdownOpen(false); }}
         className="w-full px-3 py-2 text-right hover:bg-gray-100"
       >
-        🇸🇦 العربية
+        AR العربية
       </button>
       <button
         onClick={() => { setLang("en"); setDropdownOpen(false); }}
         className="w-full px-3 py-2 text-right hover:bg-gray-100"
       >
-        🇬🇧 English
+        EN English
       </button>
       <button
         onClick={() => { setLang("he"); setDropdownOpen(false); }}
         className="w-full px-3 py-2 text-right hover:bg-gray-100"
       >
-        🇮🇱 עברית
+        HE  עברית
       </button>
     </div>
   )}
