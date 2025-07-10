@@ -67,9 +67,10 @@ export default function ContactSection() {
   return (
     <section className="bg-gradient-to-r from-white to-[#EAF2FF] py-16 px-4" dir="rtl">
       <div className="max-w-2xl mx-auto text-center mb-10">
-        <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-4">
-          تواصل معنا
-        </h2>
+        <h2 className="text-4xl font-extrabold text-center text-gray-900 mb-6 leading-tight">
+  <span className="text-blue-500">تواصل</span> معنا
+</h2>
+
         <p className="text-gray-600">
           عندك استفسار أو ملاحظة؟ فقط أرسل لنا رسالة وسنرد عليك!
         </p>
