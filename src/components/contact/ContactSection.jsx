@@ -131,10 +131,10 @@ export default function ContactSection() {
   <div className="sm:col-span-2 flex justify-center">
   <button
     type="submit"
-    className="relative flex items-center justify-center w-64 h-12 bg-[#768cd5] rounded-full border border-blue-400 text-white overflow-hidden"
+    className="relative flex items-center justify-center w-64 h-12 bg-[#74caef] rounded-full border border-blue-400 text-white overflow-hidden"
   >
     <span className="text-sm font-semibold tracking-wide z-10">إرسال</span>
-    <div className="absolute right-0 top-0 h-full w-12 bg-[#362fb8] flex items-center justify-center rounded-full">
+    <div className="absolute right-0 top-0 h-full w-12 bg-[#51b3d7] flex items-center justify-center rounded-full">
       <span className="text-xl font-bold text-white">›</span>
     </div>
   </button>
