@@ -1,51 +1,43 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import ServiceModal from "../hero/ServiceModal";
 
 export default function ContactSection() {
-  const [successMessage, setSuccessMessage] = useState(false);
-
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [message, setMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState(false);
+  const successRef = useRef(null);
 
-  // ✅ دالة التحقق من الاسم
+  // ✅ التحقق من الاسم
   const handleNameChange = (e) => {
     const value = e.target.value;
     const nameRegex = /^[^\d!@#$%^&*()_+={}\[\]|\\:;"'<>,.?/~`0-9]*$/;
-
     if (nameRegex.test(value)) {
       setName(value);
     }
   };
 
-  // ✅ دالة تنسيق رقم الهاتف
- const handlePhoneChange = (e) => {
-  let value = e.target.value.replace(/\D/g, ""); // نسمح فقط بالأرقام
+  // ✅ تنسيق رقم الهاتف
+  const handlePhoneChange = (e) => {
+    let value = e.target.value.replace(/\D/g, "");
 
-  // لا تكتب شيء إذا أول رقم مش 0
-  if (value.length === 1 && value !== "0") return;
+    if (value.length === 1 && value !== "0") return;
+    if (value.length === 2 && value !== "05") return;
+    if (value.length > 10) value = value.slice(0, 10);
+    if (value.length > 3) {
+      value = value.slice(0, 3) + "-" + value.slice(3);
+    }
 
-  // لا تكتب شيء إذا ثاني رقم مش 5
-  if (value.length === 2 && value !== "05") return;
+    setPhone(value);
+  };
 
-  // نسمح بـ 10 أرقام كحد أقصى
-  if (value.length > 10) value = value.slice(0, 10);
-
-  // نضيف "-" بعد أول 3 أرقام
-  if (value.length > 3) {
-    value = value.slice(0, 3) + "-" + value.slice(3);
-  }
-
-  setPhone(value);
-};
-
-
-  // ✅ دالة التحقق قبل الإرسال
+  // ✅ الإرسال
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (name.trim() === "") {
-      alert("الرجاء كتابة الاسم الكامل.");
+    if (name.trim() === "" || phone.trim() === "" || message.trim() === "") {
+      alert("يرجى تعبئة جميع الحقول.");
       return;
     }
 
@@ -55,16 +47,21 @@ export default function ContactSection() {
       return;
     }
 
-    alert("✅ تم إرسال الرسالة بنجاح!");
-    setSuccessMessage(true);     // عرض الرسالة
-setName("");                 // تنظيف الاسم
-setPhone("");                // تنظيف الهاتف
+    // ✅ تم الإرسال
+    setSuccessMessage(true);
+    setName("");
+    setPhone("");
+    setMessage("");
 
-// إخفاء الرسالة بعد 3 ثواني
-setTimeout(() => {
-  setSuccessMessage(false);
-}, 3000);
+    // تمركز على الرسالة
+    setTimeout(() => {
+      successRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 100);
 
+    // إخفاء الرسالة بعد 5 ثواني
+    setTimeout(() => {
+      setSuccessMessage(false);
+    }, 5000);
   };
 
   return (
@@ -79,12 +76,18 @@ setTimeout(() => {
       </div>
 
       <form onSubmit={handleSubmit} className="max-w-2xl mx-auto grid sm:grid-cols-2 gap-6 text-right">
-      {successMessage && (
-  <div className="max-w-md mx-auto bg-green-100 text-green-700 text-center py-3 px-5 rounded-xl shadow-md transition-all duration-500 animate-fade-in">
-    ✅ تم إرسال الرسالة بنجاح!
-  </div>
-)}
 
+        {/* ✅ رسالة النجاح */}
+        {successMessage && (
+          <div
+            ref={successRef}
+            className="sm:col-span-2 bg-green-100 text-green-700 text-center py-3 px-5 rounded-xl shadow-md transition-all duration-500 animate-fade-in"
+          >
+            ✅ تم إرسال الرسالة بنجاح!
+          </div>
+        )}
+
+        {/* الاسم */}
         <div className="flex flex-col">
           <label htmlFor="name" className="mb-1 text-sm font-medium text-gray-700">الاسم الكامل</label>
           <input
@@ -97,6 +100,7 @@ setTimeout(() => {
           />
         </div>
 
+        {/* رقم الهاتف */}
         <div className="flex flex-col">
           <label htmlFor="phone" className="mb-1 text-sm font-medium text-gray-700">رقم الهاتف</label>
           <input
@@ -109,16 +113,20 @@ setTimeout(() => {
           />
         </div>
 
+        {/* الرسالة */}
         <div className="sm:col-span-2 flex flex-col">
           <label htmlFor="message" className="mb-1 text-sm font-medium text-gray-700">رسالتك</label>
           <textarea
             id="message"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
             rows="4"
             placeholder="اكتب رسالتك هنا..."
             className="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400"
           ></textarea>
         </div>
 
+        {/* الزر */}
         <div className="sm:col-span-2">
           <button
             type="submit"
@@ -129,7 +137,7 @@ setTimeout(() => {
         </div>
       </form>
 
-      {/* المعلومات أسفل النموذج */}
+      {/* روابط أسفل النموذج */}
       <div className="max-w-5xl mx-auto mt-16 grid gap-8 sm:grid-cols-3 text-center text-gray-700">
         <div
           onClick={() => setIsModalOpen(true)}
