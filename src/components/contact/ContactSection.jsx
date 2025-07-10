@@ -127,18 +127,25 @@ export default function ContactSection() {
         </div>
 
         {/* الزر */}
-        <div className="sm:col-span-2">
-          <button
-            type="submit"
-            className="w-full bg-[#3B82F6] text-white font-semibold py-3 rounded-xl hover:bg-blue-600 transition"
-          >
-            إرسال
-          </button>
-        </div>
+        <div className="sm:col-span-2 flex justify-center">
+  <div className="sm:col-span-2 flex justify-center">
+  <button
+    type="submit"
+    className="relative flex items-center justify-center w-64 h-12 bg-[#768cd5] rounded-full border border-blue-400 text-white overflow-hidden"
+  >
+    <span className="text-sm font-semibold tracking-wide z-10">إرسال</span>
+    <div className="absolute right-0 top-0 h-full w-12 bg-[#362fb8] flex items-center justify-center rounded-full">
+      <span className="text-xl font-bold text-white">›</span>
+    </div>
+  </button>
+</div>
+
+</div>
+
       </form>
 
       {/* روابط أسفل النموذج */}
-      <div className="max-w-5xl mx-auto mt-16 grid gap-8 sm:grid-cols-3 text-center text-gray-700">
+<div className="max-w-5xl mx-auto mt-16 flex flex-wrap justify-center gap-8 text-center text-gray-700">
         <div
           onClick={() => setIsModalOpen(true)}
           className="flex flex-col items-center cursor-pointer hover:opacity-90 transition"
