@@ -1,4 +1,5 @@
 import Header from "./components/Header"
+import Hero from "./components/hero/Hero";
 
 
 function App() {
@@ -6,6 +7,7 @@ function App() {
     <div className="font-sans">
       <Header />
       {/* باقي مكونات الموقع */}
+      <Hero />
     </div>
   );
 }
