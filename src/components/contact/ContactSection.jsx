@@ -2,6 +2,8 @@ import { useState } from "react";
 import ServiceModal from "../hero/ServiceModal";
 
 export default function ContactSection() {
+  const [successMessage, setSuccessMessage] = useState(false);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -54,6 +56,15 @@ export default function ContactSection() {
     }
 
     alert("✅ تم إرسال الرسالة بنجاح!");
+    setSuccessMessage(true);     // عرض الرسالة
+setName("");                 // تنظيف الاسم
+setPhone("");                // تنظيف الهاتف
+
+// إخفاء الرسالة بعد 3 ثواني
+setTimeout(() => {
+  setSuccessMessage(false);
+}, 3000);
+
   };
 
   return (
@@ -68,6 +79,12 @@ export default function ContactSection() {
       </div>
 
       <form onSubmit={handleSubmit} className="max-w-2xl mx-auto grid sm:grid-cols-2 gap-6 text-right">
+      {successMessage && (
+  <div className="max-w-md mx-auto bg-green-100 text-green-700 text-center py-3 px-5 rounded-xl shadow-md transition-all duration-500 animate-fade-in">
+    ✅ تم إرسال الرسالة بنجاح!
+  </div>
+)}
+
         <div className="flex flex-col">
           <label htmlFor="name" className="mb-1 text-sm font-medium text-gray-700">الاسم الكامل</label>
           <input
