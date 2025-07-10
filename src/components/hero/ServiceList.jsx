@@ -24,7 +24,7 @@ export default function ServiceList() {
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8 px-4 mb-10">
       {services.map((service, index) => (
         <div
           key={index}
