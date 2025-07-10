@@ -30,7 +30,7 @@ export default function ServiceModal({ open, onClose }) {
         </h2>
 
         {/* رح نضيف هنا ServiceList.jsx لاحقًا */}
-        <p className="text-gray-700 text-center">
+        <p className="max-h-[80vh] overflow-y-auto px-2">
           <ServiceList />
         </p>
       </div>
