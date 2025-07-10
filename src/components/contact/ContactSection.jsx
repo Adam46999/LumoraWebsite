@@ -109,7 +109,7 @@ export default function ContactSection() {
             type="tel"
             value={phone}
             onChange={handlePhoneChange}
-            placeholder="مثال: 059-1234567"
+            placeholder="ادخل  رقم الهاتف"
             className="p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
         </div>
@@ -147,16 +147,7 @@ export default function ContactSection() {
 
       {/* روابط أسفل النموذج */}
 <div className="max-w-5xl mx-auto mt-16 flex flex-wrap justify-center gap-8 text-center text-gray-700">
-        <div
-          onClick={() => setIsModalOpen(true)}
-          className="flex flex-col items-center cursor-pointer hover:opacity-90 transition"
-        >
-          <div className="w-14 h-14 bg-blue-100 text-blue-600 flex items-center justify-center rounded-full text-2xl mb-4">
-            🧽
-          </div>
-          <h4 className="font-semibold mb-1">خدماتنا</h4>
-          <p className="text-sm">تنظيف سيارات، سجاد، كنب والمزيد.</p>
-        </div>
+        
 
         <a
           href="tel:+972543075619"
