@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import beforeImage from '../../assets/before.jpg';
-import afterImage from '../../assets/after.jpg';
+import beforeImage from '../../assets/before1.jpg';
+import afterImage from '../../assets/after1.jpg';
 
 function BeforeAfter() {
   const [sliderX, setSliderX] = useState(50); // نسبة الكشف
