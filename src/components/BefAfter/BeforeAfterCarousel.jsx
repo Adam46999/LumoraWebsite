@@ -47,21 +47,20 @@ export default function BeforeAfterCarousel({ items }) {
         قبل / بعد التنظيف
       </h2>
       <Swiper
-        modules={[Navigation]}
-        navigation
-        spaceBetween={30}
-        slidesPerView={1}
-        loop={true}
-      >
-        {items.map((item, index) => (
-          <SwiperSlide key={index}>
-            <BeforeAfter
-              beforeImage={item.before}
-              afterImage={item.after}
-            />
-          </SwiperSlide>
-        ))}
-      </Swiper>
+  modules={[Navigation]}
+  navigation
+  spaceBetween={30}
+  slidesPerView={1}
+  loop={true}
+  allowTouchMove={false} // ✅ إيقاف السحب باللمس
+>
+  {items.map((item, index) => (
+    <SwiperSlide key={index}>
+      <BeforeAfter beforeImage={item.before} afterImage={item.after} />
+    </SwiperSlide>
+  ))}
+</Swiper>
+
     </section>
   );
 }
