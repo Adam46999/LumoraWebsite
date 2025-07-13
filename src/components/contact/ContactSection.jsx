@@ -63,7 +63,10 @@ export default function ContactSection() {
   };
 
   return (
-    <section className="bg-gradient-to-r from-white to-[#EAF2FF] py-16 px-4" dir="rtl">
+<section
+  className="relative py-16 px-4 bg-[#f4fafe] bg-gradient-to-br from-[#f4fafe] to-[#dbefff] shadow-inner"
+  dir="rtl"
+>
       <div className="max-w-2xl mx-auto text-center mb-10">
         <h2 className="text-4xl font-extrabold text-center text-gray-900 mb-6 leading-tight">
   <span className="text-blue-500">تواصل</span> معنا
@@ -130,7 +133,7 @@ export default function ContactSection() {
   <div className="sm:col-span-2 flex justify-center">
   <button
     type="submit"
-    className="relative flex items-center justify-center w-64 h-12 bg-[#74caef] rounded-full border border-blue-400 text-white overflow-hidden"
+    className="relative flex items-center justify-center w-64 h-12 bg-[#42778e] rounded-full border border-blue-400 text-white overflow-hidden"
   >
     <span className="text-sm font-semibold tracking-wide z-10">إرسال</span>
     <div className="absolute right-0 top-0 h-full w-12 bg-[#51b3d7] flex items-center justify-center rounded-full">
@@ -144,33 +147,50 @@ export default function ContactSection() {
       </form>
 
       {/* روابط أسفل النموذج */}
-<div className="max-w-5xl mx-auto mt-16 flex flex-wrap justify-center gap-8 text-center text-gray-700">
-        
+     {/* روابط أسفل النموذج بتصميم أنيق وصغير */}  
+<div className="max-w-4xl mx-auto mt-16 flex flex-col sm:flex-row items-center justify-center gap-10 text-center text-gray-800">
 
-        <a
-          href="tel:+972543075619"
-          className="flex flex-col items-center hover:text-blue-600 transition"
-        >
-          <div className="w-14 h-14 bg-blue-100 text-blue-600 flex items-center justify-center rounded-full text-2xl mb-4">
-            📞
-          </div>
-          <h4 className="font-semibold mb-1">رقم الهاتف</h4>
-          <p className="text-sm">+972 54-3075619</p>
-        </a>
+  {/* رقم الهاتف */}
+  <a
+  href="tel:+972543075619"
+  className="relative inline-flex items-center gap-3 px-5 py-3 bg-[#5da165] text-white font-bold text-sm rounded-full shadow-md hover:bg-[#5C74E0] transition duration-300"
+  style={{ boxShadow: "3px 3px 0px #aaa" }}
+>
+  {/* أيقونة الهاتف داخل فقاعة */}
+  <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-[#6D83F2] text-lg font-bold">
+    📞
+  </div>
 
-        <a
-          href="https://waze.com/ul?ll=32.9535,35.3072"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex flex-col items-center hover:text-blue-600 transition"
-        >
-          <div className="w-14 h-14 bg-blue-100 text-blue-600 flex items-center justify-center rounded-full text-2xl mb-4">
-            📍
-          </div>
-          <h4 className="font-semibold mb-1">موقعنا</h4>
-          <p className="text-sm">البعنة 7</p>
-        </a>
-      </div>
+  <span className="whitespace-nowrap">اتصل بنا الآن</span>
+
+  {/* خط بسيط أسفل الزر - مثل الصورة */}
+  <div className="absolute bottom-[-4px] right-2 w-[85%] h-[2px] bg-black opacity-20 rounded-full"></div>
+</a>
+
+
+  {/* الموقع */}
+  <a
+  href="https://waze.com/ul?ll=32.9535,35.3072"
+  target="_blank"
+  rel="noopener noreferrer"
+  className="relative inline-flex items-center gap-3 px-5 py-3 bg-[#b55555] text-white font-bold text-sm rounded-full shadow-md hover:bg-[#5C74E0] transition duration-300"
+  style={{ boxShadow: "3px 3px 0px #aaa" }}
+>
+  {/* أيقونة الموقع داخل فقاعة */}
+  <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-[#6D83F2] text-lg font-bold">
+    📍
+  </div>
+
+  <span className="whitespace-nowrap">موقعنا على الخريطة</span>
+
+  {/* خط سفلي بسيط للتصميم */}
+  <div className="absolute bottom-[-4px] right-2 w-[85%] h-[2px] bg-black opacity-20 rounded-full"></div>
+</a>
+
+
+</div>
+
+
 
     </section>
   );

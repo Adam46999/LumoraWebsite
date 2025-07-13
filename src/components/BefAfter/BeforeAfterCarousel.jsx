@@ -44,7 +44,8 @@ export default function BeforeAfterCarousel({ items }) {
   return (
     <section className="max-w-5xl mx-auto px-4 my-10">
       <h2 className="text-center text-3xl font-bold text-gray-800 mb-6">
-        قبل / بعد التنظيف
+      <span className="text-black"> قبل /</span>{" "}
+  <span className="text-blue-500">بعد التنظيف </span>
       </h2>
       <Swiper
   modules={[Navigation]}
