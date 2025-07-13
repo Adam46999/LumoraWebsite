@@ -1,8 +1,6 @@
 import { useState, useRef } from "react";
-import ServiceModal from "../hero/ServiceModal";
 
 export default function ContactSection() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [message, setMessage] = useState("");
@@ -174,7 +172,6 @@ export default function ContactSection() {
         </a>
       </div>
 
-      <ServiceModal open={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </section>
   );
 }

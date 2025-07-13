@@ -2,7 +2,6 @@ import Header from "./components/Header";
 import Hero from "./components/hero/Hero";
 import ContactSection from "./components/contact/ContactSection";
 import { useState } from "react";
-import ServiceModal from "./components/hero/ServiceModal";
 import BeforeAfterCarousel from "./components/BefAfter/BeforeAfterCarousel";
 
 // ✅ استيراد الصور من src/assets
@@ -14,7 +13,6 @@ import before3 from "./assets/before3.jpg";
 import after3 from "./assets/after3.jpg";
 
 function App() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
     <div className="font-sans">
@@ -29,8 +27,7 @@ function App() {
         ]}
       />
 
-      <ContactSection onOpenModal={() => setIsModalOpen(true)} />
-      <ServiceModal open={isModalOpen} onClose={() => setIsModalOpen(false)} />
+      <ContactSection/>
     </div>
   );
 }
