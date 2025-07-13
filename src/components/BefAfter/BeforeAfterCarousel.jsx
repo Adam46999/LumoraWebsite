@@ -26,13 +26,16 @@ function BeforeAfter({ beforeImage, afterImage }) {
         />
       </div>
       <input
-        type="range"
-        min="0"
-        max="100"
-        value={sliderX}
-        onChange={handleSlider}
-        className="absolute bottom-4 left-1/2 -translate-x-1/2 w-3/4 z-10"
-      />
+  type="range"
+  min="0"
+  max="100"
+  value={sliderX}
+  onChange={handleSlider}
+  onTouchStart={(e) => e.stopPropagation()}   // لمنع Swiper يشتغل في الموبايل
+  onMouseDown={(e) => e.stopPropagation()}    // لمنع Swiper يشتغل في الكمبيوتر
+  className="absolute bottom-4 left-1/2 -translate-x-1/2 w-3/4 z-30"
+/>
+
     </div>
   );
 }
