@@ -4,7 +4,6 @@ function BeforeAfter({ beforeImage, afterImage }) {
   const [sliderX, setSliderX] = useState(50);
   const containerRef = useRef(null);
 
-  // تحديث قيمة السحب حسب موقع المؤشر
   const updateSlider = (clientX) => {
     const container = containerRef.current;
     if (!container) return;
@@ -14,11 +13,9 @@ function BeforeAfter({ beforeImage, afterImage }) {
     setSliderX(percent);
   };
 
-  // سحب بالماوس
   const handleMouseDown = (e) => {
     e.preventDefault();
-    e.stopPropagation(); // يمنع السوايبر
-
+    e.stopPropagation();
     updateSlider(e.clientX);
 
     const move = (e) => updateSlider(e.clientX);
@@ -31,11 +28,9 @@ function BeforeAfter({ beforeImage, afterImage }) {
     window.addEventListener("mouseup", up);
   };
 
-  // سحب باللمس
   const handleTouchStart = (e) => {
     e.preventDefault();
-    e.stopPropagation(); // يمنع السوايبر
-
+    e.stopPropagation();
     updateSlider(e.touches[0].clientX);
 
     const move = (e) => updateSlider(e.touches[0].clientX);
@@ -55,19 +50,25 @@ function BeforeAfter({ beforeImage, afterImage }) {
       onTouchStart={handleTouchStart}
       className="relative w-full h-[400px] overflow-hidden rounded-xl shadow-md bg-gray-100 touch-none select-none cursor-ew-resize"
     >
-      {/* الصورة بعد */}
       <img
         src={afterImage}
         alt="بعد"
         draggable={false}
-        className="absolute inset-0 w-full h-full object-cover z-10"      />
+        className="absolute inset-0 w-full h-full object-cover z-0"
+      />
 
-      {/* الصورة قبل */}
       <img
         src={beforeImage}
         alt="قبل"
         draggable={false}
-        className="absolute inset-0 w-full h-full object-cover z-10"        style={{ clipPath: `inset(0 ${100 - sliderX}% 0 0)` }}
+        className="absolute inset-0 w-full h-full object-cover z-10"
+        style={{ clipPath: `inset(0 ${100 - sliderX}% 0 0)` }}
+      />
+
+      {/* الخط الفاصل */}
+      <div
+        className="absolute top-0 h-full w-[3px] bg-blue-500 z-20"
+        style={{ left: `${sliderX}%` }}
       />
 
       {/* السلايدر */}
@@ -86,7 +87,6 @@ function BeforeAfter({ beforeImage, afterImage }) {
         }}
       />
 
-      {/* تنسيق السلايدر */}
       <style jsx>{`
         input[type="range"]::-webkit-slider-runnable-track {
           height: 8px;
@@ -97,7 +97,7 @@ function BeforeAfter({ beforeImage, afterImage }) {
           -webkit-appearance: none;
           height: 36px;
           width: 36px;
-          background-color: #facc15;
+          background-color: #3B82F6;
           border: 3px solid white;
           border-radius: 9999px;
           margin-top: -14px;
@@ -107,7 +107,7 @@ function BeforeAfter({ beforeImage, afterImage }) {
         input[type="range"]::-moz-range-thumb {
           height: 36px;
           width: 36px;
-          background-color: #facc15;
+          background-color: #3B82F6;
           border: 3px solid white;
           border-radius: 9999px;
           cursor: pointer;
