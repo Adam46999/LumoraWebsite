@@ -3,7 +3,15 @@ import React, { useState, useRef } from "react";
 function BeforeAfter({ beforeImage, afterImage }) {
   const [sliderX, setSliderX] = useState(50);
   const [showHint, setShowHint] = useState(true);
+  const hasInteractedRef = useRef(false); // يتبع التفاعل مرة واحدة فقط
   const containerRef = useRef(null);
+
+  const hideHintOnce = () => {
+    if (!hasInteractedRef.current) {
+      setShowHint(false);
+      hasInteractedRef.current = true;
+    }
+  };
 
   const updateSlider = (clientX) => {
     const container = containerRef.current;
@@ -12,7 +20,7 @@ function BeforeAfter({ beforeImage, afterImage }) {
     const x = clientX - rect.left;
     const percent = Math.max(0, Math.min(100, (x / rect.width) * 100));
     setSliderX(percent);
-    setShowHint(false); // إخفاء التلميح عند أول تفاعل
+    hideHintOnce();
   };
 
   const handleMouseDown = (e) => {
@@ -71,7 +79,7 @@ function BeforeAfter({ beforeImage, afterImage }) {
 
       {/* الخط الفاصل */}
       <div
-       className="absolute top-0 h-full w-[3px] bg-blue-500 z-20"
+        className="absolute top-0 h-full w-[3px] bg-blue-500 z-20 transition-all"
         style={{ left: `${sliderX}%` }}
       />
 
@@ -92,7 +100,10 @@ function BeforeAfter({ beforeImage, afterImage }) {
         min="0"
         max="100"
         value={sliderX}
-        onChange={(e) => setSliderX(Number(e.target.value))}
+        onChange={(e) => {
+          setSliderX(Number(e.target.value));
+          hideHintOnce(); // ✅ إخفاء التلميح حتى من السلايدر
+        }}
         onTouchStart={(e) => e.stopPropagation()}
         onMouseDown={(e) => e.stopPropagation()}
         className="absolute bottom-4 left-1/2 -translate-x-1/2 w-3/4 z-30 appearance-none bg-transparent"
