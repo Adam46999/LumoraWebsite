@@ -47,7 +47,7 @@ function BeforeAfter({ beforeImage, afterImage }) {
         onTouchEnd={enableSwiper}      // نعيد التفاعل
         onMouseDown={disableSwiper}
         onMouseUp={enableSwiper}
-        className="absolute bottom-4 left-1/2 -translate-x-1/2 w-3/4 z-30"
+        className="absolute bottom-4 left-1/2 -translate-x-1/2 w-3/4 z-30 touch-none"
       />
     </div>
   );
