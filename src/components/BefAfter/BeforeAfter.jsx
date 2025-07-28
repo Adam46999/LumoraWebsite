@@ -2,6 +2,7 @@ import React, { useState, useRef } from "react";
 
 function BeforeAfter({ beforeImage, afterImage }) {
   const [sliderX, setSliderX] = useState(50);
+  const [showHint, setShowHint] = useState(true);
   const containerRef = useRef(null);
 
   const updateSlider = (clientX) => {
@@ -11,6 +12,7 @@ function BeforeAfter({ beforeImage, afterImage }) {
     const x = clientX - rect.left;
     const percent = Math.max(0, Math.min(100, (x / rect.width) * 100));
     setSliderX(percent);
+    setShowHint(false); // إخفاء التلميح عند أول تفاعل
   };
 
   const handleMouseDown = (e) => {
@@ -50,6 +52,7 @@ function BeforeAfter({ beforeImage, afterImage }) {
       onTouchStart={handleTouchStart}
       className="relative w-full h-[400px] overflow-hidden rounded-xl shadow-md bg-gray-100 touch-none select-none cursor-ew-resize"
     >
+      {/* الصورة بعد */}
       <img
         src={afterImage}
         alt="بعد"
@@ -57,6 +60,7 @@ function BeforeAfter({ beforeImage, afterImage }) {
         className="absolute inset-0 w-full h-full object-cover z-0"
       />
 
+      {/* الصورة قبل */}
       <img
         src={beforeImage}
         alt="قبل"
@@ -67,9 +71,20 @@ function BeforeAfter({ beforeImage, afterImage }) {
 
       {/* الخط الفاصل */}
       <div
-        className="absolute top-0 h-full w-[3px] bg-blue-500 z-20"
+        className="absolute top-0 h-full w-[3px] bg-blue-500 z-20 transition-all"
         style={{ left: `${sliderX}%` }}
       />
+
+      {/* التلميح البصري */}
+      {showHint && (
+        <div className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
+          <div className="bg-black/60 text-white px-4 py-2 rounded-full text-sm animate-pulse flex items-center gap-2">
+            <span className="text-xl">⬅️</span>
+            <span>اسحب لرؤية الفرق</span>
+            <span className="text-xl">➡️</span>
+          </div>
+        </div>
+      )}
 
       {/* السلايدر */}
       <input
@@ -87,6 +102,7 @@ function BeforeAfter({ beforeImage, afterImage }) {
         }}
       />
 
+      {/* تنسيقات السلايدر */}
       <style jsx>{`
         input[type="range"]::-webkit-slider-runnable-track {
           height: 8px;
