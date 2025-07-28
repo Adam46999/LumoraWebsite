@@ -60,16 +60,14 @@ function BeforeAfter({ beforeImage, afterImage }) {
         src={afterImage}
         alt="بعد"
         draggable={false}
-        className="absolute inset-0 w-full h-full object-cover z-0"
-      />
+        className="absolute inset-0 w-full h-full object-cover z-10"      />
 
       {/* الصورة قبل */}
       <img
         src={beforeImage}
         alt="قبل"
         draggable={false}
-        className="absolute inset-0 w-full h-full object-cover z-10 transition-all duration-200"
-        style={{ clipPath: `inset(0 ${100 - sliderX}% 0 0)` }}
+        className="absolute inset-0 w-full h-full object-cover z-10"        style={{ clipPath: `inset(0 ${100 - sliderX}% 0 0)` }}
       />
 
       {/* السلايدر */}
