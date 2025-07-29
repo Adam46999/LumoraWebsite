@@ -1,5 +1,13 @@
 import { useState, useEffect } from "react";
-import { Menu, X, Search, ShoppingCart, User } from "lucide-react";
+import {
+  Menu,                // ✅ هذا هو المطلوب
+  Search,
+  ShoppingCart,
+  User,
+  Layers as CarpetIcon,
+  Sofa as SofaIcon,
+  CarFront as CarIcon,
+} from "lucide-react";
 import { useLanguage } from "../context/LanguageContext";
 import SidebarMenu from "../header/SidebarMenu";
 import DesktopNav from "../header/DesktopNav";
@@ -14,7 +22,16 @@ export default function Header() {
 
   const navItems = [
   { id: "home", label: "الرئيسية" },
-  { id: "services", label: "الخدمات" },
+  {
+    id: "services",
+    label: "الخدمات",
+    subItems: [
+      { id: "carpet", label: "تنظيف سجاد", icon: CarpetIcon },
+      { id: "sofa", label: "تنظيف كنب", icon: SofaIcon },
+      { id: "car", label: "تنظيف سيارات", icon: CarIcon },
+      // أضف باقي الخدمات هنا
+    ],
+  },
   { id: "beforeafter", label: "قبل / بعد" },
   { id: "contact", label: "تواصل معنا" }
 ];

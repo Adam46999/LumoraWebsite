@@ -27,17 +27,38 @@ export default function SidebarMenu({ menuOpen, setMenuOpen, navItems }) {
         </button>
 
           <nav className={`mt-10 space-y-4 ${lang === "ar" ? "text-right" : "text-left"}`}>
-          {navItems.map((item) => (
-            <a
-              key={item.id}
-              href={`#${item.id}`}
-              className="block text-gray-800 font-medium hover:text-[#2563EB]"
-              onClick={() => setMenuOpen(false)}
-            >
-              {item.label}
-            </a>
+  {navItems.map((item) => (
+    <div key={item.id}>
+      <a
+        href={`#${item.id}`}
+        onClick={() => setMenuOpen(false)}
+        className={`block text-gray-800 font-bold mb-2 hover:text-[#2563EB]`}
+      >
+        {item.label}
+      </a>
+
+      {/* عرض الخدمات الفرعية بأيقونات */}
+      {item.subItems && (
+        <ul className="ml-4 space-y-2">
+          {item.subItems.map((sub) => (
+            <li key={sub.id}>
+              <a
+  href={`#${sub.id}`}
+  onClick={() => setMenuOpen(false)}
+  className={`flex items-center gap-2 text-sm text-gray-700 hover:text-[#2563EB] ${lang === "ar" ? "flex-row-reverse" : ""}`}
+>
+  {sub.icon && <sub.icon className="w-4 h-4 text-gray-600" />}
+  {sub.label}
+</a>
+
+            </li>
           ))}
-        </nav>
+        </ul>
+      )}
+    </div>
+  ))}
+</nav>
+
 
         <div className={`flex items-center gap-4 pt-10 text-gray-700 ${lang === "ar" ? "justify-end" : "justify-start"}`}>
           <Search className="w-5 h-5 hover:text-[#2563EB] cursor-pointer" />
