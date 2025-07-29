@@ -55,11 +55,12 @@ function BeforeAfter({ beforeImage, afterImage }) {
 
   return (
     <div
-      ref={containerRef}
-      onMouseDown={handleMouseDown}
-      onTouchStart={handleTouchStart}
-      className="relative w-full h-[400px] overflow-hidden rounded-xl shadow-md bg-gray-100 touch-none select-none cursor-ew-resize"
-    >
+  id="beforeafter"  ref={containerRef}
+  onMouseDown={handleMouseDown}
+  onTouchStart={handleTouchStart}
+  className="relative w-full h-[400px] overflow-hidden rounded-xl shadow-md bg-gray-100 touch-none select-none cursor-ew-resize"
+>
+
       {/* الصورة بعد */}
       <img
         src={afterImage}

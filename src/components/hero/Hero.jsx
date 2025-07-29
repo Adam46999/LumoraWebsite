@@ -22,7 +22,7 @@ export default function Hero() {
   }, []);
 
   return (
-    <section className="relative h-[90vh] w-full overflow-hidden">
+    <section id="hero" className="relative h-[90vh] w-full overflow-hidden">
       {/* خلفية متغيرة */}
       <img
         src={heroImages[currentImage]}

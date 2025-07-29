@@ -8,7 +8,7 @@ export default function Services() {
   const [selectedService, setSelectedService] = useState(null);
 
   return (
-    <section className="py-20 px-6 bg-gradient-to-b from-blue-50 to-white" dir="rtl">
+    <section id="services" className="py-20 px-6 bg-gradient-to-b from-blue-50 to-white" dir="rtl">
       <div className="max-w-6xl mx-auto text-center mb-12">
         <h2 className="text-4xl font-extrabold text-gray-900 mb-4">
           <span className="text-blue-500">خدمات</span> التنظيف
@@ -31,11 +31,13 @@ export default function Services() {
       </div>
 
       <ServiceModal
-        isOpen={!!selectedService}
-        title={selectedService?.title}
-        details={selectedService?.details}
-        onClose={() => setSelectedService(null)}
-      />
+  isOpen={!!selectedService}
+  title={selectedService?.title}
+  details={selectedService?.details}
+  image={selectedService?.image}
+  onClose={() => setSelectedService(null)}
+/>
+
     </section>
   );
 }

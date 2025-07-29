@@ -1,38 +1,49 @@
-// src/components/services/ServiceModal.jsx
-import { X } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+// ✅ ServiceModal.jsx - نسخة محسّنة تدعم وصف طويل واحترافي وتمنع تمرير الخلفية
+import React, { useEffect } from "react";
 
-export default function ServiceModal({ isOpen, onClose, title, details }) {
+export default function ServiceModal({ isOpen, onClose, title, image, description }) {
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "auto";
+    }
+    return () => (document.body.style.overflow = "auto");
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <motion.div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-        >
-          <motion.div
-            className="relative bg-white w-[90%] max-w-xl rounded-2xl shadow-2xl p-8 text-right"
-            dir="rtl"
-            initial={{ y: 50, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 50, opacity: 0 }}
-            transition={{ duration: 0.3 }}
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+      <div className="bg-white rounded-xl shadow-xl w-[90%] max-w-md overflow-hidden">
+
+        {/* الصورة */}
+        <img src={image} alt={title} className="w-full h-48 object-cover" />
+
+        {/* المحتوى */}
+        <div className="p-6 max-h-[60vh] overflow-y-auto text-right">
+          <h2 className="text-xl font-bold text-blue-600 mb-4">{title}</h2>
+          <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+            {description}
+          </p>
+        </div>
+
+        {/* زر الإغلاق وطلب الآن */}
+        <div className="flex justify-between items-center p-4 border-t">
+          <button
+            onClick={onClose}
+            className="text-sm text-gray-500 hover:text-gray-700"
           >
-            <button
-              onClick={onClose}
-              className="absolute top-4 left-4 text-gray-400 hover:text-red-500 transition"
-            >
-              <X className="w-6 h-6" />
-            </button>
-            <h3 className="text-2xl font-bold text-blue-700 mb-4">{title}</h3>
-            <p className="text-gray-700 leading-relaxed text-base whitespace-pre-line">
-              {details}
-            </p>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+            إغلاق ✖️
+          </button>
+
+          <button
+            className="bg-blue-600 text-white px-6 py-2 rounded-full font-semibold hover:bg-blue-700 transition"
+          >
+            اطلب الآن
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }

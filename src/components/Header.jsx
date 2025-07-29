@@ -13,12 +13,12 @@ export default function Header() {
   const [activeId, setActiveId] = useState("home");
 
   const navItems = [
-    { id: "home", label: "الرئيسية" },
-    { id: "services", label: "الخدمات" },
-    { id: "beforeafter", label: "قبل / بعد" },
-    { id: "testimonials", label: "التقييمات" },
-    { id: "contact", label: "تواصل معنا" }
-  ];
+  { id: "home", label: "الرئيسية" },
+  { id: "services", label: "الخدمات" },
+  { id: "beforeafter", label: "قبل / بعد" },
+  { id: "contact", label: "تواصل معنا" }
+];
+
 
   // ScrollSpy: تحديث الرابط النشط حسب موقع التمرير
   useEffect(() => {
@@ -124,7 +124,12 @@ export default function Header() {
       </div>
 
       {/* السايدبار - موبايل */}
-      <SidebarMenu menuOpen={menuOpen} setMenuOpen={setMenuOpen} navItems={navItems} />
+<SidebarMenu
+  menuOpen={menuOpen}
+  setMenuOpen={setMenuOpen}
+  navItems={navItems}
+  activeId={activeId} // ✅ أضفنا هذا
+/>
 
       
     </header>

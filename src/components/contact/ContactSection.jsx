@@ -65,6 +65,7 @@ export default function ContactSection() {
 
   return (
 <section
+id="contact"
   className="relative py-16 px-4 bg-[#f4fafe] bg-gradient-to-br from-[#f4fafe] to-[#dbefff] shadow-inner"
   dir="rtl"
 >

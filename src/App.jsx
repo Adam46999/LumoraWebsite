@@ -21,13 +21,16 @@ function App() {
       <Hero />
       <Services />
 
-      <BeforeAfterCarousel
-        items={[
-          { before: before1, after: after1 },
-          { before: before2, after: after2 },
-          { before: before3, after: after3 },
-        ]}
-      />
+       {/* ✅ قسم قبل/بعد مع ID مناسب و padding علوي */}
+      <section id="beforeafter" className="py-24 bg-white">
+        <BeforeAfterCarousel
+          items={[
+            { before: before1, after: after1 },
+            { before: before2, after: after2 },
+            { before: before3, after: after3 },
+          ]}
+        />
+      </section>
 
       <ContactSection/>
     </div>
