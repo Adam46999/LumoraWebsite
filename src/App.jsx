@@ -3,6 +3,7 @@ import Hero from "./components/hero/Hero";
 import ContactSection from "./components/contact/ContactSection";
 import { useState } from "react";
 import BeforeAfterCarousel from "./components/BefAfter/BeforeAfterCarousel";
+import Services from "./components/services/Services";
 
 // ✅ استيراد الصور من src/assets
 import before1 from "./assets/before1.jpg";
@@ -18,6 +19,7 @@ function App() {
     <div className="font-sans">
       <Header />
       <Hero />
+      <Services />
 
       <BeforeAfterCarousel
         items={[
