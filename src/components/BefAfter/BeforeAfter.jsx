@@ -79,8 +79,7 @@ function BeforeAfter({ beforeImage, afterImage }) {
 
       {/* الخط الفاصل */}
       <div
-        className="absolute top-0 h-full w-[3px] bg-blue-500 z-20 transition-all"
-        style={{ left: `${sliderX}%` }}
+       className="absolute top-0 h-full w-[3px] bg-blue-500 z-20"        style={{ left: `${sliderX}%` }}
       />
 
       {/* التلميح البصري */}
