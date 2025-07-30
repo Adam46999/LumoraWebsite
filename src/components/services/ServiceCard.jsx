@@ -1,26 +1,27 @@
-// src/components/services/ServiceCard.jsx
-import { Sofa, Car, Droplets, Layers } from "lucide-react";
+import React, { forwardRef } from "react";
 
-const iconMap = {
-  sofa: Sofa,
-  car: Car,
-  droplets: Droplets,
-  layers: Layers,
-};
+const ServiceCard = forwardRef(
+  ({ id, icon, title, description, onClick }, ref) => {
+    return (
+      <div
+        id={id} // ✅ هذا هو السطر اللي بيخلي الرابط من الهيدر يشتغل
+        ref={ref}
+        onClick={onClick}
+        className="cursor-pointer p-6 bg-white rounded-xl shadow hover:shadow-lg transition text-center"
+      >
+        {/* أيقونة الخدمة */}
+        <div className="text-blue-500 mb-4">
+          <i className={`fas fa-${icon} fa-2x`}></i>
+        </div>
 
-export default function ServiceCard({ icon, title, description, onClick }) {
-  const IconComponent = iconMap[icon];
+        {/* عنوان الخدمة */}
+        <h3 className="text-lg font-semibold mb-2">{title}</h3>
 
-  return (
-    <button
-      onClick={onClick}
-      className="bg-white rounded-xl shadow-md p-6 flex flex-col items-center text-center hover:shadow-xl transition-all duration-300 focus:outline-none"
-    >
-      <div className="mb-4 w-16 h-16 flex items-center justify-center rounded-full bg-blue-100">
-        {IconComponent && <IconComponent className="w-8 h-8 text-blue-600" />}
+        {/* وصف مختصر */}
+        <p className="text-gray-600 text-sm">{description}</p>
       </div>
-      <h3 className="text-lg font-bold text-gray-800 mb-2">{title}</h3>
-      <p className="text-gray-600 text-sm">{description}</p>
-    </button>
-  );
-}
+    );
+  }
+);
+
+export default ServiceCard;

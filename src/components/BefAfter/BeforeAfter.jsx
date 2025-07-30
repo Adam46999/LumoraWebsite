@@ -55,12 +55,12 @@ function BeforeAfter({ beforeImage, afterImage }) {
 
   return (
     <div
-  id="beforeafter"  ref={containerRef}
-  onMouseDown={handleMouseDown}
-  onTouchStart={handleTouchStart}
-  className="relative w-full h-[400px] overflow-hidden rounded-xl shadow-md bg-gray-100 touch-none select-none cursor-ew-resize"
->
-
+      id="beforeafter"
+      ref={containerRef}
+      onMouseDown={handleMouseDown}
+      onTouchStart={handleTouchStart}
+      className="relative w-full h-[400px] overflow-hidden rounded-xl shadow-md bg-gray-100 touch-none select-none cursor-ew-resize"
+    >
       {/* الصورة بعد */}
       <img
         src={afterImage}
@@ -80,7 +80,8 @@ function BeforeAfter({ beforeImage, afterImage }) {
 
       {/* الخط الفاصل */}
       <div
-       className="absolute top-0 h-full w-[3px] bg-blue-500 z-20"        style={{ left: `${sliderX}%` }}
+        className="absolute top-0 h-full w-[3px] bg-blue-500 z-20"
+        style={{ left: `${sliderX}%` }}
       />
 
       {/* التلميح البصري */}
@@ -124,7 +125,7 @@ function BeforeAfter({ beforeImage, afterImage }) {
           -webkit-appearance: none;
           height: 36px;
           width: 36px;
-          background-color: #3B82F6;
+          background-color: #3b82f6;
           border: 3px solid white;
           border-radius: 9999px;
           margin-top: -14px;
@@ -134,7 +135,7 @@ function BeforeAfter({ beforeImage, afterImage }) {
         input[type="range"]::-moz-range-thumb {
           height: 36px;
           width: 36px;
-          background-color: #3B82F6;
+          background-color: #3b82f6;
           border: 3px solid white;
           border-radius: 9999px;
           cursor: pointer;

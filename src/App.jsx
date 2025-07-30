@@ -1,11 +1,10 @@
+// src/App.jsx
+import useSectionNavigation from "./hooks/useSectionNavigation";
 import Header from "./components/Header";
 import Hero from "./components/hero/Hero";
-import ContactSection from "./components/contact/ContactSection";
-import { useState } from "react";
-import BeforeAfterCarousel from "./components/BefAfter/BeforeAfterCarousel";
 import Services from "./components/services/Services";
-
-// ✅ استيراد الصور من src/assets
+import BeforeAfterCarousel from "./components/BefAfter/BeforeAfterCarousel";
+import ContactSection from "./components/contact/ContactSection";
 import before1 from "./assets/before1.jpg";
 import after1 from "./assets/after1.jpg";
 import before2 from "./assets/before2.jpg";
@@ -14,15 +13,29 @@ import before3 from "./assets/before3.jpg";
 import after3 from "./assets/after3.jpg";
 
 function App() {
+  const { scrollToSection, shakeTarget } = useSectionNavigation();
 
   return (
     <div className="font-sans">
-      <Header />
-      <Hero />
-      <Services />
+      <Header scrollToSection={scrollToSection} />
 
-       {/* ✅ قسم قبل/بعد مع ID مناسب و padding علوي */}
-      <section id="beforeafter" className="py-24 bg-white">
+      <Hero />
+
+      <section
+        id="services"
+        className={`py-20 px-6 transition-all duration-300 ${
+          shakeTarget === "services" ? "animate-shake" : ""
+        }`}
+      >
+        <Services />
+      </section>
+
+      <section
+        id="beforeafter"
+        className={`py-24 transition-all duration-300 ${
+          shakeTarget === "beforeafter" ? "animate-shake" : ""
+        }`}
+      >
         <BeforeAfterCarousel
           items={[
             { before: before1, after: after1 },
@@ -32,7 +45,14 @@ function App() {
         />
       </section>
 
-      <ContactSection/>
+      <section
+        id="contact"
+        className={`py-20 px-6 transition-all duration-300 ${
+          shakeTarget === "contact" ? "animate-shake" : ""
+        }`}
+      >
+        <ContactSection />
+      </section>
     </div>
   );
 }
