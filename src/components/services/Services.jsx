@@ -2,19 +2,20 @@ import React, { useState, useRef, useEffect } from "react";
 import { services } from "./data";
 import ServiceCard from "./ServiceCard";
 import ServiceModal from "./ServiceModal";
+import { useLanguage } from "../../context/LanguageContext";
 
 export default function Services() {
+  const { t } = useLanguage();
+
   const [selectedService, setSelectedService] = useState(null);
   const serviceRefs = useRef({});
 
-  // تجهيز الـ refs عند التحميل
   useEffect(() => {
     services.forEach((service) => {
       serviceRefs.current[service.id] = React.createRef();
     });
   }, []);
 
-  // دالة للتمرير الناعم
   const scrollToService = (id) => {
     const ref = serviceRefs.current[id];
     if (ref?.current) {
@@ -30,11 +31,11 @@ export default function Services() {
     >
       <div className="max-w-6xl mx-auto text-center mb-12">
         <h2 className="text-4xl font-extrabold text-gray-900 mb-4">
-          <span className="text-blue-500">خدمات</span> التنظيف
+          <span className="text-blue-500">{t.servicesTitle1}</span>{" "}
+          {t.servicesTitle2}
         </h2>
         <p className="text-gray-600 max-w-xl mx-auto">
-          نقدم حلول تنظيف متكاملة للكنب، السجاد، السيارات والمزيد باستخدام أحدث
-          التقنيات.
+          {t.servicesDescription}
         </p>
       </div>
 
@@ -45,8 +46,8 @@ export default function Services() {
             id={service.id}
             ref={serviceRefs.current[service.id]}
             icon={service.icon}
-            title={service.title}
-            description={service.description}
+            titleKey={service.titleKey}
+            descriptionKey={service.descriptionKey}
             onClick={() => setSelectedService(service)}
           />
         ))}
@@ -54,14 +55,14 @@ export default function Services() {
 
       <ServiceModal
         isOpen={!!selectedService}
-        title={selectedService?.title}
-        details={selectedService?.details}
+        title={t[selectedService?.titleKey]}
+        details={t[selectedService?.detailsKey]}
         image={selectedService?.image}
         onClose={() => setSelectedService(null)}
         onOrderNow={() => {
           const id = selectedService?.id;
           setSelectedService(null);
-          setTimeout(() => scrollToService(id), 300); // بعد الإغلاق، ننزل للسيرفيس
+          setTimeout(() => scrollToService(id), 300);
         }}
       />
     </section>

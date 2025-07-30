@@ -1,37 +1,30 @@
 export const services = [
   {
     id: "sofa",
-    title: "تنظيف الكنب",
-    description: "تنظيف عميق وإزالة البقع.",
-    details: `نقوم بتنظيف الكنب بجميع أنواعه باستخدام أجهزة بخار حديثة، ومواد تنظيف آمنة على القماش.
-يشمل:
-- إزالة البقع الصعبة
-- تعقيم ضد البكتيريا
-- تجفيف سريع بدون رائحة`,
+    titleKey: "sofaTitle",
+    descriptionKey: "sofaDescription",
+    detailsKey: "sofaDetails",
     icon: "sofa",
   },
   {
     id: "car",
-    title: "تنظيف السيارات",
-    description: "داخلي وخارجي مع تعقيم.",
-    details: `يشمل تنظيف كامل للمقاعد، الأرضيات، الزجاج، والكونسول.
-نستخدم مواد خاصة لكل نوع جلد أو قماش، مع تعقيم بالبخار للمناطق الحساسة.`,
+    titleKey: "carTitle",
+    descriptionKey: "carDescription",
+    detailsKey: "carDetails",
     icon: "car",
   },
   {
     id: "carpet",
-    title: "تنظيف السجاد",
-    description: "غسيل وتجفيف السجاد.",
-    details: `غسيل يدوي وآلي للسجاد والموكيت مع تجفيف سريع.
-نسترجع ألوان السجاد الأصلية ونعيد له النعومة.`,
+    titleKey: "carpetTitle",
+    descriptionKey: "carpetDescription",
+    detailsKey: "carpetDetails",
     icon: "layers",
   },
   {
     id: "steam",
-    title: "تعقيم بالبخار",
-    description: "تعقيم بالبخار عالي الحرارة.",
-    details: `بخار حراري بدرجة 160° لتعقيم الأرضيات، المفروشات، والأماكن الرطبة.
-يقضي على 99.9٪ من البكتيريا والجراثيم.`,
+    titleKey: "steamTitle",
+    descriptionKey: "steamDescription",
+    detailsKey: "steamDetails",
     icon: "droplets",
   },
 ];

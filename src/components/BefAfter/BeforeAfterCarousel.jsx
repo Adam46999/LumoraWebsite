@@ -4,17 +4,20 @@ import "swiper/css";
 import "swiper/css/navigation";
 import { Navigation } from "swiper/modules";
 import BeforeAfter from "./BeforeAfter";
+import { useLanguage } from "../../context/LanguageContext"; // ✅ استيراد الترجمة
 
 export default function BeforeAfterCarousel({ items }) {
+  const { t } = useLanguage(); // ✅ استخدام الترجمة
+
   return (
     <section className="max-w-5xl mx-auto px-4 my-10">
       <h2 className="text-center text-3xl font-bold text-gray-800 mb-2">
-        <span className="text-black">قبل</span>
-        <span className="text-blue-500"> / بعد التنظيف</span>
+        <span className="text-black">{t.beforeAfterTitle1}</span>
+        <span className="text-blue-500">{t.beforeAfterTitle2}</span>
       </h2>
 
       <p className="text-center text-gray-600 max-w-2xl mx-auto mb-6 text-sm sm:text-base">
-        شاهد الفرق الحقيقي قبل وبعد تنظيف الكنب والسجاد من خلال السحب على الصور.
+        {t.beforeAfterDescription}
       </p>
 
       <Swiper

@@ -1,9 +1,12 @@
 import React, { useState, useRef } from "react";
+import { useLanguage } from "../../context/LanguageContext";
 
 function BeforeAfter({ beforeImage, afterImage }) {
+  const { t } = useLanguage(); // ✅ دعم الترجمة
+
   const [sliderX, setSliderX] = useState(50);
   const [showHint, setShowHint] = useState(true);
-  const hasInteractedRef = useRef(false); // يتبع التفاعل مرة واحدة فقط
+  const hasInteractedRef = useRef(false);
   const containerRef = useRef(null);
 
   const hideHintOnce = () => {
@@ -64,7 +67,7 @@ function BeforeAfter({ beforeImage, afterImage }) {
       {/* الصورة بعد */}
       <img
         src={afterImage}
-        alt="بعد"
+        alt={t.afterAlt || "بعد"}
         draggable={false}
         className="absolute inset-0 w-full h-full object-cover z-0"
       />
@@ -72,7 +75,7 @@ function BeforeAfter({ beforeImage, afterImage }) {
       {/* الصورة قبل */}
       <img
         src={beforeImage}
-        alt="قبل"
+        alt={t.beforeAlt || "قبل"}
         draggable={false}
         className="absolute inset-0 w-full h-full object-cover z-10"
         style={{ clipPath: `inset(0 ${100 - sliderX}% 0 0)` }}
@@ -89,7 +92,7 @@ function BeforeAfter({ beforeImage, afterImage }) {
         <div className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
           <div className="bg-black/60 text-white px-4 py-2 rounded-full text-sm animate-pulse flex items-center gap-2">
             <span className="text-xl">⬅️</span>
-            <span>اسحب لرؤية الفرق</span>
+            <span>{t.beforeAfterHint}</span>
             <span className="text-xl">➡️</span>
           </div>
         </div>
@@ -103,7 +106,7 @@ function BeforeAfter({ beforeImage, afterImage }) {
         value={sliderX}
         onChange={(e) => {
           setSliderX(Number(e.target.value));
-          hideHintOnce(); // ✅ إخفاء التلميح حتى من السلايدر
+          hideHintOnce();
         }}
         onTouchStart={(e) => e.stopPropagation()}
         onMouseDown={(e) => e.stopPropagation()}

@@ -1,7 +1,6 @@
-// src/hooks/useSectionNavigation.js
 import { useState } from "react";
 
-export default function useSectionNavigation() {
+function useSectionNavigation() {
   const [shakeTarget, setShakeTarget] = useState(null);
 
   const scrollToSection = (id) => {
@@ -9,25 +8,34 @@ export default function useSectionNavigation() {
     if (!el) return;
 
     const rect = el.getBoundingClientRect();
-    const isFullyVisible = rect.top >= 0 && rect.bottom <= window.innerHeight;
-    const isPartiallyVisible = rect.top < window.innerHeight && rect.bottom > 0;
+    const headerHeight = 80;
+
+    const elTop = rect.top + window.scrollY;
+    const elBottom = rect.bottom + window.scrollY;
+
+    const viewTop = window.scrollY + headerHeight;
+    const viewBottom = window.scrollY + window.innerHeight;
+
+    const isFullyVisible = elTop >= viewTop && elBottom <= viewBottom;
+    const isPartiallyVisible = elBottom > viewTop && elTop < viewBottom;
+
+    const triggerShake = (targetId) => {
+      setShakeTarget(targetId);
+      setTimeout(() => setShakeTarget(null), 1000);
+    };
 
     if (isFullyVisible) {
-      // إذا القسم ظاهر كامل – فقط نفعل الاهتزاز
-      setShakeTarget(id);
-      setTimeout(() => setShakeTarget(null), 1000);
+      triggerShake(id);
     } else if (isPartiallyVisible) {
-      // إذا ظاهر جزئيًا – مرر للقسم وفعّل الاهتزاز بعد التمرير
       el.scrollIntoView({ behavior: "smooth", block: "center" });
-      setTimeout(() => {
-        setShakeTarget(id);
-        setTimeout(() => setShakeTarget(null), 1000);
-      }, 600);
+      setTimeout(() => triggerShake(id), 600);
     } else {
-      // إذا مش ظاهر نهائيًا – مرر للقسم فقط، بدون اهتزاز
       el.scrollIntoView({ behavior: "smooth", block: "center" });
     }
   };
 
   return { scrollToSection, shakeTarget };
 }
+
+// 🟢 هذا هو السطر المهم لحل المشكلة:
+export default useSectionNavigation;
