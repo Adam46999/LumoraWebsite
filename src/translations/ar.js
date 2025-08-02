@@ -17,10 +17,6 @@ export default {
   servicesTitle2: "التنظيف",
   servicesDescription:
     "نقدم حلول تنظيف متكاملة للكنب، السجاد، السيارات والمزيد باستخدام أحدث التقنيات.",
-  servicesTitle1: "خدمات",
-  servicesTitle2: "التنظيف",
-  servicesDescription:
-    "نقدم حلول تنظيف متكاملة للكنب، السجاد، السيارات والمزيد باستخدام أحدث التقنيات.",
 
   sofaTitle: "تنظيف الكنب",
   sofaDescription: "تنظيف عميق وإزالة البقع.",
@@ -44,21 +40,24 @@ export default {
   steamDescription: "تعقيم بالبخار عالي الحرارة.",
   steamDetails: `بخار حراري بدرجة 160° لتعقيم الأرضيات، المفروشات، والأماكن الرطبة.
 يقضي على 99.9٪ من البكتيريا والجراثيم.`,
+
+  // Before After
   beforeAfterHint: "اسحب لرؤية الفرق",
   beforeAlt: "قبل",
   afterAlt: "بعد",
-
   beforeAfterTitle1: "قبل",
   beforeAfterTitle2: " / بعد التنظيف",
   beforeAfterDescription:
     "شاهد الفرق الحقيقي قبل وبعد تنظيف الكنب والسجاد من خلال السحب على الصور.",
+
+  // Contact Section
   contactTitleSpan: "تواصل",
   contactTitle: " معنا",
   contactSubtitle: "عندك استفسار أو ملاحظة؟ فقط أرسل لنا رسالة وسنرد عليك!",
   contactNameLabel: "الاسم الكامل",
   contactNamePlaceholder: "اكتب اسمك",
   contactPhoneLabel: "رقم الهاتف",
-  contactPhonePlaceholder: "ادخل  رقم الهاتف",
+  contactPhonePlaceholder: "ادخل رقم الهاتف",
   contactMessageLabel: "رسالتك",
   contactMessagePlaceholder: "اكتب رسالتك هنا...",
   contactSendButton: "إرسال",
@@ -69,27 +68,21 @@ export default {
   contactCallNow: "اتصل بنا الآن",
   contactMapLocation: "موقعنا على الخريطة",
   contactChooseLanguage: "اختر اللغة",
+
+  // Lang Switch
   langArabic: "العربية",
   langEnglish: "English",
   langHebrew: "עברית",
+
+  // Nav (for Sidebar or others)
   navHome: "الرئيسية",
   navServices: "الخدمات",
   navBeforeAfter: "قبل / بعد",
   navContact: "تواصل معنا",
-  serviceCarpet: "تنظيف السجاد",
-  serviceSofa: "تنظيف الكنب",
-  serviceCar: "تنظيف السيارات",
   closeMenu: "إغلاق القائمة",
   chooseLanguage: "اختر اللغة",
-  langArabic: "العربية",
-  langEnglish: "English",
-  langHebrew: "עברית",
 
-  navHome: "الرئيسية",
-  navServices: "الخدمات",
-  navBeforeAfter: "قبل / بعد",
-  navContact: "تواصل معنا",
-
+  // Services Short
   serviceCarpet: "تنظيف السجاد",
   serviceSofa: "تنظيف الكنب",
   serviceCar: "تنظيف السيارات",

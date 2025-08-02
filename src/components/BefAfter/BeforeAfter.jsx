@@ -111,10 +111,7 @@ function BeforeAfter({ beforeImage, afterImage }) {
         onTouchStart={(e) => e.stopPropagation()}
         onMouseDown={(e) => e.stopPropagation()}
         className="absolute bottom-4 left-1/2 -translate-x-1/2 w-3/4 z-30 appearance-none bg-transparent"
-        style={{
-          WebkitAppearance: "none",
-          height: "44px",
-        }}
+        style={{ WebkitAppearance: "none", height: "44px" }}
       />
 
       {/* تنسيقات السلايدر */}

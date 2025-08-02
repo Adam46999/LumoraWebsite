@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect } from "react";
-import { services } from "./data";
+import { services } from "./servicesData"; // ✅ تم التعديل هنا
 import ServiceCard from "./ServiceCard";
 import ServiceModal from "./ServiceModal";
 import { useLanguage } from "../../context/LanguageContext";
 
 export default function Services() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
 
   const [selectedService, setSelectedService] = useState(null);
   const serviceRefs = useRef({});
@@ -27,11 +27,11 @@ export default function Services() {
     <section
       id="services"
       className="py-20 px-6 bg-gradient-to-b from-blue-50 to-white"
-      dir="rtl"
+      dir={lang === "ar" ? "rtl" : "ltr"}
     >
       <div className="max-w-6xl mx-auto text-center mb-12">
         <h2 className="text-4xl font-extrabold text-gray-900 mb-4">
-          <span className="text-blue-500">{t.servicesTitle1}</span>{" "}
+          <span className="text-blue-600">{t.servicesTitle1}</span>{" "}
           {t.servicesTitle2}
         </h2>
         <p className="text-gray-600 max-w-xl mx-auto">
@@ -56,7 +56,7 @@ export default function Services() {
       <ServiceModal
         isOpen={!!selectedService}
         title={t[selectedService?.titleKey]}
-        details={t[selectedService?.detailsKey]}
+        description={t[selectedService?.detailsKey]}
         image={selectedService?.image}
         onClose={() => setSelectedService(null)}
         onOrderNow={() => {
