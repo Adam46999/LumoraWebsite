@@ -1,26 +1,20 @@
-import React, { useState, useRef, useEffect } from "react";
-import { services } from "./servicesData"; // ✅ تم التعديل هنا
+import React, { useState } from "react";
+import { services } from "./servicesData";
 import ServiceCard from "./ServiceCard";
 import ServiceModal from "./ServiceModal";
 import { useLanguage } from "../../context/LanguageContext";
 
 export default function Services() {
   const { t, lang } = useLanguage();
-
   const [selectedService, setSelectedService] = useState(null);
-  const serviceRefs = useRef({});
 
-  useEffect(() => {
-    services.forEach((service) => {
-      serviceRefs.current[service.id] = React.createRef();
-    });
-  }, []);
-
-  const scrollToService = (id) => {
-    const ref = serviceRefs.current[id];
-    if (ref?.current) {
-      ref.current.scrollIntoView({ behavior: "smooth", block: "center" });
-    }
+  const handleOrderNow = () => {
+    const id = selectedService?.id;
+    setSelectedService(null);
+    setTimeout(() => {
+      const el = document.getElementById(id);
+      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 300);
   };
 
   return (
@@ -39,31 +33,29 @@ export default function Services() {
         </p>
       </div>
 
+      {/* شبكة الكروت */}
       <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
         {services.map((service) => (
           <ServiceCard
             key={service.id}
             id={service.id}
-            ref={serviceRefs.current[service.id]}
             icon={service.icon}
             titleKey={service.titleKey}
             descriptionKey={service.descriptionKey}
             onClick={() => setSelectedService(service)}
+            bgColor={service.bgColor} // ✅ اللون يمر للكرت
           />
         ))}
       </div>
 
+      {/* المودال */}
       <ServiceModal
         isOpen={!!selectedService}
-        title={t[selectedService?.titleKey]}
-        description={t[selectedService?.detailsKey]}
+        titleKey={selectedService?.titleKey}
+        descriptionKey={selectedService?.detailsKey}
         image={selectedService?.image}
         onClose={() => setSelectedService(null)}
-        onOrderNow={() => {
-          const id = selectedService?.id;
-          setSelectedService(null);
-          setTimeout(() => scrollToService(id), 300);
-        }}
+        onOrderNow={handleOrderNow}
       />
     </section>
   );

@@ -9,6 +9,7 @@ export default {
         "fade-in": "fadeIn 0.5s ease-in-out",
         shake: "shake 0.5s ease-in-out",
         "slide-up": "slideUp 0.6s ease-out forwards", // ✅ مضاف الآن
+        "bounce-slow": "bounce 2s infinite",
       },
       keyframes: {
         fadeIn: {

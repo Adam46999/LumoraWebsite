@@ -79,4 +79,8 @@ Kills 99.9% of bacteria and germs.`,
   serviceCarpet: "Carpet Cleaning",
   serviceSofa: "Sofa Cleaning",
   serviceCar: "Car Cleaning",
+  heroHighlight1: "Professional Cleaning",
+  heroHighlight2: "for Sofas, Cars & Carpets",
+  heroSubtitle:
+    "We offer deep cleaning services for home sofas, car interiors & exteriors, and carpets – using modern steam devices and safe materials.",
 };
