@@ -1,9 +1,9 @@
-import { useState, useRef } from "react";
+// ContactForm.jsx
+import { useState, useRef, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { useLanguage } from "../../context/LanguageContext";
 import ContactField from "./ContactField";
 import SuccessMessage from "./SuccessMessage";
-import { useEffect } from "react";
 
 export default function ContactForm() {
   const { t } = useLanguage();
@@ -13,30 +13,19 @@ export default function ContactForm() {
   const [success, setSuccess] = useState(false);
   const successRef = useRef(null);
   const [shakeTarget, setShakeTarget] = useState(null);
-  const successSound = useRef(null); // 🎧 مرجع للصوت
+  const successSound = useRef(null);
 
   const validateField = (id, value) => {
-    let error = "";
-    if (!value.trim()) {
-      error = t.contactFillAllFields;
-    }
-
-    if (id === "phone") {
-      const phonePattern = /^05\d{1}-\d{7}$/;
-      if (value && !phonePattern.test(value)) {
-        error = t.contactPhoneError;
-      }
-    }
-
-    return error;
+    if (!value.trim()) return t.contactFillAllFields;
+    if (id === "phone" && !/^05\d{1}-\d{7}$/.test(value))
+      return t.contactPhoneError;
+    return "";
   };
 
   const handleBlur = (e) => {
     const { id, value } = e.target;
     const error = validateField(id, value);
-    if (error) {
-      setErrors((prev) => ({ ...prev, [id]: error }));
-    }
+    if (error) setErrors((prev) => ({ ...prev, [id]: error }));
   };
 
   const handleChange = (e) => {
@@ -52,8 +41,6 @@ export default function ContactForm() {
     }
 
     setForm((prev) => ({ ...prev, [id]: updated }));
-
-    // إزالة رسالة الخطأ عند التصحيح
     setErrors((prev) => ({ ...prev, [id]: "" }));
   };
 
@@ -64,49 +51,48 @@ export default function ContactForm() {
         successSound.current.volume = 0.6;
         successSound.current.play();
       } catch (e) {
-        console.warn("🔇 المتصفح منع تشغيل الصوت:", e);
+        console.warn("🔇 الصوت منع من التشغيل:", e);
       }
     }
   }, [success]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
     const newErrors = {};
     Object.entries(form).forEach(([id, value]) => {
       const error = validateField(id, value);
-      if (error) {
-        newErrors[id] = error;
-      }
+      if (error) newErrors[id] = error;
     });
-
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       const firstErrorField = Object.keys(newErrors)[0];
       setShakeTarget(firstErrorField);
-
       setTimeout(() => {
-        const el = document.getElementById(firstErrorField);
-        el?.scrollIntoView({ behavior: "smooth", block: "center" });
+        document
+          .getElementById(firstErrorField)
+          ?.scrollIntoView({ behavior: "smooth", block: "center" });
       }, 300);
       setTimeout(() => setShakeTarget(null), 800);
       return;
     }
 
-    // ✅ شغل الصوت فورًا قبل أي انتظار
-
     setLoading(true);
-
     setTimeout(() => {
       setLoading(false);
       setSuccess(true);
       setForm({ name: "", phone: "", message: "" });
       setErrors({});
-
       setTimeout(() => {
-        successRef.current?.scrollIntoView({ behavior: "smooth" });
+        setTimeout(() => {
+          if (successRef.current) {
+            const y =
+              successRef.current.getBoundingClientRect().top +
+              window.scrollY -
+              80; // 🧠 80px لتعويض الهيدر
+            window.scrollTo({ top: y, behavior: "smooth" });
+          }
+        }, 200);
       }, 200);
-
       setTimeout(() => setSuccess(false), 6000);
     }, 1500);
   };
@@ -166,14 +152,14 @@ export default function ContactForm() {
           type="submit"
           disabled={loading || success}
           className={`relative group w-64 h-14 flex items-center justify-center gap-2 font-semibold rounded-full text-white transition-all duration-300 ease-in-out
-    ${
-      success
-        ? "bg-green-500 shadow-md"
-        : loading
-        ? "bg-blue-300 shadow"
-        : "bg-gradient-to-br from-blue-600 via-blue-500 to-blue-400 shadow-md hover:shadow-xl hover:scale-105 active:scale-95"
-    }
-  `}
+            ${
+              success
+                ? "bg-green-500 shadow-md"
+                : loading
+                ? "bg-blue-300 shadow"
+                : "bg-gradient-to-br from-blue-600 via-blue-500 to-blue-400 shadow-md hover:shadow-xl hover:scale-105 active:scale-95"
+            }
+          `}
         >
           {loading ? (
             <>
@@ -193,6 +179,7 @@ export default function ContactForm() {
           )}
         </button>
       </div>
+
       <audio ref={successSound} src="/sounds/success.mp3" preload="auto" />
     </form>
   );

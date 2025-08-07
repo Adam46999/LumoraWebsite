@@ -1,3 +1,4 @@
+// ContactSection.jsx
 import { useLanguage } from "../../context/LanguageContext";
 import ContactHeader from "./ContactHeader";
 import ContactForm from "./ContactForm";
@@ -9,17 +10,25 @@ export default function ContactSection() {
   return (
     <section
       id="contact"
-      className="relative py-24 px-4 bg-gradient-to-tr from-blue-50 to-white"
       dir={lang === "ar" ? "rtl" : "ltr"}
+      className="relative py-28 px-4 bg-gradient-to-br from-blue-100 via-white to-blue-50"
     >
-      {/* العنوان */}
-      <ContactHeader />
+      <div className="max-w-5xl mx-auto">
+        {/* العنوان */}
+        <div className="animate-fade-in">
+          <ContactHeader />
+        </div>
 
-      {/* النموذج */}
-      <ContactForm />
+        {/* النموذج */}
+        <div className="mt-16 animate-fade-in delay-200">
+          <ContactForm />
+        </div>
 
-      {/* روابط الاتصال */}
-      <ContactLinks />
+        {/* روابط الاتصال */}
+        <div className="mt-24 animate-fade-in delay-500">
+          <ContactLinks />
+        </div>
+      </div>
     </section>
   );
 }

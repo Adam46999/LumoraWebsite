@@ -1,20 +1,23 @@
+// SuccessMessage.jsx
 import { CheckCircle2 } from "lucide-react";
 
 export default function SuccessMessage({ text, refEl, onClose }) {
   return (
     <div
       ref={refEl}
-      className="sm:col-span-2 flex items-center justify-between gap-2 bg-green-100 text-green-700 px-4 py-3 rounded-xl shadow animate-fade-in animate-scale-in"
+      className="sm:col-span-2 w-full flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-green-100 text-green-700 px-5 py-4 rounded-2xl shadow-lg animate-fade-in animate-scale-in border border-green-300"
     >
       <div className="flex items-center gap-2">
-        <CheckCircle2 className="w-5 h-5" />
-        <span>{text}</span>
+        <CheckCircle2 className="w-6 h-6" />
+        <span className="text-sm sm:text-base font-medium tracking-wide">
+          {text}
+        </span>
       </div>
 
       {onClose && (
         <button
           onClick={onClose}
-          className="text-lg font-bold text-green-700 hover:text-red-500 transition"
+          className="self-end sm:self-auto text-xl font-bold text-green-700 hover:text-red-500 transition duration-200"
           aria-label="Close"
         >
           ×
