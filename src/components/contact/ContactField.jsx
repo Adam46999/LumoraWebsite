@@ -1,3 +1,6 @@
+// src/components/contact/ContactField.jsx
+import React from "react";
+
 export default function ContactField({
   id,
   label,
@@ -8,14 +11,23 @@ export default function ContactField({
   error,
   isTextArea = false,
   shake = false,
+  isValid = false,
 }) {
-  const inputClass = `p-3 rounded-xl border ${
-    error ? "border-red-400" : "border-gray-300"
-  } focus:outline-none focus:ring-2 focus:ring-blue-400`;
+  const inputBase =
+    "p-3 rounded-xl border focus:outline-none focus:ring-2 focus:ring-blue-400 transition duration-200 shadow-sm";
+
+  const borderColor = error ? "border-red-400" : "border-gray-300";
+  const shakeAnim = shake ? "animate-shake" : "";
+  const validRing = isValid ? "ring-1 ring-green-300" : "";
+
+  const inputClass = `${inputBase} ${borderColor} ${validRing} ${shakeAnim}`;
 
   return (
     <div className={`${id === "message" ? "col-span-full" : ""} flex flex-col`}>
-      <label htmlFor={id} className="mb-1 text-sm text-gray-700 font-medium">
+      <label
+        htmlFor={id}
+        className="mb-1 text-sm text-gray-700 font-semibold tracking-wide"
+      >
         {label}
       </label>
 
@@ -27,7 +39,7 @@ export default function ContactField({
           onBlur={onBlur}
           placeholder={placeholder}
           rows="4"
-          className={`${inputClass} ${shake ? "animate-shake" : ""}`}
+          className={inputClass}
         />
       ) : (
         <input
@@ -37,11 +49,13 @@ export default function ContactField({
           onChange={onChange}
           onBlur={onBlur}
           placeholder={placeholder}
-          className={`${inputClass} ${shake ? "animate-shake" : ""}`}
+          className={inputClass}
         />
       )}
 
-      {error && <span className="text-red-500 text-sm mt-1">{error}</span>}
+      {error && (
+        <span className="text-red-500 text-xs mt-1 font-medium">{error}</span>
+      )}
     </div>
   );
 }

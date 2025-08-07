@@ -3,6 +3,7 @@ import { Loader2 } from "lucide-react";
 import { useLanguage } from "../../context/LanguageContext";
 import ContactField from "./ContactField";
 import SuccessMessage from "./SuccessMessage";
+import { useEffect } from "react";
 
 export default function ContactForm() {
   const { t } = useLanguage();
@@ -11,7 +12,8 @@ export default function ContactForm() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const successRef = useRef(null);
-  const [shakeTarget, setShakeTarget] = useState(null); // ✅ جديد
+  const [shakeTarget, setShakeTarget] = useState(null);
+  const successSound = useRef(null); // 🎧 مرجع للصوت
 
   const validateField = (id, value) => {
     let error = "";
@@ -32,7 +34,6 @@ export default function ContactForm() {
   const handleBlur = (e) => {
     const { id, value } = e.target;
     const error = validateField(id, value);
-
     if (error) {
       setErrors((prev) => ({ ...prev, [id]: error }));
     }
@@ -52,17 +53,25 @@ export default function ContactForm() {
 
     setForm((prev) => ({ ...prev, [id]: updated }));
 
-    // نحذف الخطأ مباشرة إذا صحّح المستخدم الإدخال
-    setErrors((prev) => ({
-      ...prev,
-      [id]: "", // إفراغ رسالة الخطأ
-    }));
+    // إزالة رسالة الخطأ عند التصحيح
+    setErrors((prev) => ({ ...prev, [id]: "" }));
   };
+
+  useEffect(() => {
+    if (success) {
+      try {
+        successSound.current.currentTime = 0;
+        successSound.current.volume = 0.6;
+        successSound.current.play();
+      } catch (e) {
+        console.warn("🔇 المتصفح منع تشغيل الصوت:", e);
+      }
+    }
+  }, [success]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // تحقق من كل الحقول يدويًا
     const newErrors = {};
     Object.entries(form).forEach(([id, value]) => {
       const error = validateField(id, value);
@@ -73,26 +82,31 @@ export default function ContactForm() {
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
-      // نحدد أول حقل فيه خطأ ونعمله اهتزاز
       const firstErrorField = Object.keys(newErrors)[0];
       setShakeTarget(firstErrorField);
 
-      // نرجعه null بعد شوية عشان يسمح بإعادة الحركة
-      setTimeout(() => setShakeTarget(null), 600);
-
+      setTimeout(() => {
+        const el = document.getElementById(firstErrorField);
+        el?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 300);
+      setTimeout(() => setShakeTarget(null), 800);
       return;
     }
 
-    // إذا كله تمام، نكمل
+    // ✅ شغل الصوت فورًا قبل أي انتظار
+
     setLoading(true);
+
     setTimeout(() => {
       setLoading(false);
       setSuccess(true);
       setForm({ name: "", phone: "", message: "" });
       setErrors({});
+
       setTimeout(() => {
         successRef.current?.scrollIntoView({ behavior: "smooth" });
       }, 200);
+
       setTimeout(() => setSuccess(false), 6000);
     }, 1500);
   };
@@ -103,7 +117,11 @@ export default function ContactForm() {
       className="max-w-3xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-6"
     >
       {success && (
-        <SuccessMessage text={t.contactSuccessMessage} refEl={successRef} />
+        <SuccessMessage
+          text={t.contactSuccessMessage}
+          refEl={successRef}
+          onClose={() => setSuccess(false)}
+        />
       )}
 
       <ContactField
@@ -115,6 +133,7 @@ export default function ContactForm() {
         onChange={handleChange}
         error={errors.name}
         shake={shakeTarget === "name"}
+        isValid={form.name.trim() !== "" && !errors.name}
       />
 
       <ContactField
@@ -126,6 +145,7 @@ export default function ContactForm() {
         onChange={handleChange}
         error={errors.phone}
         shake={shakeTarget === "phone"}
+        isValid={form.phone.trim() !== "" && !errors.phone}
       />
 
       <ContactField
@@ -138,33 +158,42 @@ export default function ContactForm() {
         error={errors.message}
         isTextArea
         shake={shakeTarget === "message"}
+        isValid={form.message.trim() !== "" && !errors.message}
       />
 
-      {/* زر الإرسال */}
       <div className="col-span-full flex justify-center mt-4">
         <button
           type="submit"
-          disabled={loading || success} // 🚫 يمنع الضغط المتكرر
-          className={`relative w-64 h-14 flex items-center justify-center font-semibold rounded-full shadow-lg transition-all duration-300
+          disabled={loading || success}
+          className={`relative group w-64 h-14 flex items-center justify-center gap-2 font-semibold rounded-full text-white transition-all duration-300 ease-in-out
     ${
-      loading || success
-        ? "bg-green-500 text-white"
-        : "bg-gradient-to-r from-blue-600 to-blue-400 text-white hover:scale-105"
+      success
+        ? "bg-green-500 shadow-md"
+        : loading
+        ? "bg-blue-300 shadow"
+        : "bg-gradient-to-br from-blue-600 via-blue-500 to-blue-400 shadow-md hover:shadow-xl hover:scale-105 active:scale-95"
     }
-    ${success ? "animate-pulse" : ""}
   `}
         >
           {loading ? (
-            <Loader2 className="animate-spin w-5 h-5" />
+            <>
+              <Loader2 className="animate-spin w-5 h-5" />
+              <span className="text-sm">{t.contactSendButton}</span>
+            </>
           ) : success ? (
-            <span className="flex items-center gap-2">
-              <span>✔</span> {t.contactSent}
+            <span className="flex items-center gap-2 text-base font-semibold">
+              <span className="text-xl">✔</span>
+              {t.contactSent}
             </span>
           ) : (
-            t.contactSendButton
+            <span className="flex items-center gap-2 text-base group-hover:translate-x-1 transition-all">
+              <span className="text-lg">✉️</span>
+              {t.contactSendButton}
+            </span>
           )}
         </button>
       </div>
+      <audio ref={successSound} src="/sounds/success.mp3" preload="auto" />
     </form>
   );
 }
