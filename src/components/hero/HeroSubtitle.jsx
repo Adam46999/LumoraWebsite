@@ -1,3 +1,4 @@
+// src/components/hero/HeroSubtitle.jsx
 import { useLanguage } from "../../context/LanguageContext";
 
 export default function HeroSubtitle() {
@@ -5,10 +6,11 @@ export default function HeroSubtitle() {
 
   return (
     <p
-      className="text-base sm:text-lg mb-10 sm:mb-12 max-w-2xl text-center px-2"
+      className="text-base sm:text-lg lg:text-xl mb-10 sm:mb-12 max-w-2xl text-center px-2 text-white animate-slide-up"
       style={{ textShadow: "0 2px 5px rgba(0,0,0,0.5)" }}
     >
-      {t.heroSubtitle}
+      {t.heroSubtitle ||
+        "نوفر لك خدمات تنظيف احترافية بجودة عالية وسرعة تنفيذ مثالية"}
     </p>
   );
 }
