@@ -1,5 +1,5 @@
 // src/components/contact/ContactField.jsx
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { User, Phone, MessageSquare } from "lucide-react";
 
 export default function ContactField({
@@ -17,13 +17,24 @@ export default function ContactField({
   assistiveText,
   maxChars = 500,
   isRTL = false,
-  refEl, // للتركيز من الخارج (Auto-advance)
+  refEl, // للتركيز من الخارج
+  autoGrow, // 👈 جديد: يُفعّل تمدد تلقائي للـ textarea
 }) {
   const [charCount, setCharCount] = useState(0);
+  const taRef = useRef(null);
 
   useEffect(() => {
     if (id === "message") setCharCount(value?.length || 0);
   }, [value, id]);
+
+  // Auto-grow
+  useEffect(() => {
+    if (!autoGrow || !isTextArea) return;
+    const el = taRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = Math.min(el.scrollHeight, 320) + "px"; // سقف معقول
+  }, [value, autoGrow, isTextArea]);
 
   const sidePad = isRTL ? "pr-14 text-right" : "pl-14 text-left";
   const iconPos = isRTL ? "right-4" : "left-4";
@@ -87,7 +98,10 @@ export default function ContactField({
         {isTextArea ? (
           <textarea
             id={id}
-            ref={refEl}
+            ref={(node) => {
+              taRef.current = node;
+              if (refEl) refEl.current = node;
+            }}
             value={value}
             onChange={onChange}
             onBlur={onBlur}
