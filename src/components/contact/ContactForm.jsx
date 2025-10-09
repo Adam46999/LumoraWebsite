@@ -1,199 +1,99 @@
-import { useState, useRef, useEffect } from "react";
-import { Loader2, CheckCircle2 } from "lucide-react";
-import { useLanguage } from "../../context/LanguageContext";
-import ContactField from "./ContactField";
+// src/components/contact/ContactForm.jsx
+import { useState } from "react";
+import { User, Phone, ChatText } from "phosphor-react";
+import MagicSendButton from "./MagicSendButton";
 
-export default function ContactForm() {
-  const { t } = useLanguage();
-
+export default function ContactForm({ onSend }) {
   const [form, setForm] = useState({ name: "", phone: "", message: "" });
-  const [errors, setErrors] = useState({});
-  const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const flashRef = useRef(null);
-
-  // ✅ حفظ تلقائي مؤقت للبيانات
-  useEffect(() => {
-    const saved = localStorage.getItem("contactForm");
-    if (saved) setForm(JSON.parse(saved));
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem("contactForm", JSON.stringify(form));
-  }, [form]);
-
-  // ✅ تحقق ذكي للهاتف
-  const validatePhone = (value) => {
-    const clean = value.replace(/\D/g, "");
-    return /^05\d{8}$/.test(clean) || /^9725\d{8}$/.test(clean);
-  };
-
-  const validateField = (id, value) => {
-    if (!value.trim()) return t.contactFillAllFields;
-    if (id === "phone" && !validatePhone(value)) return t.contactPhoneError;
-    return "";
-  };
-
-  const handleBlur = (e) => {
-    const { id, value } = e.target;
-    const error = validateField(id, value);
-    setErrors((prev) => ({ ...prev, [id]: error }));
-  };
+  const [sending, setSending] = useState(false);
 
   const handleChange = (e) => {
     const { id, value } = e.target;
     setForm((prev) => ({ ...prev, [id]: value }));
-    setErrors((prev) => ({ ...prev, [id]: "" }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const newErrors = {};
-    Object.entries(form).forEach(([id, value]) => {
-      const err = validateField(id, value);
-      if (err) newErrors[id] = err;
-    });
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
-    }
-
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      setSuccess(true);
-      localStorage.removeItem("contactForm");
-      setForm({ name: "", phone: "", message: "" });
-
-      // تأثير ضوء مؤقت بالفلاش
-      if (flashRef.current) {
-        flashRef.current.classList.add("animate-form-flash");
-        setTimeout(() => {
-          flashRef.current.classList.remove("animate-form-flash");
-        }, 1000);
-      }
-
-      setTimeout(() => setSuccess(false), 4000);
-    }, 1500);
+    if (!form.name || !form.phone || !form.message) return;
+    setSending(true);
+    await onSend(form);
+    setSending(false);
+    setForm({ name: "", phone: "", message: "" });
   };
+
+  const inputBase =
+    "w-full pl-12 pr-4 py-3 rounded-2xl border border-gray-200/60 bg-white/70 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 text-gray-800 placeholder-gray-400 transition-all duration-500 backdrop-blur-sm shadow-[inset_0_1px_2px_rgba(255,255,255,0.4)] focus:shadow-[0_0_12px_rgba(59,130,246,0.15)]";
 
   return (
-    <div
-      ref={flashRef}
-      className="relative isolate max-w-3xl mx-auto p-[2px] rounded-[2rem] bg-gradient-to-r from-blue-400/60 via-blue-200/50 to-blue-300/60 shadow-[0_12px_45px_rgba(59,130,246,0.15)] overflow-hidden"
+    <form
+      onSubmit={handleSubmit}
+      className="grid grid-cols-1 sm:grid-cols-2 gap-6 p-8 sm:p-10 animate-fade-up"
     >
-      {/* 🧊 خلفية متدرجة شفافة */}
-      <div className="absolute inset-0 bg-white/70 backdrop-blur-xl rounded-[2rem] -z-10"></div>
-
-      <form
-        onSubmit={handleSubmit}
-        className="relative grid grid-cols-1 sm:grid-cols-2 gap-6 p-10 sm:p-12"
-      >
-        {/* ✅ رسالة نجاح */}
-        {success && (
-          <div className="col-span-full flex items-center justify-center gap-3 bg-green-50 border border-green-200 text-green-700 py-3 px-6 rounded-2xl animate-fade-in">
-            <CheckCircle2 className="w-5 h-5" />
-            <span className="text-sm sm:text-base font-medium">
-              {t.contactSuccessMessage}
-            </span>
-          </div>
-        )}
-
-        {/* 🧍 الاسم */}
-        <ContactField
+      <div className="relative group animate-fade-slide">
+        <User
+          size={22}
+          className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-500/70"
+        />
+        <input
           id="name"
-          label={t.contactNameLabel}
-          placeholder={t.contactNamePlaceholder}
+          type="text"
+          placeholder="الاسم الكامل"
           value={form.name}
           onChange={handleChange}
-          onBlur={handleBlur}
-          error={errors.name}
-          isValid={form.name.trim() && !errors.name}
+          className={inputBase}
+          required
         />
+      </div>
 
-        {/* 📞 الهاتف */}
-        <ContactField
+      <div className="relative group animate-fade-slide delay-[100ms]">
+        <Phone
+          size={22}
+          className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-500/70"
+        />
+        <input
           id="phone"
-          label={t.contactPhoneLabel}
-          placeholder={t.contactPhonePlaceholder}
+          type="tel"
+          placeholder="رقم الهاتف"
           value={form.phone}
           onChange={handleChange}
-          onBlur={handleBlur}
-          error={errors.phone}
-          isValid={form.phone.trim() && !errors.phone}
+          className={inputBase}
+          required
         />
+      </div>
 
-        {/* 💬 الرسالة */}
-        <ContactField
+      <div className="relative sm:col-span-2 group animate-fade-slide delay-[200ms]">
+        <ChatText
+          size={22}
+          className="absolute left-4 top-4 text-blue-500/70"
+        />
+        <textarea
           id="message"
-          label={t.contactMessageLabel}
-          placeholder={t.contactMessagePlaceholder}
+          placeholder="اكتب رسالتك هنا..."
           value={form.message}
           onChange={handleChange}
-          onBlur={handleBlur}
-          error={errors.message}
-          isTextArea
-          isValid={form.message.trim() && !errors.message}
+          rows="4"
+          maxLength="500"
+          className={`${inputBase} resize-none`}
+          required
         />
+        <p className="text-right text-gray-400 text-xs mt-1">
+          {form.message.length} / 500
+        </p>
+      </div>
 
-        {/* ✉️ زر الإرسال */}
-        <div className="col-span-full flex justify-center mt-4">
-          <button
-            type="submit"
-            disabled={loading || success}
-            className={`relative w-64 h-14 rounded-full font-semibold text-white text-base tracking-wide flex items-center justify-center gap-2 shadow-lg transition-all duration-500 overflow-hidden
-            ${
-              loading
-                ? "bg-blue-300 cursor-wait"
-                : success
-                ? "bg-green-500"
-                : "bg-gradient-to-r from-blue-600 via-blue-500 to-blue-400 hover:scale-[1.04] active:scale-[0.97]"
-            }`}
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 blur-md transition-opacity duration-500"></div>
+      <div className="sm:col-span-2 flex justify-center mt-4">
+        <MagicSendButton disabled={sending} />
+      </div>
 
-            {loading ? (
-              <>
-                <Loader2 className="animate-spin w-5 h-5" />
-                <span>{t.contactSendButton}</span>
-              </>
-            ) : success ? (
-              <>
-                <CheckCircle2 className="w-5 h-5" />
-                <span>{t.contactSent}</span>
-              </>
-            ) : (
-              <>
-                <span className="text-lg">✉️</span>
-                <span>{t.contactSendButton}</span>
-              </>
-            )}
-          </button>
-        </div>
-      </form>
-
-      {/* ✨ أنيميشنات */}
       <style>
         {`
-        @keyframes form-flash {
-          0% { box-shadow: 0 0 0 rgba(255,255,255,0); }
-          50% { box-shadow: 0 0 50px rgba(255,255,255,0.6); }
-          100% { box-shadow: 0 0 0 rgba(255,255,255,0); }
-        }
-        .animate-form-flash {
-          animation: form-flash 0.9s ease-in-out;
-        }
-
-        @keyframes fade-in {
-          0% { opacity: 0; transform: translateY(-10px); }
+        @keyframes fade-up {
+          0% { opacity: 0; transform: translateY(15px); }
           100% { opacity: 1; transform: translateY(0); }
         }
-        .animate-fade-in {
-          animation: fade-in 0.6s ease-out;
-        }
+        .animate-fade-up { animation: fade-up 0.8s ease-out both; }
         `}
       </style>
-    </div>
+    </form>
   );
 }
