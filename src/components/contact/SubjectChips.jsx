@@ -1,4 +1,3 @@
-// src/components/contact/SubjectChips.jsx
 import {
   Tag,
   Info,
@@ -42,7 +41,7 @@ export default function SubjectChips({
     }
   }, [value]);
 
-  // تنقّل الأسهم + scroll إلى الشريحة المختارة
+  // تنقّل الأسهم
   useEffect(() => {
     const el = scrollerRef.current;
     if (!el) return;
@@ -64,11 +63,6 @@ export default function SubjectChips({
       const next = (i + dir + chips.length) % chips.length;
       chips[next].focus();
       onChange({ target: { id, value: chips[next].dataset.value } });
-      chips[next].scrollIntoView({
-        inline: "center",
-        block: "nearest",
-        behavior: "smooth",
-      });
     };
     el.addEventListener("keydown", onKey);
     return () => el.removeEventListener("keydown", onKey);
@@ -83,31 +77,18 @@ export default function SubjectChips({
       <div
         className={`relative w-full rounded-2xl border ${
           error ? "border-red-300" : "border-gray-200"
-        } bg-white/70 backdrop-blur-md md:backdrop-blur-lg ${sidePad}`}
+        } bg-white ${sidePad}`}
       >
         <Tag
-          className={`absolute ${iconPos} top-1/2 -translate-y-1/2 text-blue-500/70 bg-white/80 p-2 rounded-xl shadow-sm`}
+          className={`absolute ${iconPos} top-1/2 -translate-y-1/2 text-blue-500/70 bg-white p-2 rounded-xl shadow-sm`}
           aria-hidden="true"
         />
 
-        {/* ⚠️ سر الاستجابة على الموبايل:
-            - جعل اتجاه السكولر LTR (تمرير مريح على iOS)
-            - ترتيب العناصر RTL بصريًا بـ flex-row-reverse
-            - تمرير أفقي + snap + إخفاء شريط التمرير
-        */}
+        {/* شبكة 2×2 على الموبايل */}
         <div
           ref={scrollerRef}
           role="radiogroup"
-          style={{ direction: "ltr" }} // 👈 لتصليح iOS مع RTL
-          className="
-            w-full min-w-0
-            overflow-x-auto md:overflow-visible
-            whitespace-nowrap md:whitespace-normal
-            snap-x snap-mandatory md:snap-none
-            -mx-3 md:mx-0 px-3 md:px-0 py-2.5
-            flex flex-row-reverse md:flex-row md:grid gap-2 md:grid-cols-4
-            scrollbar-none touch-pan-x overscroll-x-contain
-          "
+          className="w-full min-w-0 px-3 sm:px-0 py-2.5 grid grid-cols-2 gap-2 sm:grid-cols-4"
         >
           {options.map(({ value: val, label: text, icon: Icon }) => {
             const active = value === val;
@@ -119,15 +100,14 @@ export default function SubjectChips({
                 aria-checked={active ? "true" : "false"}
                 data-value={val}
                 onClick={() => onChange({ target: { id, value: val } })}
-                // نعيد اتجاه النص داخل الزر إلى RTL حتى مع LTR للسكولر
                 dir={isRTL ? "rtl" : "ltr"}
                 className={`
-                  inline-flex items-center gap-1.5 min-w-[92px]
-                  px-3.5 h-11 md:h-9 rounded-xl border text-[clamp(12px,1.4vw,14px)] transition-all snap-center
+                  inline-flex items-center justify-center gap-1.5 min-h-9
+                  px-3.5 h-11 sm:h-9 rounded-xl border text-[clamp(12px,1.4vw,14px)] transition-all
                   ${
                     active
                       ? "bg-gradient-to-r from-blue-600 via-blue-500 to-blue-500 text-white border-blue-600 ring-1 ring-white/20 shadow-[0_6px_16px_rgba(59,130,246,0.24)]"
-                      : "bg-white/70 md:bg-white/60 text-gray-700 border-gray-200 hover:border-blue-300 hover:bg-white"
+                      : "bg-white text-gray-700 border-gray-200 hover:border-blue-300"
                   }
                   focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-300 focus-visible:ring-offset-2 active:scale-[.98]
                 `}
@@ -148,17 +128,12 @@ export default function SubjectChips({
       </div>
 
       <div
-        className={`text-xs md:text-[12px] ${
+        className={`text-xs sm:text-[12px] ${
           error ? "text-red-600" : "text-gray-600"
         } mt-1.5`}
       >
         {error ? error : helper}
       </div>
-
-      <style>{`
-        .scrollbar-none::-webkit-scrollbar{display:none}
-        @media (prefers-reduced-motion: reduce){ .snap-mandatory{scroll-behavior:auto} }
-      `}</style>
     </div>
   );
 }

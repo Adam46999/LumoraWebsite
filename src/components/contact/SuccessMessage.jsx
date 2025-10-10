@@ -1,4 +1,3 @@
-// src/components/contact/SuccessMessage.jsx
 import { CheckCircle2 } from "lucide-react";
 
 export default function SuccessMessage({ text, refEl, onClose }) {
@@ -15,7 +14,6 @@ export default function SuccessMessage({ text, refEl, onClose }) {
           {text}
         </span>
       </div>
-
       {onClose && (
         <button
           onClick={onClose}

@@ -1,4 +1,3 @@
-// src/components/contact/ContactForm.jsx
 import { useEffect, useMemo, useRef, useState } from "react";
 import MagicSendButton from "./MagicSendButton";
 import ContactField from "./ContactField";
@@ -32,7 +31,7 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
   const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors] = useState({});
   const [okMsg, setOkMsg] = useState("");
-  const [kbOpen, setKbOpen] = useState(false); // للكبيورد على الموبايل
+  const [kbOpen, setKbOpen] = useState(false);
   const firstErrorRef = useRef(null);
   const messageRef = useRef(null);
 
@@ -140,7 +139,7 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
     return e;
   };
 
-  // تحديث فوري للأخطاء أثناء الكتابة
+  // تحديث الأخطاء أثناء الكتابة
   const handleChange = (e) => {
     const { id, value } = e.target;
     const next = id === "phone" ? formatILPhone(value) : value;
@@ -202,7 +201,6 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
     }
   };
 
-  // واتساب (اختياري)
   const waText = encodeURIComponent(
     `موضوع: ${form.subject}\nالاسم: ${form.name}\nالهاتف: ${form.phone}\nالرسالة:\n${form.message}`
   );
@@ -212,14 +210,14 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 p-4 sm:p-6 md:p-8"
+      className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-5 p-4 sm:p-6"
     >
       {/* طمأنة قصيرة */}
-      <div className="md:col-span-2 text-gray-600 text-[clamp(12px,1.3vw,14px)] -mb-1">
+      <div className="md:col-span-2 text-gray-600 text-xs sm:text-[clamp(12px,1.3vw,14px)] -mb-1">
         نردّ عادة خلال <strong>ساعتين</strong> (أوقات العمل).
       </div>
 
-      {/* أخطاء لطيفة */}
+      {/* أخطاء عامة */}
       {submitted &&
         ["subject", "name", "phone", "message"].some((k) => errors[k]) && (
           <div
@@ -316,8 +314,8 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
             className={`h-12 px-5 rounded-full border flex items-center justify-center gap-2 text-sm font-semibold transition
               ${
                 canWa
-                  ? "bg-white/80 text-green-700 border-green-300 hover:bg-white"
-                  : "pointer-events-none opacity-50 bg-white/60 text-gray-400 border-gray-200"
+                  ? "bg-white text-green-700 border-green-300 hover:bg-green-50"
+                  : "pointer-events-none opacity-50 bg-white text-gray-400 border-gray-200"
               }`}
             aria-disabled={!canWa}
           >
@@ -332,28 +330,29 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
           />
         </div>
 
-        {/* Mobile sticky bar */}
+        {/* Mobile sticky bar مبسّط */}
         <div
           className={`md:hidden fixed left-0 right-0 bottom-0 z-40
             px-4 ${
-              kbOpen ? "pb-2" : "pb-[max(12px,env(safe-area-inset-bottom))]"
+              kbOpen ? "pb-2" : "pb-[max(10px,env(safe-area-inset-bottom))]"
             } pt-2
-            bg-white/90 backdrop-blur-md border-t border-gray-200
-            flex items-center justify-between gap-3 transition-all`}
+            bg-white border-t border-gray-200
+            flex items-center gap-2`}
         >
           <a
             href={waHref}
             target="_blank"
             rel="noopener noreferrer"
-            className={`flex-1 h-11 rounded-full border flex items-center justify-center text-sm font-semibold
+            className={`w-12 h-11 rounded-full border flex items-center justify-center text-sm font-semibold
               ${
                 canWa
-                  ? "bg-white text-green-700 border-green-300"
-                  : "pointer-events-none opacity-50 bg-white text-gray-400 border-gray-200"
+                  ? "text-green-700 border-green-300"
+                  : "pointer-events-none opacity-50 text-gray-400 border-gray-200"
               }`}
             aria-disabled={!canWa}
+            aria-label="واتساب"
           >
-            واتساب
+            WA
           </a>
           <div className="flex-1">
             <MagicSendButton
@@ -366,7 +365,7 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
           </div>
         </div>
 
-        {/* رسالة نجاح */}
+        {/* رسالة نجاح داخل البطاقة */}
         {okMsg && (
           <div className="mt-3 text-center text-green-700 bg-green-50 border border-green-200 rounded-xl py-2 text-sm">
             {okMsg}
@@ -375,7 +374,7 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
       </div>
 
       {/* سياسة خصوصية + هامش للستكي بار */}
-      <div className="md:col-span-2 flex items-center justify-between text-[12px] text-gray-600 mt-1 mb-[72px] md:mb-0">
+      <div className="md:col-span-2 mb-[90px] md:mb-0 flex items-center justify-between text-[11px] text-gray-600">
         <a href="/privacy" className="underline hover:text-gray-700">
           بيان الخصوصية
         </a>

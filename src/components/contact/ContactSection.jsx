@@ -1,4 +1,3 @@
-// src/components/contact/ContactSection.jsx
 import { useState } from "react";
 import { useLanguage } from "../../context/LanguageContext";
 import ContactHeader from "./ContactHeader";
@@ -10,7 +9,7 @@ export default function ContactSection() {
   const [toast, setToast] = useState({ type: "", message: "" });
 
   const handleSend = async (formData) => {
-    // هنا تقدر تربط EmailJS / API خاص بك
+    // مكان الربط مع EmailJS / API
     await new Promise((res) => setTimeout(res, 1200));
     setToast({
       type: "success",
@@ -23,38 +22,41 @@ export default function ContactSection() {
     <section
       id="contact"
       dir={lang === "ar" ? "rtl" : "ltr"}
-      className="relative overflow-hidden py-20 sm:py-24 px-4 sm:px-6 bg-gradient-to-b from-[#f7faff] via-[#edf3ff] to-[#e5eeff] text-gray-800"
+      className="relative overflow-hidden bg-[#F7FAFF] px-4 sm:px-6 py-12 sm:py-20 text-gray-800"
     >
-      {/* خلفيات خفيفة */}
-      <div className="absolute inset-0 -z-10">
-        <div className="absolute w-[650px] h-[650px] bg-blue-200/40 rounded-full blur-3xl top-[-200px] left-[-220px]" />
-        <div className="absolute w-[400px] h-[400px] bg-blue-100/40 rounded-full blur-3xl bottom-[-150px] right-[-140px]" />
+      {/* خلفيات زخرفية — نخفيها على الموبايل لتقليل الضوضاء البصرية */}
+      <div className="absolute inset-0 -z-10 hidden sm:block">
+        <div className="absolute w-[650px] h-[650px] bg-blue-200/40 rounded-full blur-3xl -top-52 -left-56" />
+        <div className="absolute w-[400px] h-[400px] bg-blue-100/40 rounded-full blur-3xl -bottom-40 -right-36" />
       </div>
 
-      <ContactHeader />
-
-      {/* Toast (aria-live) */}
+      {/* Toast آمن بالنسبة لشريط متصفح iOS */}
       <div
-        className="fixed top-5 left-1/2 -translate-x-1/2 z-50"
+        className="fixed top-[max(12px,env(safe-area-inset-top))] left-1/2 -translate-x-1/2 z-50"
         role="status"
         aria-live="polite"
       >
         {toast.message && (
           <div
-            className={`px-6 py-3 rounded-xl shadow-lg text-white font-medium backdrop-blur-md transition-all
-            ${toast.type === "success" ? "bg-green-500/90" : "bg-red-500/90"}`}
+            className={`px-4 py-2 rounded-lg shadow-lg text-white text-sm font-semibold
+            ${toast.type === "success" ? "bg-green-600/95" : "bg-red-600/95"}`}
           >
             {toast.message}
           </div>
         )}
       </div>
 
-      {/* البطاقة */}
-      <div className="max-w-3xl mx-auto mt-12 backdrop-blur-2xl bg-white/60 border border-white/70 rounded-[2rem] shadow-[0_8px_40px_rgba(59,130,246,0.08)] hover:shadow-[0_12px_45px_rgba(59,130,246,0.12)] transition-all duration-700 hover:-translate-y-1.5">
+      <ContactHeader />
+
+      {/* البطاقة أخف على الموبايل */}
+      <div
+        className="max-w-3xl mx-auto mt-8 sm:mt-12 bg-white border border-gray-100 rounded-2xl sm:rounded-[2rem]
+                      shadow-[0_6px_24px_rgba(59,130,246,0.06)] sm:shadow-[0_8px_40px_rgba(59,130,246,0.08)]
+                      transition-all"
+      >
         <ContactForm onSend={handleSend} t={t} isRTL={lang === "ar"} />
       </div>
 
-      {/* الروابط */}
       <ContactLinks />
     </section>
   );

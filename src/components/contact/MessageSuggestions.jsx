@@ -1,12 +1,10 @@
-// src/components/contact/MessageSuggestions.jsx
 export default function MessageSuggestions({
   subject = "inquiry",
-  onPick, // (text) => void
+  onPick,
   isRTL = true,
 }) {
   const base =
-    "px-3 h-8 rounded-xl border text-xs transition bg-white/70 hover:bg-white border-gray-200 text-gray-700";
-
+    "px-3 h-8 rounded-xl border text-xs transition bg-white hover:bg-gray-50 border-gray-200 text-gray-700";
   const data = {
     inquiry: [
       "أودّ معرفة تفاصيل الخدمة.",
@@ -28,7 +26,6 @@ export default function MessageSuggestions({
       "تواصلوا معي على الرقم بخصوص ____.",
     ],
   };
-
   const list = data[subject] ?? data.inquiry;
 
   return (

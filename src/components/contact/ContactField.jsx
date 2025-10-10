@@ -1,4 +1,3 @@
-// src/components/contact/ContactField.jsx
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { User, Phone, MessageSquare } from "lucide-react";
 
@@ -17,8 +16,8 @@ export default function ContactField({
   assistiveText,
   maxChars = 500,
   isRTL = false,
-  refEl, // لتمرير ref خارجي (تركيز/أوتو-جرو)
-  autoGrow, // للـtextarea
+  refEl,
+  autoGrow,
 }) {
   const [charCount, setCharCount] = useState(0);
   const taRef = useRef(null);
@@ -37,26 +36,26 @@ export default function ContactField({
   }, [value, autoGrow, isTextArea]);
 
   const sidePad = isRTL
-    ? "pr-12 md:pr-14 text-right"
-    : "pl-12 md:pl-14 text-left";
-  const iconPos = isRTL ? "right-3.5 md:right-4" : "left-3.5 md:left-4";
+    ? "pr-12 sm:pr-14 text-right"
+    : "pl-12 sm:pl-14 text-left";
+  const iconPos = isRTL ? "right-3.5 sm:right-4" : "left-3.5 sm:left-4";
 
   const inputBase = `
-    w-full px-3 md:px-4 py-[12px] md:py-3 ${sidePad}
-    rounded-2xl border transition-all duration-300 focus:outline-none
-    bg-white/70 backdrop-blur-md md:backdrop-blur-lg
-    shadow-[inset_0_1px_1px_rgba(255,255,255,0.4)]
-    text-[16px] md:text-[clamp(14px,2.8vw,16px)] text-gray-800 placeholder-gray-400
-  `; // 16px يمنع تكبير iOS تلقائيًا
+    w-full px-3 py-2.5 sm:px-4 sm:py-3 ${sidePad}
+    rounded-xl sm:rounded-2xl border transition-all duration-300 focus:outline-none
+    bg-white
+    text-[15px] sm:text-[clamp(14px,2.8vw,16px)] text-gray-800 placeholder-gray-400
+  `;
 
   const borderColor = error
-    ? "border-red-300 ring-2 ring-red-200"
+    ? "border-red-400 ring-2 ring-red-200"
     : isValid
-    ? "border-green-200 ring-1 ring-green-200"
-    : "border-gray-200";
+    ? "border-green-300 ring-1 ring-green-200"
+    : "border-gray-300";
 
   const focusRing =
     "focus:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-300 focus-visible:ring-offset-2";
+
   const inputClass = `${inputBase} ${borderColor} ${focusRing} ${
     shake ? "animate-shake" : ""
   }`;
@@ -68,7 +67,8 @@ export default function ContactField({
     return ids.join(" ") || undefined;
   }, [assistiveText, error, id]);
 
-  const iconClass = `absolute ${iconPos} top-1/2 -translate-y-1/2 text-blue-500/70 bg-white/80 p-2 rounded-xl shadow-sm`;
+  const iconClass = `absolute ${iconPos} top-1/2 -translate-y-1/2 text-blue-500/70 bg-white p-2 rounded-xl shadow-sm`;
+
   const renderIcon = () => {
     const common = { className: iconClass, "aria-hidden": true };
     if (id === "name") return <User {...common} />;
@@ -87,10 +87,13 @@ export default function ContactField({
   return (
     <div
       className={`${
-        id === "message" ? "md:col-span-2" : ""
+        id === "message" ? "col-span-full" : ""
       } flex flex-col gap-1`}
     >
-      <label className="mb-1 text-[clamp(12px,1.3vw,14px)] text-gray-700 font-semibold tracking-wide">
+      <label
+        htmlFor={id}
+        className="mb-1 text-[clamp(12px,1.3vw,14px)] text-gray-700 font-semibold tracking-wide"
+      >
         {label} {required && <span className="text-red-500">*</span>}
       </label>
 
@@ -137,7 +140,7 @@ export default function ContactField({
       {assistiveText && !error && (
         <span
           id={`${id}-desc`}
-          className="text-[12px] md:text-xs text-gray-600 mt-1"
+          className="text-[12px] sm:text-xs text-gray-600 mt-1"
         >
           {assistiveText}
         </span>
@@ -146,7 +149,7 @@ export default function ContactField({
       {error && (
         <span
           id={`${id}-error`}
-          className="text-red-600 text-[12px] md:text-xs mt-1 font-medium"
+          className="text-red-600 text-[12px] sm:text-xs mt-1 font-medium"
         >
           {error}
         </span>
@@ -154,9 +157,7 @@ export default function ContactField({
 
       {id === "message" && (
         <span
-          className={`text-[12px] md:text-xs mt-1 ${
-            isRTL ? "text-left" : "text-right"
-          } ${counterColor}`}
+          className={`text-[12px] sm:text-xs mt-1 self-start ${counterColor}`}
         >
           {charCount} / {maxChars}
         </span>

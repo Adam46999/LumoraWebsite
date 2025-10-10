@@ -1,4 +1,3 @@
-RememberMeSwitch.jsx; // src/components/contact/RememberMeSwitch.jsx
 export default function RememberMeSwitch({ checked, onChange, isRTL = true }) {
   return (
     <label className="inline-flex items-center gap-2 text-xs text-gray-600 cursor-pointer select-none">
