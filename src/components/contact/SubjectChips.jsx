@@ -12,7 +12,7 @@ export default function SubjectChips({
   id = "subject",
   label = "موضوع الرسالة",
   value,
-  onChange, // expect: onChange({ target: { id, value } })
+  onChange, // onChange({ target: { id, value } })
   options = [
     { value: "inquiry", label: "استفسار", icon: Info },
     { value: "booking", label: "حجز", icon: CalendarCheck },
@@ -42,7 +42,7 @@ export default function SubjectChips({
     }
   }, [value]);
 
-  // تنقل بالكيبورد + scroll إلى العنصر المختار
+  // تنقّل الأسهم + scroll إلى الشريحة المختارة
   useEffect(() => {
     const el = scrollerRef.current;
     if (!el) return;
@@ -66,8 +66,8 @@ export default function SubjectChips({
       onChange({ target: { id, value: chips[next].dataset.value } });
       chips[next].scrollIntoView({
         inline: "center",
-        behavior: "smooth",
         block: "nearest",
+        behavior: "smooth",
       });
     };
     el.addEventListener("keydown", onKey);
@@ -81,7 +81,7 @@ export default function SubjectChips({
       </label>
 
       <div
-        className={`relative rounded-2xl border ${
+        className={`relative w-full rounded-2xl border ${
           error ? "border-red-300" : "border-gray-200"
         } bg-white/70 backdrop-blur-md md:backdrop-blur-lg ${sidePad}`}
       >
@@ -90,16 +90,23 @@ export default function SubjectChips({
           aria-hidden="true"
         />
 
-        {/* موبايل: تمرير أفقي + snap | دِسكتوب: grid */}
+        {/* ⚠️ سر الاستجابة على الموبايل:
+            - جعل اتجاه السكولر LTR (تمرير مريح على iOS)
+            - ترتيب العناصر RTL بصريًا بـ flex-row-reverse
+            - تمرير أفقي + snap + إخفاء شريط التمرير
+        */}
         <div
           ref={scrollerRef}
           role="radiogroup"
+          style={{ direction: "ltr" }} // 👈 لتصليح iOS مع RTL
           className="
-            overflow-x-auto md:overflow-visible whitespace-nowrap md:whitespace-normal
+            w-full min-w-0
+            overflow-x-auto md:overflow-visible
+            whitespace-nowrap md:whitespace-normal
             snap-x snap-mandatory md:snap-none
             -mx-3 md:mx-0 px-3 md:px-0 py-2.5
-            flex md:grid gap-2 md:grid-cols-4
-            scrollbar-none touch-pan-x
+            flex flex-row-reverse md:flex-row md:grid gap-2 md:grid-cols-4
+            scrollbar-none touch-pan-x overscroll-x-contain
           "
         >
           {options.map(({ value: val, label: text, icon: Icon }) => {
@@ -112,8 +119,10 @@ export default function SubjectChips({
                 aria-checked={active ? "true" : "false"}
                 data-value={val}
                 onClick={() => onChange({ target: { id, value: val } })}
+                // نعيد اتجاه النص داخل الزر إلى RTL حتى مع LTR للسكولر
+                dir={isRTL ? "rtl" : "ltr"}
                 className={`
-                  inline-flex items-center gap-1.5 min-w-[88px]
+                  inline-flex items-center gap-1.5 min-w-[92px]
                   px-3.5 h-11 md:h-9 rounded-xl border text-[clamp(12px,1.4vw,14px)] transition-all snap-center
                   ${
                     active
