@@ -17,8 +17,8 @@ export default function ContactField({
   assistiveText,
   maxChars = 500,
   isRTL = false,
-  refEl, // للتركيز من الخارج
-  autoGrow, // 👈 جديد: يُفعّل تمدد تلقائي للـ textarea
+  refEl,
+  autoGrow,
 }) {
   const [charCount, setCharCount] = useState(0);
   const taRef = useRef(null);
@@ -27,21 +27,26 @@ export default function ContactField({
     if (id === "message") setCharCount(value?.length || 0);
   }, [value, id]);
 
-  // Auto-grow
   useEffect(() => {
     if (!autoGrow || !isTextArea) return;
     const el = taRef.current;
     if (!el) return;
     el.style.height = "auto";
-    el.style.height = Math.min(el.scrollHeight, 320) + "px"; // سقف معقول
+    el.style.height = Math.min(el.scrollHeight, 360) + "px";
   }, [value, autoGrow, isTextArea]);
 
-  const sidePad = isRTL ? "pr-14 text-right" : "pl-14 text-left";
-  const iconPos = isRTL ? "right-4" : "left-4";
+  const sidePad = isRTL
+    ? "pr-12 md:pr-14 text-right"
+    : "pl-12 md:pl-14 text-left";
+  const iconPos = isRTL ? "right-3.5 md:right-4" : "left-3.5 md:left-4";
 
-  const inputBase = `w-full p-3 ${sidePad} rounded-2xl border transition-all duration-300 focus:outline-none 
-     bg-white/70 backdrop-blur-lg shadow-[inset_0_1px_1px_rgba(255,255,255,0.4)]
-     text-gray-800 placeholder-gray-400 focus:shadow-[0_0_12px_rgba(59,130,246,0.15)]`;
+  const inputBase = `
+    w-full px-3 md:px-4 py-[12px] md:py-3 ${sidePad}
+    rounded-2xl border transition-all duration-300 focus:outline-none
+    bg-white/70 backdrop-blur-md md:backdrop-blur-lg
+    shadow-[inset_0_1px_1px_rgba(255,255,255,0.4)]
+    text-[clamp(14px,2.8vw,16px)] text-gray-800 placeholder-gray-400
+  `;
 
   const borderColor = error
     ? "border-red-300 ring-2 ring-red-200"
@@ -63,7 +68,8 @@ export default function ContactField({
     return ids.join(" ") || undefined;
   }, [assistiveText, error, id]);
 
-  const iconClass = `absolute ${iconPos} top-1/2 -translate-y-1/2 text-blue-500/70 bg-white/70 p-2 rounded-xl shadow-sm`;
+  const iconClass = `absolute ${iconPos} top-1/2 -translate-y-1/2
+    text-blue-500/70 bg-white/80 p-2 rounded-xl shadow-sm`;
 
   const renderIcon = () => {
     const common = { className: iconClass, "aria-hidden": true };
@@ -88,7 +94,7 @@ export default function ContactField({
     >
       <label
         htmlFor={id}
-        className="mb-1 text-sm text-gray-700 font-semibold tracking-wide"
+        className="mb-1 text-[clamp(12px,1.3vw,14px)] text-gray-700 font-semibold tracking-wide"
       >
         {label} {required && <span className="text-red-500">*</span>}
       </label>
@@ -117,6 +123,10 @@ export default function ContactField({
           <input
             id={id}
             type={id === "phone" ? "tel" : "text"}
+            inputMode={id === "phone" ? "tel" : "text"}
+            autoComplete={
+              id === "name" ? "name" : id === "phone" ? "tel" : "off"
+            }
             value={value}
             onChange={onChange}
             onBlur={onBlur}
@@ -125,16 +135,15 @@ export default function ContactField({
             aria-describedby={describedIds}
             className={inputClass}
             required={required}
-            inputMode={id === "phone" ? "tel" : "text"}
-            autoComplete={
-              id === "name" ? "name" : id === "phone" ? "tel" : "off"
-            }
           />
         )}
       </div>
 
       {assistiveText && !error && (
-        <span id={`${id}-desc`} className="text-gray-600 text-xs mt-1">
+        <span
+          id={`${id}-desc`}
+          className="text-[12px] md:text-xs text-gray-600 mt-1"
+        >
           {assistiveText}
         </span>
       )}
@@ -142,7 +151,7 @@ export default function ContactField({
       {error && (
         <span
           id={`${id}-error`}
-          className="text-red-600 text-xs mt-1 font-medium"
+          className="text-red-600 text-[12px] md:text-xs mt-1 font-medium"
         >
           {error}
         </span>
@@ -150,7 +159,7 @@ export default function ContactField({
 
       {id === "message" && (
         <span
-          className={`text-xs mt-1 ${
+          className={`text-[12px] md:text-xs mt-1 ${
             isRTL ? "text-left" : "text-right"
           } ${counterColor}`}
         >
@@ -161,6 +170,9 @@ export default function ContactField({
       <style>{`
         @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
         .animate-shake{animation:shake .3s ease-in-out}
+        @media (prefers-reduced-motion: reduce){
+          .animate-shake{animation:none}
+        }
       `}</style>
     </div>
   );
