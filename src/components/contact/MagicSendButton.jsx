@@ -14,52 +14,31 @@ export default function MagicSendButton({
     <button
       type="submit"
       disabled={disabled || isLoading}
-      className={`group relative w-full sm:w-56 h-12 sm:h-14 rounded-full overflow-hidden flex items-center justify-center gap-2 font-semibold text-base sm:text-lg transition-all duration-500 select-none
+      className={`w-full sm:w-56 h-11 sm:h-12 rounded-full flex items-center justify-center gap-2 font-semibold text-base
       ${
-        isSuccess
-          ? "bg-green-500 text-white shadow-[0_6px_25px_rgba(34,197,94,0.4)]"
-          : "bg-gradient-to-r from-blue-600 via-blue-500 to-blue-400 text-white shadow-[0_6px_25px_rgba(59,130,246,0.35)] hover:shadow-[0_8px_30px_rgba(59,130,246,0.45)]"
-      } ${
-        disabled ? "opacity-60 cursor-not-allowed" : "active:scale-[0.97]"
-      } focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-300`}
-      style={{
-        WebkitBackdropFilter: "blur(10px)",
-        backdropFilter: "blur(10px)",
-      }}
+        disabled
+          ? "bg-gray-200 text-gray-500"
+          : "bg-gradient-to-r from-blue-600 via-blue-500 to-blue-500 hover:from-blue-700 hover:via-blue-600 hover:to-blue-600 text-white shadow-[0_8px_24px_rgba(59,130,246,.18)]"
+      }
+      transition disabled:cursor-not-allowed`}
       aria-live="polite"
     >
-      <div className="absolute inset-0 bg-gradient-to-r from-blue-400 via-blue-300 to-blue-500 opacity-0 group-hover:opacity-20 blur-2xl transition duration-700" />
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shine opacity-70 blur-[2px]" />
-
       {isLoading ? (
         <>
-          <Spinner size={22} className="animate-spin" />
+          <Spinner size={18} className="animate-spin" />
           <span>{labelLoading}</span>
         </>
       ) : isSuccess ? (
         <>
-          <CheckCircle size={24} weight="fill" />
+          <CheckCircle size={20} weight="fill" />
           <span>{labelSuccess}</span>
         </>
       ) : (
         <>
-          <PaperPlaneTilt
-            size={22}
-            weight="fill"
-            className="transform transition-transform duration-300 group-hover:-translate-y-[2px]"
-          />
+          <PaperPlaneTilt size={18} weight="fill" />
           <span>{labelIdle}</span>
         </>
       )}
-
-      <div className="absolute inset-0 rounded-full border border-white/30 shadow-[inset_0_1px_4px_rgba(255,255,255,0.3)] pointer-events-none" />
-
-      <style>{`
-        @keyframes shine { 0%{background-position:-200% center} 100%{background-position:200% center} }
-        .animate-shine { background-size:200% auto; animation: shine 3s linear infinite; }
-        @media (max-width:640px){ .animate-shine{ animation-duration:4s; opacity:.55 } }
-        @media (prefers-reduced-motion: reduce){ .animate-shine{ animation:none } }
-      `}</style>
     </button>
   );
 }

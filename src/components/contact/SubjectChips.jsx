@@ -5,13 +5,13 @@ import {
   AlertTriangle,
   MoreHorizontal,
 } from "lucide-react";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useRef } from "react";
 
 export default function SubjectChips({
   id = "subject",
-  label = "موضوع الرسالة",
+  label = "موضوع",
   value,
-  onChange, // onChange({ target: { id, value } })
+  onChange,
   options = [
     { value: "inquiry", label: "استفسار", icon: Info },
     { value: "booking", label: "حجز", icon: CalendarCheck },
@@ -22,28 +22,13 @@ export default function SubjectChips({
   required = false,
   isRTL = true,
 }) {
-  const scrollerRef = useRef(null);
+  const rootRef = useRef(null);
   const sidePad = isRTL ? "pr-12 text-right" : "pl-12 text-left";
-  const iconPos = isRTL ? "right-3.5" : "left-3.5";
+  const iconPos = isRTL ? "right-2.5" : "left-2.5";
 
-  const helper = useMemo(() => {
-    switch (value) {
-      case "inquiry":
-        return "سؤال عام أو طلب معلومات.";
-      case "booking":
-        return "حجز موعد/خدمة.";
-      case "complaint":
-        return "نعتذر مسبقًا—سنحلّها سريعًا.";
-      case "other":
-        return "اختر إن لم تجد ما يناسبك.";
-      default:
-        return "اختر أقرب موضوع.";
-    }
-  }, [value]);
-
-  // تنقّل الأسهم
+  // keyboard arrows
   useEffect(() => {
-    const el = scrollerRef.current;
+    const el = rootRef.current;
     if (!el) return;
     const onKey = (e) => {
       const chips = Array.from(el.querySelectorAll('[role="radio"]'));
@@ -61,34 +46,34 @@ export default function SubjectChips({
       if (!dir) return;
       e.preventDefault();
       const next = (i + dir + chips.length) % chips.length;
-      chips[next].focus();
       onChange({ target: { id, value: chips[next].dataset.value } });
+      chips[next].focus();
     };
     el.addEventListener("keydown", onKey);
     return () => el.removeEventListener("keydown", onKey);
   }, [id, onChange]);
 
   return (
-    <div className="md:col-span-2 flex flex-col gap-2">
-      <label className="text-[clamp(12px,1.3vw,14px)] text-gray-700 font-semibold tracking-wide">
-        {label} {required && <span className="text-red-500">*</span>}
+    <div className="md:col-span-2 flex flex-col gap-1.5">
+      <label className="text-sm font-semibold text-gray-800">
+        {label} {required && <span className="text-rose-500">*</span>}
       </label>
 
       <div
-        className={`relative w-full rounded-2xl border ${
-          error ? "border-red-300" : "border-gray-200"
+        className={`relative w-full rounded-xl border ${
+          error ? "border-rose-300" : "border-gray-300"
         } bg-white ${sidePad}`}
       >
-        <Tag
-          className={`absolute ${iconPos} top-1/2 -translate-y-1/2 text-blue-500/70 bg-white p-2 rounded-xl shadow-sm`}
-          aria-hidden="true"
-        />
+        <span
+          className={`absolute ${iconPos} top-1/2 -translate-y-1/2 inline-flex items-center justify-center w-7 h-7 rounded-lg bg-blue-50 text-blue-600 border border-blue-100`}
+        >
+          <Tag className="w-[18px] h-[18px]" aria-hidden="true" />
+        </span>
 
-        {/* شبكة 2×2 على الموبايل */}
         <div
-          ref={scrollerRef}
+          ref={rootRef}
           role="radiogroup"
-          className="w-full min-w-0 px-3 sm:px-0 py-2.5 grid grid-cols-2 gap-2 sm:grid-cols-4"
+          className="w-full px-2.5 sm:px-3 py-2.5 grid grid-cols-2 gap-2 sm:grid-cols-4"
         >
           {options.map(({ value: val, label: text, icon: Icon }) => {
             const active = value === val;
@@ -101,16 +86,13 @@ export default function SubjectChips({
                 data-value={val}
                 onClick={() => onChange({ target: { id, value: val } })}
                 dir={isRTL ? "rtl" : "ltr"}
-                className={`
-                  inline-flex items-center justify-center gap-1.5 min-h-9
-                  px-3.5 h-11 sm:h-9 rounded-xl border text-[clamp(12px,1.4vw,14px)] transition-all
+                className={`inline-flex items-center justify-center gap-1.5 h-11 sm:h-10 rounded-lg border text-[13px] sm:text-[14px] font-medium
                   ${
                     active
-                      ? "bg-gradient-to-r from-blue-600 via-blue-500 to-blue-500 text-white border-blue-600 ring-1 ring-white/20 shadow-[0_6px_16px_rgba(59,130,246,0.24)]"
-                      : "bg-white text-gray-700 border-gray-200 hover:border-blue-300"
+                      ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white border-blue-600 shadow-[0_6px_18px_rgba(59,130,246,.18)]"
+                      : "bg-white text-gray-800 border-gray-300 hover:border-blue-400"
                   }
-                  focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-300 focus-visible:ring-offset-2 active:scale-[.98]
-                `}
+                  transition-[transform,box-shadow,colors] duration-200 active:scale-[.98]`}
               >
                 {Icon && (
                   <Icon
@@ -120,19 +102,11 @@ export default function SubjectChips({
                     aria-hidden="true"
                   />
                 )}
-                <span className="font-medium">{text}</span>
+                <span>{text}</span>
               </button>
             );
           })}
         </div>
-      </div>
-
-      <div
-        className={`text-xs sm:text-[12px] ${
-          error ? "text-red-600" : "text-gray-600"
-        } mt-1.5`}
-      >
-        {error ? error : helper}
       </div>
     </div>
   );

@@ -3,20 +3,18 @@ import MagicSendButton from "./MagicSendButton";
 import ContactField from "./ContactField";
 import SubjectChips from "./SubjectChips";
 
-const DRAFT_KEY = "CONTACT_FORM_RESP_v2";
+const DRAFT_KEY = "CONTACT_FORM_STICKY_v1";
 const phoneRegex = /^(?:\+9725\d{8}|0(?:5\d{8}|[2-9]\d{7}))$/;
 
-function formatILPhone(v) {
-  const digits = v.replace(/\D/g, "");
-  if (digits.startsWith("972")) return `+${digits.slice(0, 12)}`;
-  const d = digits.slice(0, 10);
-  if (d.length <= 3) return d.startsWith("5") ? `0${d}` : d;
-  if (d.length <= 6) return `${d.slice(0, 3)}-${d.slice(3)}`;
-  return `${d.slice(0, 3)}-${d.slice(3, 6)}-${d.slice(6)}`;
-}
-function isPhoneComplete(v) {
-  return v.replace(/\D/g, "").length >= 10;
-}
+const fmtIL = (v) => {
+  const d = v.replace(/\D/g, "");
+  if (d.startsWith("972")) return `+${d.slice(0, 12)}`;
+  const s = d.slice(0, 10);
+  if (s.length <= 3) return s.startsWith("5") ? `0${s}` : s;
+  if (s.length <= 6) return `${s.slice(0, 3)}-${s.slice(3)}`;
+  return `${s.slice(0, 3)}-${s.slice(3, 6)}-${s.slice(6)}`;
+};
+const isPhoneComplete = (v) => v.replace(/\D/g, "").length >= 10;
 
 export default function ContactForm({ onSend, t = {}, isRTL = true }) {
   const [form, setForm] = useState({
@@ -28,14 +26,14 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
   });
   const [state, setState] = useState("idle");
   const [touched, setTouched] = useState({});
-  const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors] = useState({});
-  const [okMsg, setOkMsg] = useState("");
   const [kbOpen, setKbOpen] = useState(false);
-  const firstErrorRef = useRef(null);
-  const messageRef = useRef(null);
 
-  // مسودة + subject من URL
+  const phoneRef = useRef(null);
+  const msgRef = useRef(null);
+  const firstErrorRef = useRef(null);
+
+  // draft + subject from URL
   useEffect(() => {
     try {
       const raw = localStorage.getItem(DRAFT_KEY);
@@ -63,95 +61,68 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
     );
   }, [form.subject, form.name, form.phone, form.message]);
 
-  // كشف لوحة المفاتيح لتعديل شريط الإرسال
+  // mobile keyboard height (لتحسين الهوامش فقط)
   useEffect(() => {
     const vv = window.visualViewport;
     if (!vv) return;
-    const onResize = () => {
-      const delta = window.innerHeight - vv.height;
-      setKbOpen(delta > 150);
-    };
+    const onResize = () => setKbOpen(window.innerHeight - vv.height > 150);
     vv.addEventListener("resize", onResize);
     onResize();
     return () => vv.removeEventListener("resize", onResize);
   }, []);
 
-  // نصوص وديناميكيات
   const labels = useMemo(
     () => ({
-      subject: t.subjectLabel || "موضوع الرسالة",
-      name: t.nameLabel || "الاسم الكامل",
-      phone: t.phoneLabel || "رقم الهاتف",
-      message: t.messageLabel || "رسالتك",
-      phName: t.namePlaceholder || "اكتب اسمك هنا",
-      phPhone: t.phonePlaceholder || "05X-XXX-XXXX",
+      subject: "1) موضوع",
+      name: "2) الاسم",
+      phone: "3) الهاتف",
+      message: "4) الرسالة",
+      phName: "الاسم الأول + الكُنية",
+      phPhone: "05X-XXX-XXXX",
       phMessage:
         form.subject === "booking"
-          ? "اذكر الخدمة والوقت المناسب لك…"
+          ? "الخدمة والوقت المناسب…"
           : form.subject === "complaint"
-          ? "أخبرنا بالمشكلة باختصار محترم…"
+          ? "المشكلة باختصار…"
           : form.subject === "other"
-          ? "اكتب رسالتك هنا…"
-          : "اكتب سؤالك أو طلب المعلومات…",
-      send: t.send || "إرسال",
-      sending: t.sending || "جارٍ الإرسال...",
-      sent: t.sent || "تم الإرسال!",
+          ? "اكتب رسالتك…"
+          : "سؤالك أو طلب المعلومات…",
+      send: "إرسال",
+      sending: "جارٍ الإرسال...",
+      sent: "تم الإرسال!",
     }),
-    [t, form.subject]
+    [form.subject]
   );
-
-  const messageAssist =
-    form.subject === "booking"
-      ? "مثال: الإثنين بعد 4 م / الخدمة المطلوبة."
-      : form.subject === "complaint"
-      ? "وعدنا: نعود بحل واضح وسريع."
-      : form.subject === "inquiry"
-      ? "اسأل أي شيء—نرد خلال ساعتين (أوقات العمل)."
-      : "ضع تفاصيل مختصرة وسنعود إليك.";
-
-  const sendLabel = useMemo(() => {
-    switch (form.subject) {
-      case "inquiry":
-        return "أرسل سؤالك";
-      case "booking":
-        return "اطلب حجزًا";
-      case "complaint":
-        return "أرسل شكواك";
-      default:
-        return labels.send;
-    }
-  }, [form.subject, labels.send]);
 
   const validate = (draft = form) => {
     const e = {};
-    if (!draft.subject) e.subject = "اختر الموضوع.";
-    if (!draft.name.trim()) e.name = "اكتب اسمك الكامل لطفًا.";
+    if (!draft.subject) e.subject = "اختر الموضوع";
+    if (!draft.name.trim()) e.name = "اكتب اسمك";
     const clean = draft.phone.replace(/\D/g, "");
     const normalized = clean.startsWith("972")
       ? `+${clean}`
       : clean.startsWith("0")
       ? `0${clean.slice(1)}`
       : draft.phone.trim();
-    if (!draft.phone.trim()) e.phone = "اكتب رقمك للتواصل.";
-    else if (!phoneRegex.test(normalized)) e.phone = "خلّيه 05X-XXX-XXXX.";
-    if (!draft.message.trim()) e.message = "اكتب المطلوب باختصار.";
-    if (draft.honey) e.honey = "Spam detected.";
+    if (!draft.phone.trim()) e.phone = "أدخل رقمك";
+    else if (!phoneRegex.test(normalized)) e.phone = "رقم غير صالح";
+    if (!draft.message.trim()) e.message = "اكتب الرسالة";
+    if (draft.honey) e.honey = "Spam";
     return e;
   };
 
-  // تحديث الأخطاء أثناء الكتابة
   const handleChange = (e) => {
     const { id, value } = e.target;
-    const next = id === "phone" ? formatILPhone(value) : value;
+    const next = id === "phone" ? fmtIL(value) : value;
     setForm((p) => ({ ...p, [id]: next }));
-    if (touched[id] || submitted) {
+    if (touched[id]) {
       const now = validate({ ...form, [id]: next });
       setErrors((prev) => ({ ...prev, [id]: now[id] }));
     }
-    if (id === "phone" && isPhoneComplete(next))
-      setTimeout(() => messageRef.current?.focus(), 0);
+    if (id === "phone" && isPhoneComplete(next)) {
+      setTimeout(() => msgRef.current?.focus(), 0);
+    }
   };
-
   const handleBlur = (e) => {
     const { id } = e.target;
     setTouched((p) => ({ ...p, [id]: true }));
@@ -161,14 +132,14 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setSubmitted(true);
+    setTouched({ subject: true, name: true, phone: true, message: true });
     const eNow = validate();
     setErrors(eNow);
     if (Object.keys(eNow).length) {
       const firstKey = ["subject", "name", "phone", "message"].find(
         (k) => eNow[k]
       );
-      if (firstKey) document.getElementById(firstKey)?.focus();
+      document.getElementById(firstKey)?.focus();
       firstErrorRef.current?.scrollIntoView({
         behavior: "smooth",
         block: "start",
@@ -176,7 +147,6 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
       return;
     }
     try {
-      setOkMsg("");
       setState("loading");
       await onSend({
         subject: form.subject,
@@ -185,21 +155,28 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
         message: form.message.trim(),
       });
       setState("success");
-      setOkMsg("تم الاستلام! سنعاودك غالبًا خلال ساعتين 🙌");
-      setForm({
-        subject: form.subject,
-        name: "",
-        phone: "",
-        message: "",
-        honey: "",
-      });
+      setForm((p) => ({ ...p, name: "", phone: "", message: "" }));
       setTouched({});
-      setSubmitted(false);
-      setTimeout(() => setState("idle"), 1600);
+      setErrors({});
+      setTimeout(() => setState("idle"), 1100);
     } catch {
       setState("idle");
     }
   };
+
+  // جاهزية زر الإرسال
+  const validPhone = (() => {
+    const clean = form.phone.replace(/\D/g, "");
+    const normalized = clean.startsWith("972")
+      ? `+${clean}`
+      : clean.startsWith("0")
+      ? `0${clean.slice(1)}`
+      : form.phone.trim();
+    return phoneRegex.test(normalized);
+  })();
+  const ready =
+    !!(form.subject && form.name.trim() && validPhone && form.message.trim()) &&
+    state !== "loading";
 
   const waText = encodeURIComponent(
     `موضوع: ${form.subject}\nالاسم: ${form.name}\nالهاتف: ${form.phone}\nالرسالة:\n${form.message}`
@@ -210,25 +187,21 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-5 p-4 sm:p-6"
+      className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-5 p-4 sm:p-6"
     >
-      {/* طمأنة قصيرة */}
-      <div className="md:col-span-2 text-gray-600 text-xs sm:text-[clamp(12px,1.3vw,14px)] -mb-1">
-        نردّ عادة خلال <strong>ساعتين</strong> (أوقات العمل).
-      </div>
+      {/* سطر طمأنة صغير */}
 
-      {/* أخطاء عامة */}
-      {submitted &&
-        ["subject", "name", "phone", "message"].some((k) => errors[k]) && (
-          <div
-            ref={firstErrorRef}
-            className="md:col-span-2 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 px-3 py-2 text-[13px]"
-            role="status"
-            aria-live="polite"
-          >
-            {errors.subject || errors.name || errors.phone || errors.message}
-          </div>
-        )}
+      {/* شريط خطأ صغير (اختياري) */}
+      {!!Object.keys(errors).length && (
+        <div
+          ref={firstErrorRef}
+          className="md:col-span-2 rounded-lg border border-rose-200 bg-rose-50/90 text-rose-700 px-3 py-2 text-[13px]"
+          role="status"
+          aria-live="polite"
+        >
+          {errors.subject || errors.name || errors.phone || errors.message}
+        </div>
+      )}
 
       {/* honeypot */}
       <input
@@ -242,19 +215,22 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
         aria-hidden="true"
       />
 
-      {/* موضوع */}
+      {/* 1) الموضوع */}
       <SubjectChips
         id="subject"
         label={labels.subject}
         value={form.subject}
-        onChange={handleChange}
-        onBlur={handleBlur}
+        onChange={(e) => {
+          setForm((p) => ({ ...p, subject: e.target.value }));
+          setTouched((p) => ({ ...p, subject: true }));
+          setErrors((p) => ({ ...p, subject: undefined }));
+        }}
         required
-        error={submitted || touched.subject ? errors.subject : undefined}
+        error={touched.subject ? errors.subject : undefined}
         isRTL={isRTL}
       />
 
-      {/* الاسم */}
+      {/* 2) الاسم */}
       <ContactField
         id="name"
         label={labels.name}
@@ -262,14 +238,15 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
         value={form.name}
         onChange={handleChange}
         onBlur={handleBlur}
-        error={submitted || touched.name ? errors.name : undefined}
-        required
+        onEnterNext={() => phoneRef.current?.focus()}
+        inputProps={{ enterKeyHint: "next" }}
+        error={touched.name ? errors.name : undefined}
         isValid={touched.name && !errors.name}
-        assistiveText="يكفينا الاسم الأول + الكُنية."
+        required
         isRTL={isRTL}
       />
 
-      {/* الهاتف */}
+      {/* 3) الهاتف */}
       <ContactField
         id="phone"
         label={labels.phone}
@@ -277,14 +254,16 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
         value={form.phone}
         onChange={handleChange}
         onBlur={handleBlur}
-        error={submitted || touched.phone ? errors.phone : undefined}
-        required
+        onEnterNext={() => msgRef.current?.focus()}
+        inputProps={{ enterKeyHint: "next", inputMode: "tel" }}
+        error={touched.phone ? errors.phone : undefined}
         isValid={touched.phone && !errors.phone}
-        assistiveText="مثال: 059-123-4567."
+        required
         isRTL={isRTL}
+        refEl={phoneRef}
       />
 
-      {/* الرسالة */}
+      {/* 4) الرسالة */}
       <ContactField
         id="message"
         label={labels.message}
@@ -292,18 +271,19 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
         value={form.message}
         onChange={handleChange}
         onBlur={handleBlur}
-        error={submitted || touched.message ? errors.message : undefined}
+        error={touched.message ? errors.message : undefined}
+        isValid={touched.message && !errors.message}
         required
         isTextArea
         autoGrow
-        isValid={touched.message && !errors.message}
-        assistiveText={messageAssist}
         maxChars={500}
+        smartCounter
         isRTL={isRTL}
-        refEl={messageRef}
+        refEl={msgRef}
+        inputProps={{ enterKeyHint: "done" }}
       />
 
-      {/* أزرار */}
+      {/* الأزرار */}
       <div className="md:col-span-2">
         {/* Desktop actions */}
         <div className="hidden md:flex items-center justify-center gap-3 mt-2">
@@ -311,10 +291,10 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
             href={waHref}
             target="_blank"
             rel="noopener noreferrer"
-            className={`h-12 px-5 rounded-full border flex items-center justify-center gap-2 text-sm font-semibold transition
+            className={`h-11 px-4 rounded-full border flex items-center justify-center text-sm font-medium transition
               ${
                 canWa
-                  ? "bg-white text-green-700 border-green-300 hover:bg-green-50"
+                  ? "bg-white text-emerald-700 border-emerald-300 hover:bg-emerald-50"
                   : "pointer-events-none opacity-50 bg-white text-gray-400 border-gray-200"
               }`}
             aria-disabled={!canWa}
@@ -323,16 +303,16 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
           </a>
           <MagicSendButton
             state={state}
-            disabled={false}
-            labelIdle={sendLabel}
+            disabled={!ready}
+            labelIdle={ready ? labels.send : "أكمل الحقول"}
             labelLoading={labels.sending}
             labelSuccess={labels.sent}
           />
         </div>
 
-        {/* Mobile sticky bar مبسّط */}
+        {/* Mobile bar — STICKY داخل الكارد فقط */}
         <div
-          className={`md:hidden fixed left-0 right-0 bottom-0 z-40
+          className={`md:hidden sticky bottom-0 z-40
             px-4 ${
               kbOpen ? "pb-2" : "pb-[max(10px,env(safe-area-inset-bottom))]"
             } pt-2
@@ -346,7 +326,7 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
             className={`w-12 h-11 rounded-full border flex items-center justify-center text-sm font-semibold
               ${
                 canWa
-                  ? "text-green-700 border-green-300"
+                  ? "text-emerald-700 border-emerald-300 bg-white"
                   : "pointer-events-none opacity-50 text-gray-400 border-gray-200"
               }`}
             aria-disabled={!canWa}
@@ -357,29 +337,16 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
           <div className="flex-1">
             <MagicSendButton
               state={state}
-              disabled={false}
-              labelIdle={sendLabel}
+              disabled={!ready}
+              labelIdle={ready ? labels.send : "أكمل الحقول"}
               labelLoading={labels.sending}
               labelSuccess={labels.sent}
             />
           </div>
         </div>
-
-        {/* رسالة نجاح داخل البطاقة */}
-        {okMsg && (
-          <div className="mt-3 text-center text-green-700 bg-green-50 border border-green-200 rounded-xl py-2 text-sm">
-            {okMsg}
-          </div>
-        )}
       </div>
 
-      {/* سياسة خصوصية + هامش للستكي بار */}
-      <div className="md:col-span-2 mb-[90px] md:mb-0 flex items-center justify-between text-[11px] text-gray-600">
-        <a href="/privacy" className="underline hover:text-gray-700">
-          بيان الخصوصية
-        </a>
-        <span>اختصار: Ctrl/⌘ + Enter للإرسال</span>
-      </div>
+      {/* ما في هامش إضافي لأن الشريط صار sticky */}
     </form>
   );
 }
