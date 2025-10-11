@@ -1,15 +1,17 @@
 import { useState } from "react";
 import { useLanguage } from "../../context/LanguageContext";
-import ContactHeader from "./ContactHeader";
+import ContactHeader from "./ContactHeader"; // إبقِ العنوان الذي اخترته
 import ContactForm from "./ContactForm";
-import ContactLinks from "./ContactLinks";
+// (اختياري) روابط إضافية
+// import ContactLinks from "./ContactLinks";
 
 export default function ContactSection() {
   const { lang, t } = useLanguage();
   const [toast, setToast] = useState({ type: "", message: "" });
 
   const handleSend = async () => {
-    await new Promise((res) => setTimeout(res, 900)); // اربط API هنا
+    // اربط API/EmailJS هنا
+    await new Promise((r) => setTimeout(r, 900));
     setToast({
       type: "success",
       message: lang === "ar" ? "تم الإرسال بنجاح ✅" : "Sent successfully ✅",
@@ -21,7 +23,7 @@ export default function ContactSection() {
     <section
       id="contact"
       dir={lang === "ar" ? "rtl" : "ltr"}
-      className="relative bg-[#F6F8FC] px-4 sm:px-6 py-10 sm:py-16 text-gray-900"
+      className="relative overflow-hidden py-10 sm:py-16 px-4 sm:px-6 bg-[#F6F8FC] text-gray-900"
     >
       {/* Toast */}
       <div
@@ -38,16 +40,12 @@ export default function ContactSection() {
 
       <ContactHeader />
 
-      {/* بطاقة بحد متدرّج جميل */}
-      <div className="max-w-2xl sm:max-w-3xl mx-auto mt-8 sm:mt-12">
-        <div className="rounded-2xl p-[1px] bg-gradient-to-r from-blue-200 via-blue-100 to-transparent">
-          <div className="rounded-2xl bg-white border border-gray-100 shadow-[0_8px_30px_rgba(6,24,44,.06)]">
-            <ContactForm onSend={handleSend} t={t} isRTL={lang === "ar"} />
-          </div>
-        </div>
+      {/* الكارد */}
+      <div className="max-w-3xl mx-auto mt-8 sm:mt-12 rounded-[2rem] border border-gray-100 bg-white shadow-[0_8px_30px_rgba(6,24,44,.06)]">
+        <ContactForm onSend={handleSend} t={t} isRTL={lang === "ar"} />
       </div>
 
-      <ContactLinks />
+      {/* <ContactLinks /> */}
     </section>
   );
 }

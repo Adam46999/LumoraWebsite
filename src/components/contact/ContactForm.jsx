@@ -3,7 +3,7 @@ import MagicSendButton from "./MagicSendButton";
 import ContactField from "./ContactField";
 import SubjectChips from "./SubjectChips";
 
-const DRAFT_KEY = "CONTACT_FORM_STICKY_v1";
+const DRAFT_KEY = "CONTACT_FORM_CLEAN_v1";
 const phoneRegex = /^(?:\+9725\d{8}|0(?:5\d{8}|[2-9]\d{7}))$/;
 
 const fmtIL = (v) => {
@@ -33,7 +33,7 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
   const msgRef = useRef(null);
   const firstErrorRef = useRef(null);
 
-  // draft + subject from URL
+  // draft + subject من URL
   useEffect(() => {
     try {
       const raw = localStorage.getItem(DRAFT_KEY);
@@ -61,7 +61,7 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
     );
   }, [form.subject, form.name, form.phone, form.message]);
 
-  // mobile keyboard height (لتحسين الهوامش فقط)
+  // كشف لوحة المفاتيح للموبايل
   useEffect(() => {
     const vv = window.visualViewport;
     if (!vv) return;
@@ -73,10 +73,10 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
 
   const labels = useMemo(
     () => ({
-      subject: "1) موضوع",
-      name: "2) الاسم",
-      phone: "3) الهاتف",
-      message: "4) الرسالة",
+      subject: "موضوع",
+      name: "الاسم",
+      phone: "الهاتف",
+      message: "الرسالة",
       phName: "الاسم الأول + الكُنية",
       phPhone: "05X-XXX-XXXX",
       phMessage:
@@ -119,9 +119,8 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
       const now = validate({ ...form, [id]: next });
       setErrors((prev) => ({ ...prev, [id]: now[id] }));
     }
-    if (id === "phone" && isPhoneComplete(next)) {
+    if (id === "phone" && isPhoneComplete(next))
       setTimeout(() => msgRef.current?.focus(), 0);
-    }
   };
   const handleBlur = (e) => {
     const { id } = e.target;
@@ -164,7 +163,7 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
     }
   };
 
-  // جاهزية زر الإرسال
+  // جاهزية الزر
   const validPhone = (() => {
     const clean = form.phone.replace(/\D/g, "");
     const normalized = clean.startsWith("972")
@@ -187,11 +186,14 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-5 p-4 sm:p-6"
+      className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 p-4 sm:p-6"
     >
-      {/* سطر طمأنة صغير */}
+      {/* طمأنة قصيرة */}
+      <div className="md:col-span-2 text-xs text-gray-600 -mt-1">
+        نردّ عادة خلال <strong>ساعتين</strong> (أوقات العمل).
+      </div>
 
-      {/* شريط خطأ صغير (اختياري) */}
+      {/* شريط خطأ صغير عند الحاجة */}
       {!!Object.keys(errors).length && (
         <div
           ref={firstErrorRef}
@@ -215,7 +217,7 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
         aria-hidden="true"
       />
 
-      {/* 1) الموضوع */}
+      {/* الموضوع */}
       <SubjectChips
         id="subject"
         label={labels.subject}
@@ -230,7 +232,7 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
         isRTL={isRTL}
       />
 
-      {/* 2) الاسم */}
+      {/* الاسم */}
       <ContactField
         id="name"
         label={labels.name}
@@ -246,7 +248,7 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
         isRTL={isRTL}
       />
 
-      {/* 3) الهاتف */}
+      {/* الهاتف */}
       <ContactField
         id="phone"
         label={labels.phone}
@@ -263,7 +265,7 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
         refEl={phoneRef}
       />
 
-      {/* 4) الرسالة */}
+      {/* الرسالة */}
       <ContactField
         id="message"
         label={labels.message}
@@ -283,10 +285,10 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
         inputProps={{ enterKeyHint: "done" }}
       />
 
-      {/* الأزرار */}
+      {/* أزرار */}
       <div className="md:col-span-2">
-        {/* Desktop actions */}
-        <div className="hidden md:flex items-center justify-center gap-3 mt-2">
+        {/* Desktop */}
+        <div className="hidden md:flex items-center justify-center gap-3 mt-1">
           <a
             href={waHref}
             target="_blank"
@@ -310,43 +312,36 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
           />
         </div>
 
-        {/* Mobile bar — STICKY داخل الكارد فقط */}
-        <div
-          className={`md:hidden sticky bottom-0 z-40
+        {/* Mobile sticky bar — يظهر فقط عند الجاهزية */}
+        {ready && (
+          <div
+            className={`md:hidden sticky bottom-0 z-40
             px-4 ${
               kbOpen ? "pb-2" : "pb-[max(10px,env(safe-area-inset-bottom))]"
             } pt-2
-            bg-white border-t border-gray-200
-            flex items-center gap-2`}
-        >
-          <a
-            href={waHref}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`w-12 h-11 rounded-full border flex items-center justify-center text-sm font-semibold
-              ${
-                canWa
-                  ? "text-emerald-700 border-emerald-300 bg-white"
-                  : "pointer-events-none opacity-50 text-gray-400 border-gray-200"
-              }`}
-            aria-disabled={!canWa}
-            aria-label="واتساب"
+            bg-white border-t border-gray-200 flex items-center gap-2`}
           >
-            WA
-          </a>
-          <div className="flex-1">
-            <MagicSendButton
-              state={state}
-              disabled={!ready}
-              labelIdle={ready ? labels.send : "أكمل الحقول"}
-              labelLoading={labels.sending}
-              labelSuccess={labels.sent}
-            />
+            <a
+              href={waHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-12 h-11 rounded-full border flex items-center justify-center text-sm font-semibold text-emerald-700 border-emerald-300 bg-white"
+              aria-label="واتساب"
+            >
+              WA
+            </a>
+            <div className="flex-1">
+              <MagicSendButton
+                state={state}
+                disabled={!ready}
+                labelIdle={labels.send}
+                labelLoading={labels.sending}
+                labelSuccess={labels.sent}
+              />
+            </div>
           </div>
-        </div>
+        )}
       </div>
-
-      {/* ما في هامش إضافي لأن الشريط صار sticky */}
     </form>
   );
 }

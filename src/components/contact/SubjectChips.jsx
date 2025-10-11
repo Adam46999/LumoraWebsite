@@ -23,10 +23,10 @@ export default function SubjectChips({
   isRTL = true,
 }) {
   const rootRef = useRef(null);
-  const sidePad = isRTL ? "pr-12 text-right" : "pl-12 text-left";
+  const sidePad = isRTL ? "pr-11 text-right" : "pl-11 text-left";
   const iconPos = isRTL ? "right-2.5" : "left-2.5";
 
-  // keyboard arrows
+  // أسهم لوحة المفاتيح
   useEffect(() => {
     const el = rootRef.current;
     if (!el) return;
@@ -61,11 +61,11 @@ export default function SubjectChips({
 
       <div
         className={`relative w-full rounded-xl border ${
-          error ? "border-rose-300" : "border-gray-300"
+          error ? "border-rose-300" : "border-gray-200"
         } bg-white ${sidePad}`}
       >
         <span
-          className={`absolute ${iconPos} top-1/2 -translate-y-1/2 inline-flex items-center justify-center w-7 h-7 rounded-lg bg-blue-50 text-blue-600 border border-blue-100`}
+          className={`absolute ${iconPos} top-1/2 -translate-y-1/2 inline-flex items-center justify-center w-[26px] h-[26px] rounded-lg bg-blue-50 text-blue-600 border border-blue-100`}
         >
           <Tag className="w-[18px] h-[18px]" aria-hidden="true" />
         </span>
@@ -86,13 +86,13 @@ export default function SubjectChips({
                 data-value={val}
                 onClick={() => onChange({ target: { id, value: val } })}
                 dir={isRTL ? "rtl" : "ltr"}
-                className={`inline-flex items-center justify-center gap-1.5 h-11 sm:h-10 rounded-lg border text-[13px] sm:text-[14px] font-medium
+                className={`inline-flex items-center justify-center gap-1.5 h-11 sm:h-10 rounded-lg border text-[14px] font-medium
                   ${
                     active
-                      ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white border-blue-600 shadow-[0_6px_18px_rgba(59,130,246,.18)]"
-                      : "bg-white text-gray-800 border-gray-300 hover:border-blue-400"
+                      ? "bg-blue-600 text-white border-blue-600"
+                      : "bg-white text-gray-800 border-gray-200 hover:border-blue-400"
                   }
-                  transition-[transform,box-shadow,colors] duration-200 active:scale-[.98]`}
+                  transition duration-150 active:scale-[.98]`}
               >
                 {Icon && (
                   <Icon

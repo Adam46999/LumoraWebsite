@@ -42,20 +42,20 @@ export default function ContactField({
   }, [value, autoGrow, isTextArea]);
 
   const sidePad = isRTL
-    ? "pr-12 sm:pr-14 text-right"
-    : "pl-12 sm:pl-14 text-left";
+    ? "pr-11 sm:pr-12 text-right"
+    : "pl-11 sm:pl-12 text-left";
   const iconPos = isRTL ? "right-2.5 sm:right-3" : "left-2.5 sm:left-3";
 
   const base = `
-    w-full px-3 py-2.5 sm:px-4 sm:py-3 ${sidePad}
+    w-full px-3 sm:px-4 py-2.5 sm:py-3 ${sidePad}
     rounded-xl border transition-[border,box-shadow] duration-150 focus:outline-none
-    bg-white text-[15px] sm:text-[clamp(14px,2.8vw,16px)] text-gray-900 placeholder-gray-400
+    bg-white text-[15px] sm:text-[16px] text-gray-900 placeholder-gray-400
   `;
   const stateColor = error
-    ? "border-rose-300 focus:border-rose-400 shadow-[0_0_0_3px_rgba(244,63,94,.12)]"
+    ? "border-rose-300 focus:border-rose-400 shadow-[0_0_0_3px_rgba(244,63,94,.10)]"
     : isValid
-    ? "border-emerald-300 focus:border-emerald-500 shadow-[0_0_0_3px_rgba(16,185,129,.12)]"
-    : "border-gray-300 focus:border-blue-500 shadow-[0_0_0_3px_rgba(59,130,246,.12)]";
+    ? "border-emerald-200 focus:border-emerald-400 shadow-[0_0_0_3px_rgba(16,185,129,.10)]"
+    : "border-gray-200 focus:border-blue-500 shadow-[0_0_0_3px_rgba(59,130,246,.10)]";
   const cls = `${base} ${stateColor}`;
 
   const Icon = id === "name" ? User : id === "phone" ? Phone : MessageSquare;
@@ -85,9 +85,9 @@ export default function ContactField({
       </label>
 
       <div className="relative">
-        {/* leading icon كبسولة */}
+        {/* أيقونة داخل كبسولة أصغر */}
         <span
-          className={`absolute ${iconPos} top-1/2 -translate-y-1/2 inline-flex items-center justify-center w-7 h-7 rounded-lg bg-blue-50 text-blue-600 border border-blue-100`}
+          className={`absolute ${iconPos} top-1/2 -translate-y-1/2 inline-flex items-center justify-center w-[26px] h-[26px] rounded-lg bg-blue-50 text-blue-600 border border-blue-100`}
         >
           <Icon className="w-[18px] h-[18px]" aria-hidden="true" />
         </span>
@@ -131,12 +131,12 @@ export default function ContactField({
           />
         )}
 
-        {/* status icon */}
+        {/* حالة صحيحة/خطأ */}
         {StatusIcon && (
           <span
             className={`absolute ${
               isRTL ? "left-2.5 sm:left-3" : "right-2.5 sm:right-3"
-            } top-1/2 -translate-y-1/2 inline-flex items-center justify-center w-7 h-7 rounded-lg ${
+            } top-1/2 -translate-y-1/2 inline-flex items-center justify-center w-[26px] h-[26px] rounded-lg ${
               error
                 ? "bg-rose-50 text-rose-600 border border-rose-100"
                 : "bg-emerald-50 text-emerald-600 border border-emerald-100"
