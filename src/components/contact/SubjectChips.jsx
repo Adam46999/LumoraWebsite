@@ -73,6 +73,7 @@ export default function SubjectChips({
         <div
           ref={rootRef}
           role="radiogroup"
+          aria-label="اختر موضوع رسالتك"
           className="w-full px-2.5 sm:px-3 py-2.5 grid grid-cols-2 gap-2 sm:grid-cols-4"
         >
           {options.map(({ value: val, label: text, icon: Icon }) => {
@@ -86,7 +87,7 @@ export default function SubjectChips({
                 data-value={val}
                 onClick={() => onChange({ target: { id, value: val } })}
                 dir={isRTL ? "rtl" : "ltr"}
-                className={`inline-flex items-center justify-center gap-1.5 h-11 sm:h-10 rounded-lg border text-[14px] font-medium
+                className={`inline-flex items-center justify-center gap-1.5 h-12 sm:h-12 px-3 rounded-lg border text-[14px] font-medium
                   ${
                     active
                       ? "bg-blue-600 text-white border-blue-600"
