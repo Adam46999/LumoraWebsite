@@ -3,6 +3,7 @@ import MagicSendButton from "./MagicSendButton";
 import ContactField from "./ContactField";
 import SubjectChips from "./SubjectChips";
 import RememberMeSwitch from "./RememberMeSwitch";
+import PreferredChannelPicker from "./PreferredChannelPicker";
 
 // لا نحتاج MessageFullscreen بعد الآن
 const DRAFT_KEY = "CONTACT_FORM_CLEAN_v2";
@@ -483,29 +484,12 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
             id="more-prefs-panel"
             className="mt-3 p-3 rounded-xl border bg-white border-gray-200"
           >
-            <label className="text-sm font-semibold text-gray-800">
-              {labels.prefTitle}
-            </label>
-            <div className="mt-2 grid grid-cols-3 gap-2 sm:flex sm:flex-wrap">
-              {[
-                { v: "phone", l: labels.prefPhone },
-                { v: "whatsapp", l: labels.prefWA },
-                { v: "either", l: labels.prefEither },
-              ].map((opt) => (
-                <button
-                  key={opt.v}
-                  type="button"
-                  onClick={() => setForm((p) => ({ ...p, channel: opt.v }))}
-                  className={`h-11 px-4 rounded-xl border text-sm font-medium transition ${
-                    form.channel === opt.v
-                      ? "bg-blue-600 text-white border-blue-600"
-                      : "bg-white text-gray-800 border-gray-200 hover:border-blue-400"
-                  }`}
-                >
-                  {opt.l}
-                </button>
-              ))}
-            </div>
+            <PreferredChannelPicker
+              value={form.channel}
+              onChange={(v) => setForm((p) => ({ ...p, channel: v }))}
+              isRTL={isRTL}
+              label={labels.prefTitle}
+            />
 
             {canShowRemember && (
               <div className="mt-3 flex items-center justify-between gap-2">
