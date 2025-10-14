@@ -11,7 +11,6 @@ export const services = [
     detailsKey: "sofaDetails",
     icon: "couch",
     image: sofaImg,
-    bgColor: "bg-sky-100", // ✅ أزرق فاتح وواضح
   },
   {
     id: "car",
@@ -20,7 +19,6 @@ export const services = [
     detailsKey: "carDetails",
     icon: "car",
     image: carImg,
-    bgColor: "bg-slate-100", // ✅ رمادي ناعم وأنيق
   },
   {
     id: "carpet",
@@ -29,7 +27,6 @@ export const services = [
     detailsKey: "carpetDetails",
     icon: "layer-group",
     image: carpetImg,
-    bgColor: "bg-emerald-100", // ✅ أخضر مريح وواضح
   },
   {
     id: "steam",
@@ -38,6 +35,5 @@ export const services = [
     detailsKey: "steamDetails",
     icon: "tint",
     image: steamImg,
-    bgColor: "bg-cyan-100", // ✅ أزرق مائي جميل
   },
 ];

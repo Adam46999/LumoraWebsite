@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { useLanguage } from "../../context/LanguageContext";
+import { X } from "lucide-react";
 
 export default function ServiceModal({
   isOpen,
@@ -10,68 +11,83 @@ export default function ServiceModal({
   onOrderNow,
 }) {
   const { lang, t } = useLanguage();
-  const modalRef = useRef();
+  const dialogRef = useRef(null);
 
-  // 🔐 قفل التمرير أثناء فتح المودال
   useEffect(() => {
-    document.body.style.overflow = isOpen ? "hidden" : "auto";
-    return () => (document.body.style.overflow = "auto");
+    if (!isOpen) return;
+    const body = document.body;
+    body.style.overflow = "hidden";
+    return () => {
+      body.style.overflow = "auto";
+    };
   }, [isOpen]);
 
-  // 🟢 إغلاق بالضغط على ESC
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === "Escape") onClose();
-    };
-    if (isOpen) {
-      window.addEventListener("keydown", handleKeyDown);
-    }
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, onClose]);
-
-  // إذا مغلق، لا تظهر شيء
   if (!isOpen) return null;
+
+  const raw = t[descriptionKey] || "";
+  const lines = raw.split(/\r?\n/);
+  const bullets = lines
+    .filter((l) => l.trim().startsWith("-"))
+    .map((l) => l.replace(/^-+\s?/, ""));
+  const paragraph = lines.filter((l) => !l.trim().startsWith("-")).join("\n");
 
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
-      onClick={onClose} // ✅ ضغط بالخارج
+      onClick={onClose}
     >
       <div
-        ref={modalRef}
-        onClick={(e) => e.stopPropagation()} // يمنع الإغلاق عند الضغط داخل المودال
-        className={`bg-white rounded-2xl shadow-2xl w-[90%] max-w-md overflow-hidden animate-fade-in
-        ${lang === "ar" ? "text-right" : "text-left"}`}
+        onClick={(e) => e.stopPropagation()}
+        className={`relative w-[92%] max-w-lg overflow-hidden rounded-2xl bg-white border border-gray-200 shadow-2xl ${
+          lang === "ar" ? "text-right" : "text-left"
+        }`}
       >
-        {/* الصورة */}
+        <button
+          onClick={onClose}
+          className="absolute end-3 top-3 rounded-full p-1.5 text-gray-600 hover:bg-gray-100"
+          aria-label={lang === "ar" ? "إغلاق" : "Close"}
+        >
+          <X size={18} />
+        </button>
+
         <img
           src={image}
           alt={t[titleKey]}
-          className="w-full h-48 object-cover shadow-sm"
+          className="h-48 w-full object-cover"
         />
 
-        {/* المحتوى */}
-        <div className="p-6 max-h-[60vh] overflow-y-auto">
-          <h2 className="text-xl font-bold text-blue-600 mb-4">
+        <div className="max-h-[60vh] overflow-y-auto p-6">
+          <h2 className="mb-3 text-xl font-bold text-blue-600">
             {t[titleKey]}
           </h2>
-          <p className="text-gray-700 whitespace-pre-line leading-relaxed">
-            {t[descriptionKey]}
-          </p>
+          {paragraph && (
+            <p className="whitespace-pre-line leading-7 text-gray-800">
+              {paragraph}
+            </p>
+          )}
+          {bullets.length > 0 && (
+            <ul className="mt-3 list-disc ps-6 text-gray-800">
+              {bullets.map((b, i) => (
+                <li key={i} className="leading-7">
+                  {b}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
 
-        {/* الأزرار */}
-        <div className="flex justify-between items-center p-4 border-t">
+        <div className="flex items-center justify-between gap-3 border-t border-gray-200 p-4">
           <button
             onClick={onClose}
-            className="text-sm text-gray-500 hover:text-gray-700"
+            type="button"
+            className="rounded-md px-3 py-2 text-sm text-gray-600 hover:bg-gray-100"
           >
-            {lang === "ar" ? "✖️ إغلاق" : "✖️ Close"}
+            {lang === "ar" ? "إغلاق" : "Close"}
           </button>
-
           <button
             onClick={onOrderNow}
-            className="bg-blue-600 text-white px-5 py-2 rounded-full font-semibold hover:bg-blue-700 transition text-sm sm:text-base"
+            type="button"
+            className="rounded-md bg-blue-600 text-white font-medium px-4 py-2 text-sm hover:bg-blue-700 transition-colors"
           >
             {lang === "ar" ? "اطلب الآن" : "Order Now"}
           </button>

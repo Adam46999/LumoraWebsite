@@ -1,13 +1,12 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useLanguage } from "../../context/LanguageContext";
-import { Sofa, Car, Layers, Droplet } from "lucide-react"; // أيقونات احترافية
+import { Sofa, Car, Layers, Droplet } from "lucide-react";
 
-// خريطة أيقونات حسب نوع الخدمة
 const iconMap = {
-  couch: <Sofa size={36} strokeWidth={2.5} />,
-  car: <Car size={36} strokeWidth={2.5} />,
-  "layer-group": <Layers size={36} strokeWidth={2.5} />,
-  tint: <Droplet size={36} strokeWidth={2.5} />,
+  couch: <Sofa size={22} strokeWidth={2.2} />,
+  car: <Car size={22} strokeWidth={2.2} />,
+  "layer-group": <Layers size={22} strokeWidth={2.2} />,
+  tint: <Droplet size={22} strokeWidth={2.2} />,
 };
 
 export default function ServiceCard({
@@ -15,61 +14,80 @@ export default function ServiceCard({
   icon,
   titleKey,
   descriptionKey,
+  image,
   onClick,
-  bgColor = "bg-white", // لتخصيص اللون حسب الخدمة
 }) {
   const { t, lang } = useLanguage();
-
+  const [visible, setVisible] = useState(false);
   const ref = useRef(null);
-  const [isVisible, setIsVisible] = useState(false);
 
-  // 🟡 Scroll animation
+  // ✅ ظهور تدريجي عند التمرير (رقم 10 + 16)
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setIsVisible(entry.isIntersecting);
+    const obs = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setVisible(true);
+            obs.unobserve(entry.target);
+          }
+        });
       },
-      { threshold: 0.2 }
+      { threshold: 0.15 }
     );
-    if (ref.current) observer.observe(ref.current);
-    return () => observer.disconnect();
+    if (ref.current) obs.observe(ref.current);
+    return () => obs.disconnect();
   }, []);
 
   return (
-    <div
-      id={id}
+    <article
       ref={ref}
       onClick={onClick}
-      className={`relative p-6 rounded-2xl shadow-md cursor-pointer 
-        transition-all duration-300 transform hover:-translate-y-1 hover:shadow-inner
-        ${bgColor}
-        ${lang === "ar" ? "text-right" : "text-left"}
-        ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}
-        ease-in-out duration-700`}
+      className={[
+        "group cursor-pointer select-none overflow-hidden rounded-2xl border border-gray-100 bg-white",
+        "shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-500 ease-out",
+        "flex flex-col min-h-[400px] p-6",
+        visible
+          ? "opacity-100 translate-y-0"
+          : "opacity-0 translate-y-6 duration-700",
+      ].join(" ")}
     >
-      {/* دائرة الأيقونة */}
-      <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-3xl shadow-inner">
-        {iconMap[icon] || <Sofa size={36} />}
+      {/* صورة الخدمة */}
+      <div className="relative w-full h-40 overflow-hidden rounded-xl mb-4">
+        <img
+          src={image}
+          alt={t[titleKey]}
+          className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+        />
+        {/* تدرج خفيف */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent"></div>
       </div>
 
-      {/* العنوان */}
-      <h3 className="text-xl font-bold text-gray-800 mb-1">{t[titleKey]}</h3>
+      {/* المحتوى */}
+      <div className="flex flex-col flex-1">
+        {/* العنوان + الأيقونة */}
+        <div className="flex items-center gap-2 mb-3 text-blue-600">
+          {iconMap[icon]}
+          <h3 className="text-xl font-semibold text-gray-900">{t[titleKey]}</h3>
+        </div>
 
-      {/* الوصف */}
-      <p className="text-sm text-gray-500 mb-4">{t[descriptionKey]}</p>
+        {/* الوصف */}
+        <p className="text-sm text-gray-600 leading-relaxed flex-1">
+          {t[descriptionKey]}
+        </p>
 
-      {/* الزر */}
-      <div className="text-center">
+        {/* الزر */}
         <button
           onClick={(e) => {
             e.stopPropagation();
-            onClick();
+            onClick?.();
           }}
-          className="mt-2 inline-block px-5 py-2 text-sm sm:text-base font-semibold text-white bg-blue-600 rounded-full hover:bg-blue-700 transition"
+          className="mt-5 w-full rounded-lg bg-blue-50 hover:bg-gradient-to-b hover:from-blue-100 hover:to-white 
+          text-blue-700 font-semibold py-2 text-sm transition-all duration-300 
+          active:scale-95"
         >
           {lang === "ar" ? "تعرّف على الخدمة" : "View Details"}
         </button>
       </div>
-    </div>
+    </article>
   );
 }
