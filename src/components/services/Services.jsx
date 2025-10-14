@@ -84,11 +84,11 @@ export default function Services() {
       {/* مودال التفاصيل */}
       <ServiceModal
         isOpen={!!selected}
-        titleKey={selected?.titleKey}
-        descriptionKey={selected?.detailsKey}
-        image={selected?.image}
+        selected={selected} // ✅ أضف هذا
         onClose={() => setSelected(null)}
-        onOrderNow={() => {}}
+        onOrderNow={(payload) => {
+          /* افتح واتساب أو خزّن الطلب */
+        }}
       />
     </section>
   );

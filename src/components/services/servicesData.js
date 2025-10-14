@@ -1,7 +1,7 @@
 import sofaImg from "../../assets/hero1.jpg";
 import carImg from "../../assets/hero2.jpg";
 import carpetImg from "../../assets/hero3.jpg";
-import steamImg from "../../assets/hero4.jpg";
+import seatsImg from "../../assets/hero5.jpg"; // كان steamImg، استبدلناه
 
 export const services = [
   {
@@ -29,11 +29,11 @@ export const services = [
     image: carpetImg,
   },
   {
-    id: "steam",
-    titleKey: "steamTitle",
-    descriptionKey: "steamDescription",
-    detailsKey: "steamDetails",
-    icon: "tint",
-    image: steamImg,
+    id: "carSeats", // ✅ بدل steam
+    titleKey: "carSeatsTitle",
+    descriptionKey: "carSeatsDescription",
+    detailsKey: "carSeatsDetails",
+    icon: "layer-group", // نستخدم نفس الأيقونة الموجودة بالـ ServiceCard
+    image: seatsImg,
   },
 ];

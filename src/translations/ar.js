@@ -90,4 +90,16 @@ export default {
   heroHighlight2: "للكنـب والسيارات والسجاد",
   heroSubtitle:
     "نقدّم خدمات تنظيف عميق للكنب المنزلي، سياراتك من الداخل والخارج، والسجاد – باستخدام أجهزة بخار حديثة ومواد آمنة تمامًا.",
+  servicesTitle1: "خدمات",
+  servicesTitle2: "التنظيف",
+  servicesDescription: "اختر الخدمة المناسبة لك.",
+  sofaTitle: "تنظيف الكنب",
+  sofaDescription: "تنظيف شامل وتعقيم وتجفيف سريع.",
+  carTitle: "غسيل السيارات",
+  carDescription: "اختر بين غسيل يومي سريع أو عناية فاخرة.",
+  carpetTitle: "تنظيف السجاد",
+  carpetDescription: "تنظيف عميق يحافظ على اللون والملمس.",
+  carSeatsTitle: "تنظيف فرش السيارات",
+  carSeatsDescription:
+    "مقاعد، أرضيات، أو الاثنين معًا — مع إمكانية باقة مع غسيل خارجي.",
 };
