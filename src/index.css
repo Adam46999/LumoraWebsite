@@ -10,6 +10,7 @@ body {
   @apply font-sans;
 }
 
+/* ✅ أنيميشن الاهتزاز */
 @keyframes shake {
   0%,
   100% {
@@ -24,7 +25,57 @@ body {
     transform: translateX(6px);
   }
 }
-
 .animate-shake {
   animation: shake 0.6s ease-in-out;
+}
+
+/* ✅ تأثير الإطار الذهبي (احتياطي) */
+.border-gradient {
+  border-image: linear-gradient(135deg, #facc15, #fcd34d, #facc15) 1;
+}
+
+/* ✨ تأثير الضوء الذهبي المتدرّج (احتياطي سابق) */
+@keyframes shine {
+  0% {
+    box-shadow: 0 0 10px rgba(250, 204, 21, 0.3),
+      0 0 20px rgba(250, 204, 21, 0.15);
+    border-image: linear-gradient(90deg, #facc15, #fcd34d, #facc15) 1;
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(250, 204, 21, 0.6),
+      0 0 35px rgba(250, 204, 21, 0.3);
+    border-image: linear-gradient(270deg, #fcd34d, #facc15, #fcd34d) 1;
+  }
+  100% {
+    box-shadow: 0 0 10px rgba(250, 204, 21, 0.3),
+      0 0 20px rgba(250, 204, 21, 0.15);
+    border-image: linear-gradient(90deg, #facc15, #fcd34d, #facc15) 1;
+  }
+}
+.animate-shine {
+  animation: shine 4s linear infinite;
+}
+
+/* ✨✨ تأثير اللمعان الدائري الحقيقي حول الأزرار */
+@keyframes glowRing {
+  0% {
+    box-shadow: 0 0 5px 2px rgba(250, 204, 21, 0.1),
+      inset 0 0 8px rgba(250, 204, 21, 0.2);
+    filter: hue-rotate(0deg);
+  }
+  50% {
+    box-shadow: 0 0 15px 5px rgba(250, 204, 21, 0.4),
+      inset 0 0 10px rgba(250, 204, 21, 0.3);
+    filter: hue-rotate(90deg);
+  }
+  100% {
+    box-shadow: 0 0 5px 2px rgba(250, 204, 21, 0.1),
+      inset 0 0 8px rgba(250, 204, 21, 0.2);
+    filter: hue-rotate(360deg);
+  }
+}
+
+.animate-glowRing {
+  animation: glowRing 4s linear infinite;
+  opacity: 0.8;
 }

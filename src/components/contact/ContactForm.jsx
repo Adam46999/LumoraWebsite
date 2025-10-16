@@ -224,7 +224,7 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
       phone: "الهاتف",
       message: "الرسالة",
       phName: "الاسم الكامل",
-      phPhone: "05X-XXX-XXXX",
+      phPhone: "رقم الهاتف",
       phMessage:
         form.subject === "booking"
           ? "الخدمة + اليوم/الساعة…"
