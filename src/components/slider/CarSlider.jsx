@@ -28,54 +28,79 @@ export default function CarSlider({
 
   const [current, setCurrent] = useState(1);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [isAnimating, setIsAnimating] = useState(false);
   const swiperRef = useRef(null);
 
   if (!items.length) return null;
 
   const goTo = (dir) => {
-    const swiper = swiperRef.current;
-    if (!swiper) return;
+    const sw = swiperRef.current;
+    if (!sw || isAnimating) return; // 🔒 قفل أثناء الحركة
     if (isRTL) {
-      dir === "next" ? swiper.slidePrev() : swiper.slideNext();
+      dir === "next" ? sw.slidePrev() : sw.slideNext();
     } else {
-      dir === "next" ? swiper.slideNext() : swiper.slidePrev();
+      dir === "next" ? sw.slideNext() : sw.slidePrev();
     }
   };
 
-  // فتح المعاينة — نتجاهل الضغط إذا كان على زر أو عنصر معلّم كـ data-no-preview
+  // فتح المعاينة — تجاهُل الضغط لو كان على زر
   const openPreview = useCallback((e, it) => {
     if (e.defaultPrevented) return;
-    if (e.target.closest("[data-no-preview]")) return; // لا تفتح إذا كان الضغط على زر التنقل
+    if (e.target.closest("[data-no-preview]")) return;
     setSelectedImage(it);
   }, []);
 
-  // يطفي الأصفر ويمنع تسرّب الحدث للأب (ما يفتح المودال)
-  const handlePress = (e, dir) => {
-    e.preventDefault();
-    e.stopPropagation(); // مهم جداً!
-    const btn = e.currentTarget;
-    btn.classList.add("clicked", "no-hover");
-    goTo(dir);
-    setTimeout(() => {
-      btn.classList.remove("clicked", "no-hover");
-    }, 180);
-  };
-
-  // تأمين إضافي لكل أنواع الأحداث (ماوس/لمس/بوينتر)
-  const stopAll = (e) => {
+  // زر أنيق مع Ripple + Halo + تعطيل hover مؤقتًا + منع تسرّب الحدث
+  const pressButton = (e, dir) => {
     e.preventDefault();
     e.stopPropagation();
+
+    const btn = e.currentTarget;
+    btn.classList.add("clicked", "no-hover", "btn-active");
+    createRipple(btn, e);
+
+    goTo(dir);
+
+    setTimeout(() => {
+      btn.classList.remove("clicked", "no-hover");
+    }, 160);
+    setTimeout(() => {
+      btn.classList.remove("btn-active");
+    }, 260);
+  };
+
+  // Ripple
+  const createRipple = (btn, e) => {
+    const rect = btn.getBoundingClientRect();
+    const x = ("clientX" in e ? e.clientX : rect.width / 2) - rect.left;
+    const y = ("clientY" in e ? e.clientY : rect.height / 2) - rect.top;
+
+    const span = document.createElement("span");
+    span.className = "ripple";
+    span.style.left = `${x}px`;
+    span.style.top = `${y}px`;
+    btn.appendChild(span);
+    setTimeout(() => span.remove(), 450);
   };
 
   return (
     <div
       className="max-w-5xl mx-auto relative rounded-3xl overflow-hidden group animate-fade-in"
       dir={isRTL ? "rtl" : "ltr"}
+      aria-roledescription="carousel"
+      aria-label="معرض صور الخدمة"
     >
       {/* عدّاد الشرائح */}
-      <div className="absolute top-4 end-5 z-20 bg-black/50 text-white text-xs sm:text-sm px-3 py-1 rounded-full backdrop-blur-md shadow-lg">
+      <div
+        className="absolute top-4 end-5 z-20 bg-black/60 text-white text-xs sm:text-sm px-3 py-1 rounded-full backdrop-blur-md shadow-lg"
+        aria-live="polite"
+      >
         {current} / {items.length}
       </div>
+
+      {/* حافة تظليل جانبية تعطي عمق */}
+      <div className="pointer-events-none absolute inset-y-0 left-0 w-20 bg-gradient-to-r from-black/25 to-transparent z-10 hidden sm:block" />
+      <div className="pointer-events-none absolute inset-y-0 right-0 w-20 bg-gradient-to-l from-black/25 to-transparent z-10 hidden sm:block" />
 
       <Swiper
         modules={[
@@ -89,6 +114,8 @@ export default function CarSlider({
         ]}
         onSwiper={(sw) => (swiperRef.current = sw)}
         onSlideChange={(sw) => setCurrent(sw.realIndex + 1)}
+        onSlideChangeTransitionStart={() => setIsAnimating(true)}
+        onSlideChangeTransitionEnd={() => setIsAnimating(false)}
         effect={effect}
         fadeEffect={effect === "fade" ? { crossFade: true } : undefined}
         pagination={{ clickable: true, dynamicBullets: true }}
@@ -142,44 +169,24 @@ export default function CarSlider({
         ))}
       </Swiper>
 
-      {/* أزرار التنقل — مع منع تسرّب الحدث */}
-      <button
-        data-no-preview
-        type="button"
-        onPointerDown={(e) => handlePress(e, "prev")}
-        onPointerUp={stopAll}
-        onMouseDown={stopAll}
-        onMouseUp={stopAll}
-        onTouchStart={stopAll}
-        onTouchEnd={stopAll}
-        className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 z-30 w-14 h-14 sm:w-16 sm:h-16
-        flex items-center justify-center rounded-full bg-black/40 backdrop-blur-md
-        text-yellow-400 transition-all duration-150 ease-out shadow-xl border border-yellow-400/50
-        hover:bg-yellow-400/90 hover:text-black active:scale-95 focus:outline-none"
-        style={{ touchAction: "manipulation" }} // يمنع الـ "ghost click" على الموبايل
-        aria-label="السابق"
+      {/* أزرار التنقل — احترافية وواسعة اللمس */}
+      <NavButton
+        side="left"
+        label="السابق"
+        onPointerDown={(e) => pressButton(e, "prev")}
+        disabled={isAnimating}
       >
         <ChevronLeft className="w-7 h-7 sm:w-8 sm:h-8 pointer-events-none" />
-      </button>
+      </NavButton>
 
-      <button
-        data-no-preview
-        type="button"
-        onPointerDown={(e) => handlePress(e, "next")}
-        onPointerUp={stopAll}
-        onMouseDown={stopAll}
-        onMouseUp={stopAll}
-        onTouchStart={stopAll}
-        onTouchEnd={stopAll}
-        className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 z-30 w-14 h-14 sm:w-16 sm:h-16
-        flex items-center justify-center rounded-full bg-black/40 backdrop-blur-md
-        text-yellow-400 transition-all duration-150 ease-out shadow-xl border border-yellow-400/50
-        hover:bg-yellow-400/90 hover:text-black active:scale-95 focus:outline-none"
-        style={{ touchAction: "manipulation" }}
-        aria-label="التالي"
+      <NavButton
+        side="right"
+        label="التالي"
+        onPointerDown={(e) => pressButton(e, "next")}
+        disabled={isAnimating}
       >
         <ChevronRight className="w-7 h-7 sm:w-8 sm:h-8 pointer-events-none" />
-      </button>
+      </NavButton>
 
       {/* تلميح سحب */}
       <div className="absolute inset-y-0 left-3 flex items-center opacity-0 group-hover:opacity-50 transition animate-pulse pointer-events-none">
@@ -189,7 +196,7 @@ export default function CarSlider({
         <span className="text-white/60 text-2xl">↔️</span>
       </div>
 
-      {/* معاينة الصورة */}
+      {/* مودال معاينة */}
       {selectedImage && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md animate-fade-in"
@@ -216,6 +223,69 @@ export default function CarSlider({
           />
         </div>
       )}
+    </div>
+  );
+}
+
+/* ============ زر ملاحة مخصص ============ */
+function NavButton({ side = "left", label, disabled, children, ...rest }) {
+  const pos = side === "left" ? "left-2 sm:left-3" : "right-2 sm:right-3";
+
+  return (
+    <div
+      className={`absolute ${pos} top-1/2 -translate-y-1/2 z-30`}
+      aria-hidden={disabled ? "true" : "false"}
+    >
+      {/* منطقة لمس أكبر (Hit Area) */}
+      <button
+        data-no-preview
+        type="button"
+        title={label}
+        aria-label={label}
+        disabled={disabled}
+        {...rest}
+        onMouseUp={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+        }}
+        onMouseDown={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+        }}
+        onTouchStart={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+        }}
+        onTouchEnd={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+        }}
+        onPointerUp={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+        }}
+        className={`relative group/nav w-18 h-18 sm:w-20 sm:h-20 p-2 rounded-full outline-none
+          ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
+          transition-all duration-150 ease-out`}
+        style={{ touchAction: "manipulation" }}
+      >
+        {/* الهالة الخلفية (Halo) */}
+        <span className="absolute inset-0 rounded-full bg-black/25 blur-xl opacity-70 group-hover/nav:opacity-90 transition pointer-events-none" />
+
+        {/* الزر نفسه */}
+        <span
+          className={`relative z-10 flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16
+          rounded-full border border-yellow-400/50 shadow-xl backdrop-blur-md
+          bg-black/45 text-yellow-400 transition-all duration-150
+          group-hover/nav:bg-yellow-400/95 group-hover/nav:text-black
+          group-active/nav:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-400/70
+          btn-elevated`}
+        >
+          {/* Halo داخلي متحرك بسيط */}
+          <span className="absolute inset-0 rounded-full animate-glowRing pointer-events-none" />
+          {children}
+        </span>
+      </button>
     </div>
   );
 }

@@ -12,7 +12,9 @@ body {
   @apply font-sans;
 }
 
-/* ✅ أنيميشن الاهتزاز */
+/* ===================== Animations & Effects ===================== */
+
+/* ✅ اهتزاز */
 @keyframes shake {
   0%,
   100% {
@@ -31,12 +33,12 @@ body {
   animation: shake 0.6s ease-in-out;
 }
 
-/* ✅ تأثير الإطار الذهبي (احتياطي) */
+/* ✅ إطار ذهبي احتياطي */
 .border-gradient {
   border-image: linear-gradient(135deg, #facc15, #fcd34d, #facc15) 1;
 }
 
-/* ✨ تأثير الضوء الذهبي المتدرّج (احتياطي سابق) */
+/* ✨ ضوء ذهبي متدرّج */
 @keyframes shine {
   0% {
     box-shadow: 0 0 10px rgba(250, 204, 21, 0.3),
@@ -58,7 +60,7 @@ body {
   animation: shine 4s linear infinite;
 }
 
-/* ✨✨ تأثير اللمعان الدائري الحقيقي حول الأزرار */
+/* ✨ وهج حلقي حول الأزرار */
 @keyframes glowRing {
   0% {
     box-shadow: 0 0 5px 2px rgba(250, 204, 21, 0.1),
@@ -81,7 +83,7 @@ body {
   opacity: 0.8;
 }
 
-/* ✨ أنيميشن الظهور الناعم (تستخدمها في السلايدر) */
+/* ✨ ظهور ناعم */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -96,14 +98,53 @@ body {
   animation: fadeIn 0.35s ease-out both;
 }
 
-/* ✅ حل نهائي لإضاءة الأصفر بأزرار السلايدر */
+/* ===================== Slider Buttons UX Fix ===================== */
+
+/* يطفي الأصفر فورًا ويكسر hover مؤقتًا بعد الضغط */
 .clicked {
   background-color: rgba(250, 204, 21, 0.9) !important; /* أصفر */
   color: #000 !important;
   transition: background-color 0.15s ease-out, color 0.15s ease-out;
 }
 
-/* تعطيل مؤقت للـ hover لجزء من الثانية حتى ما يضل مضوي */
+/* تعطيل مؤقت للـ hover لجزء من الثانية حتى ما يظل مضوي */
 .no-hover {
   pointer-events: none !important;
+}
+
+/* نفَس ارتفاع خفيف (إحساس زر فاخر) */
+.btn-elevated {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35), inset 0 0 0 0 rgba(0, 0, 0, 0);
+}
+
+/* حالة تفعيل قصيرة لإحساس الضغط */
+.btn-active {
+  transform: translateY(0) scale(0.98);
+  transition: transform 120ms ease-out;
+}
+
+/* Ripple للضغط */
+.ripple {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  transform: translate(-50%, -50%);
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.55);
+  animation: ripple-zoom 420ms ease-out forwards;
+  pointer-events: none;
+}
+@keyframes ripple-zoom {
+  0% {
+    opacity: 0.6;
+    transform: translate(-50%, -50%) scale(0.4);
+  }
+  70% {
+    opacity: 0.25;
+    transform: translate(-50%, -50%) scale(2.6);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(3.2);
+  }
 }
