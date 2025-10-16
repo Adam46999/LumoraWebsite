@@ -2,10 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+/* سلوك تمرير ناعم */
 html {
   scroll-behavior: smooth;
 }
 
+/* خط افتراضي من Tailwind theme */
 body {
   @apply font-sans;
 }
@@ -74,8 +76,34 @@ body {
     filter: hue-rotate(360deg);
   }
 }
-
 .animate-glowRing {
   animation: glowRing 4s linear infinite;
   opacity: 0.8;
+}
+
+/* ✨ أنيميشن الظهور الناعم (تستخدمها في السلايدر) */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fade-in {
+  animation: fadeIn 0.35s ease-out both;
+}
+
+/* ✅ حل نهائي لإضاءة الأصفر بأزرار السلايدر */
+.clicked {
+  background-color: rgba(250, 204, 21, 0.9) !important; /* أصفر */
+  color: #000 !important;
+  transition: background-color 0.15s ease-out, color 0.15s ease-out;
+}
+
+/* تعطيل مؤقت للـ hover لجزء من الثانية حتى ما يضل مضوي */
+.no-hover {
+  pointer-events: none !important;
 }
