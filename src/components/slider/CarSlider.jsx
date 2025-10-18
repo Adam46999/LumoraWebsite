@@ -99,17 +99,30 @@ export default function CarSlider({
         {items.map((it, idx) => (
           <SwiperSlide key={idx}>
             <div
-              className="relative w-full h-[340px] sm:h-[420px] md:h-[460px] bg-gray-200 overflow-hidden transition-transform duration-200 ease-out active:scale-[0.985]"
+              className="relative w-full h-[340px] sm:h-[420px] md:h-[460px] bg-black/50 overflow-hidden transition-transform duration-200 ease-out active:scale-[0.985]"
               onClick={(e) => openPreview(e, it)}
             >
+              {/* 👇 الخلفية المغبّشة (تملأ الإطار بلا قصّ) */}
               <img
                 src={it.src}
-                alt={it.alt || "صورة الخدمة"}
-                className="w-full h-full object-cover transition-transform duration-[900ms] ease-[cubic-bezier(0.25,1,0.5,1)] group-hover:scale-105"
+                alt=""
+                aria-hidden="true"
+                className="absolute inset-0 w-full h-full object-cover blur-lg scale-110 opacity-40 pointer-events-none"
                 draggable={false}
                 loading="lazy"
                 decoding="async"
               />
+
+              {/* 👇 الصورة الأصلية كاملة بدون قصّ */}
+              <img
+                src={it.src}
+                alt={it.alt || "صورة الخدمة"}
+                className="absolute inset-0 w-full h-full object-contain transition-transform duration-[900ms] ease-[cubic-bezier(0.25,1,0.5,1)] group-hover:scale-105"
+                draggable={false}
+                loading="lazy"
+                decoding="async"
+              />
+
               <div
                 className="absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-black/80 via-black/30 to-transparent pointer-events-none"
                 aria-hidden="true"
