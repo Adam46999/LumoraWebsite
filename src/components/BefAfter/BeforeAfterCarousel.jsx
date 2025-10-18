@@ -22,15 +22,6 @@ export default function BeforeAfterCarousel({
         <span className="text-blue-600 ms-1">{t.beforeAfterTitle2}</span>
       </h2>
 
-      {!hideDescription && (
-        <p
-          className="text-center text-gray-600 max-w-2xl mx-auto mt-2
-                      text-[clamp(12px,3.2vw,16px)]"
-        >
-          {t.beforeAfterDescription}
-        </p>
-      )}
-
       <Swiper
         modules={[Navigation]}
         navigation
