@@ -1,5 +1,5 @@
 // src/components/BefAfter/CleaningShowcase.jsx
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { useLanguage } from "../../context/LanguageContext";
 import CleaningTabs from "./CleaningTabs";
 import CarSlider from "../slider/CarSlider";
@@ -7,12 +7,12 @@ import SimpleSlider from "../slider/SimpleSlider";
 import BeforeAfterCarousel from "./BeforeAfterCarousel";
 
 /**
- * (8) Prefetch: عند تغيير التبويب، نجهّز صور التبويب التالي بالخفاء.
- * يشمل:
- *  - carsImages: [{src,...}]
- *  - rugsImages: [{src,...}]
- *  - sofaPairs:  [{before, after}]
+ * هذا الإصدار:
+ * - يبقي كل التبويبات مركّبة (ready) ويبدّل العرض فقط عبر CSS (بدون unmount).
+ * - Prefetch لكل الصور بحدّ أعلى معقول.
+ * - تسميات قصيرة للتبويبات (سيارات | كنب-فرش | سجاد).
  */
+
 export default function CleaningShowcase({
   carsImages = [],
   rugsImages = [],
@@ -21,8 +21,8 @@ export default function CleaningShowcase({
 }) {
   const { t, lang } = useLanguage();
   const isRTL = useMemo(() => ["ar", "he"].includes(lang), [lang]);
-
   const [active, setActive] = useState(defaultTab);
+  const bootedRef = useRef(false); // لمنع تكرار الـ skeleton/التهيئة
 
   const counts = useMemo(
     () => ({
@@ -33,29 +33,31 @@ export default function CleaningShowcase({
     [carsImages.length, sofaPairs.length, rugsImages.length]
   );
 
-  // ترتيب التبويبات
   const allTabs = useMemo(
     () => ["cars", "sofa", "rugs"].filter((id) => counts[id] > 0),
     [counts]
   );
 
-  // (8) Prefetch صور التبويب التالي
+  // Prefetch لكل الصور (مرّة واحدة عند الإقلاع) — حد أعلى لحماية الذاكرة
   useEffect(() => {
-    if (!allTabs.length) return;
-    const idx = allTabs.indexOf(active);
-    if (idx === -1) return;
-    const nextId = allTabs[(idx + 1) % allTabs.length];
+    if (bootedRef.current) return;
+    bootedRef.current = true;
 
-    const urls = getTabImageUrls(nextId, { carsImages, rugsImages, sofaPairs });
-    urls.slice(0, 12).forEach((src) => {
-      // حدّ أعلى معقول
-      if (!src) return;
+    const urls = [
+      ...carsImages.map((i) => i?.src).filter(Boolean),
+      ...rugsImages.map((i) => i?.src).filter(Boolean),
+      ...sofaPairs.flatMap((p) => [p?.before, p?.after]).filter(Boolean),
+    ]
+      .slice(0, 36) // سقف منطقي
+      .filter(Boolean);
+
+    urls.forEach((src) => {
       const img = new Image();
       img.decoding = "async";
       img.loading = "eager";
       img.src = src;
     });
-  }, [active, allTabs, carsImages, rugsImages, sofaPairs]);
+  }, [carsImages, rugsImages, sofaPairs]);
 
   const title =
     t?.cleaningShowcaseTitle ||
@@ -63,14 +65,17 @@ export default function CleaningShowcase({
   const subtitle =
     t?.cleaningShowcaseSubtitle ||
     (isRTL
-      ? "استعرض أقسام التنظيف بالصور والنتائج قبل وبعد."
-      : "Browse cleaning sections with photos and before/after results.");
+      ? "استعرض النتائج: سيارات، كنب-فرش (قبل/بعد)، وسجاد."
+      : "Browse: cars, upholstery (before/after), and rugs.");
 
   return (
-    <section id="cleaning-showcase" className="max-w-6xl mx-auto px-4 py-10">
+    <section
+      id="cleaning-showcase"
+      className="max-w-6xl mx-auto px-3 sm:px-4 py-8 sm:py-10"
+    >
       {/* العنوان */}
-      <header className="text-center mb-4 sm:mb-6">
-        <h2 className="text-[clamp(20px,4.5vw,32px)] font-extrabold tracking-tight text-gray-900">
+      <header className="text-center mb-3 sm:mb-5">
+        <h2 className="text-[clamp(18px,4.5vw,32px)] font-extrabold tracking-tight text-gray-900">
           {title}
         </h2>
         <p className="mt-1 sm:mt-2 text-gray-600 max-w-2xl mx-auto text-[clamp(12px,3.5vw,16px)]">
@@ -78,17 +83,16 @@ export default function CleaningShowcase({
         </p>
       </header>
 
-      {/* التبويبات */}
+      {/* التبويبات — تسميات قصيرة */}
       <CleaningTabs
         lang={lang}
         active={active}
         onChange={setActive}
         counts={counts}
         labels={{
-          cars: t?.carsTabLabel || (isRTL ? "غسيل السيارات" : "Car Wash"),
-          sofa:
-            t?.sofaTabLabel || (isRTL ? "تنظيف الكنب والفرش" : "Upholstery"),
-          rugs: t?.rugsTabLabel || (isRTL ? "تنظيف السجاد" : "Rugs Cleaning"),
+          cars: t?.carsShort || (isRTL ? "سيارات" : "Cars"),
+          sofa: t?.sofaShort || (isRTL ? "كنب-فرش" : "Upholstery"),
+          rugs: t?.rugsShort || (isRTL ? "سجاد" : "Rugs"),
         }}
         disableEmpty={true}
         sticky={true}
@@ -96,13 +100,13 @@ export default function CleaningShowcase({
         className="mb-3 sm:mb-4"
       />
 
-      {/* المحتوى */}
+      {/* المحتوى — كل اللوحات مركّبة وجاهزة، نبدّل العرض فقط */}
       <div className="mt-2" dir={isRTL ? "rtl" : "ltr"}>
         <Panel id="cars" active={active}>
           {carsImages.length ? (
             <CarSlider items={carsImages} />
           ) : (
-            <EmptyState text={isRTL ? "لا صور cars متاحة" : "No car images"} />
+            <EmptyState text={isRTL ? "لا صور للسيارات" : "No car images"} />
           )}
         </Panel>
 
@@ -128,24 +132,29 @@ export default function CleaningShowcase({
   );
 }
 
+/** يبقي الأطفال Mounted دائمًا — يبدّل الرؤية فقط */
 function Panel({ id, active, children }) {
-  const hidden = active !== id;
+  const isActive = active === id;
   return (
     <div
       role="tabpanel"
       id={`panel-${id}`}
       aria-labelledby={`tab-${id}`}
-      hidden={hidden}
-      className={hidden ? "" : "animate-fade-in"}
+      aria-hidden={isActive ? "false" : "true"}
+      className={[
+        // نخفي عبر CSS فقط — بدون إلغاء التركيب
+        isActive ? "block animate-fade-in" : "hidden",
+      ].join(" ")}
     >
-      {!hidden && children}
+      {children}
     </div>
   );
 }
 
 function EmptyState({ text = "No items" }) {
   return (
-    <div className="w-full py-16 flex flex-col items-center justify-center text-gray-500">
+    <div className="w-full py-12 sm:py-16 flex flex-col items-center justify-center text-gray-500">
+      {/* Skeleton بسيط */}
       <div className="w-full max-w-3xl grid grid-cols-3 gap-3 mb-3 px-4">
         {[...Array(6)].map((_, i) => (
           <div
@@ -157,23 +166,4 @@ function EmptyState({ text = "No items" }) {
       <p className="text-sm">{text}</p>
     </div>
   );
-}
-
-/* ===== Helpers ===== */
-function getTabImageUrls(tabId, { carsImages, rugsImages, sofaPairs }) {
-  if (tabId === "cars") {
-    return carsImages.map((i) => i?.src).filter(Boolean);
-  }
-  if (tabId === "rugs") {
-    return rugsImages.map((i) => i?.src).filter(Boolean);
-  }
-  if (tabId === "sofa") {
-    const arr = [];
-    sofaPairs.forEach((p) => {
-      if (p?.before) arr.push(p.before);
-      if (p?.after) arr.push(p.after);
-    });
-    return arr;
-  }
-  return [];
 }

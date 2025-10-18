@@ -1,9 +1,9 @@
 // src/App.jsx
+import { useEffect } from "react";
 import useSectionNavigation from "./hooks/useSectionNavigation";
 import Header from "./components/Header";
 import Hero from "./components/hero/Hero";
 import Services from "./components/services/Services";
-// ❌ كان: import BeforeAfterCarousel from "./components/BefAfter/BeforeAfterCarousel";
 import CleaningShowcase from "./components/BefAfter/CleaningShowcase";
 import ContactSection from "./components/contact/ContactSection";
 
@@ -17,14 +17,25 @@ import after3 from "./assets/after3.jpg";
 function App() {
   const { scrollToSection, shakeTarget } = useSectionNavigation();
 
-  // بيانات جاهزة للتمرير:
+  // احسب ارتفاع الهيدر وخزّنه بمتغيّر CSS عالمي
+  useEffect(() => {
+    const setHeaderVar = () => {
+      const el = document.getElementById("site-header");
+      const h = el?.offsetHeight || 56;
+      document.documentElement.style.setProperty("--app-topbar-h", `${h}px`);
+    };
+    setHeaderVar();
+    window.addEventListener("resize", setHeaderVar);
+    return () => window.removeEventListener("resize", setHeaderVar);
+  }, []);
+
+  // بيانات التجريب
   const sofaPairs = [
     { before: before1, after: after1 },
     { before: before2, after: after2 },
     { before: before3, after: after3 },
   ];
 
-  // مؤقتًا استعمل نفس الصور لأي سلايدر لحد ما تحط صور سيارات/سجاد
   const carsImages = [
     { src: after1, caption: "غسيل سيارات VIP" },
     { src: after2, caption: "تلميع خارجي" },
@@ -37,7 +48,10 @@ function App() {
 
   return (
     <div className="font-sans">
-      <Header scrollToSection={scrollToSection} />
+      {/* لفّ الهيدر لتحديد ارتفاعه */}
+      <div id="site-header">
+        <Header scrollToSection={scrollToSection} />
+      </div>
 
       <Hero />
 
@@ -50,7 +64,6 @@ function App() {
         <Services />
       </section>
 
-      {/* ✅ هنا التبويبات الجديدة بدل BeforeAfterCarousel */}
       <section
         id="beforeafter"
         className={`py-24 px-6 transition-all duration-300 ${
@@ -58,10 +71,10 @@ function App() {
         }`}
       >
         <CleaningShowcase
-          defaultTab="sofa" // "cars" | "sofa" | "rugs"
-          carsImages={carsImages} // سلايدر
-          rugsImages={rugsImages} // سلايدر
-          sofaPairs={sofaPairs} // Before/After
+          defaultTab="sofa"
+          carsImages={carsImages}
+          rugsImages={rugsImages}
+          sofaPairs={sofaPairs}
         />
       </section>
 

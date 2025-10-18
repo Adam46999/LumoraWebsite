@@ -2,12 +2,6 @@
 import { useEffect, useMemo, useRef, useState, useId } from "react";
 import { Car, Armchair, Layers } from "lucide-react";
 
-/**
- * ثلاث تبويبات ثابتة بدون تمرير:
- * - grid-cols-3 دائماً (موبايل → دِسك توب)
- * - على الشاشات الصغيرة: أيقونة فوق + نص يلفّ حتى سطرين (بدون قص)
- * - ارتفاع ثابت لمنع القفزات + RTL/Keyboard/Sticky
- */
 export default function CleaningTabs({
   lang = "ar",
   active,
@@ -15,17 +9,15 @@ export default function CleaningTabs({
   defaultActive = "sofa",
   counts = { cars: 0, sofa: 0, rugs: 0 },
   labels = {
-    cars: "غسيل السيارات",
-    sofa: "تنظيف الكنب والفرش",
-    rugs: "تنظيف السجاد",
+    cars: "سيارات",
+    sofa: "كنب-فرش",
+    rugs: "سجاد",
   },
   sticky = true,
   icons = { cars: Car, sofa: Armchair, rugs: Layers },
   className = "",
 }) {
   const isRTL = useMemo(() => ["ar", "he"].includes(lang), [lang]);
-
-  // Controlled / Uncontrolled
   const controlled = active !== undefined && typeof onChange === "function";
   const [internal, setInternal] = useState(defaultActive);
   const current = controlled ? active : internal;
@@ -93,11 +85,15 @@ export default function CleaningTabs({
   return (
     <div
       ref={wrapRef}
-      className={[
-        sticky ? "sticky top-[calc(0.5rem+env(safe-area-inset-top))]" : "",
-        "z-30",
-        className,
-      ].join(" ")}
+      className={["z-50", className].join(" ")}
+      style={
+        sticky
+          ? {
+              position: "sticky",
+              top: "calc(var(--app-topbar-h, 56px) + env(safe-area-inset-top) + 8px)",
+            }
+          : undefined
+      }
     >
       <div
         dir={isRTL ? "rtl" : "ltr"}
@@ -107,13 +103,12 @@ export default function CleaningTabs({
         tabIndex={0}
         className={[
           "w-full rounded-2xl bg-white/85 dark:bg-white/10 backdrop-blur-md",
-          "shadow-[0_6px_20px_-6px_rgba(0,0,0,0.15)] border border-white/60 dark:border-white/10",
-          "px-1.5 py-1.5",
+          "shadow-[0_6px_18px_-10px_rgba(0,0,0,0.22)]",
+          "border border-white/60 dark:border-white/10",
+          "px-2 py-2",
         ].join(" ")}
-        // ارتفاع ثابت يمنع تغيّر الطول بين الحالات
-        style={{ minHeight: 70 }}
+        style={{ minHeight: 72 }}
       >
-        {/* ثابت: 3 أعمدة بدون تمرير */}
         <div className="grid grid-cols-3 gap-1.5">
           {TABS.map(({ id, label, count, Icon }) => {
             const selected = current === id;
@@ -130,25 +125,18 @@ export default function CleaningTabs({
                 onClick={() => setCurrent(id)}
                 className={[
                   "relative rounded-xl font-semibold select-none text-center",
-                  "transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/80",
-                  // تخطيط عمودي على الشاشات الصغيرة لزيادة الوضوح
                   "flex flex-col items-center justify-center",
-                  // مسافات متوازنة
-                  "py-2.5 px-2 sm:px-3",
-                  // ارتفاع ثابت يسمح بسطرين
-                  "min-h-[58px] sm:min-h-[56px]",
+                  "py-3 px-2 sm:px-3 min-h-[62px] sm:min-h-[58px]",
+                  "transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/80",
                   selected
-                    ? "text-white bg-gradient-to-b from-blue-600 to-blue-700 shadow-[0_10px_24px_-12px_rgba(37,99,235,0.55)] active:scale-[0.98]"
-                    : "text-gray-800 dark:text-gray-100 bg-white/60 dark:bg-white/5 hover:bg-white/85 dark:hover:bg-white/10 border border-white/60 dark:border-white/10 active:scale-[0.98]",
+                    ? "text-white bg-gradient-to-b from-blue-600 to-blue-700 shadow-[0_10px_22px_-14px_rgba(37,99,235,0.55)]"
+                    : "text-gray-900 dark:text-gray-100 bg-white/60 dark:bg-white/5 hover:bg-white/85 dark:hover:bg-white/10 border border-white/60 dark:border-white/10",
                 ].join(" ")}
                 title={label}
               >
-                {/* الأيقونة */}
-                <Icon className="w-[18px] h-[18px] sm:w-5 sm:h-5 mb-0.5" />
-
-                {/* النص — سطران كحد أقصى بدون قصّ حروف */}
+                <Icon className="w-[19px] h-[19px] sm:w-5 sm:h-5 mb-1" />
                 <span
-                  className="px-1 text-[12.5px] sm:text-[13.5px] leading-[1.05] sm:leading-snug whitespace-normal break-words"
+                  className="px-1 text-[clamp(12px,3.2vw,13.5px)] leading-snug whitespace-normal break-words"
                   style={{
                     display: "-webkit-box",
                     WebkitLineClamp: 2,
@@ -159,8 +147,6 @@ export default function CleaningTabs({
                 >
                   {label}
                 </span>
-
-                {/* الشارة — تصغير على الموبايل */}
                 {count > 0 && (
                   <span
                     className={[
