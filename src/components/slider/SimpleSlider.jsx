@@ -28,7 +28,7 @@ export default function SimpleSlider({
   loop = true,
   effect = "slide", // "slide" | "fade"
   showEmpty = true,
-  heightClasses = "h-[340px] sm:h-[420px] md:h-[460px]",
+  heightClasses = "aspect-[16/9]",
 }) {
   const { lang } = useLanguage();
   const isRTL = useMemo(() => ["ar", "he"].includes(lang), [lang]);
@@ -37,6 +37,7 @@ export default function SimpleSlider({
   const [selectedImage, setSelectedImage] = useState(null);
   const swiperRef = useRef(null);
   const resumeTimerRef = useRef(null);
+  const startYRef = useRef(0);
 
   // حالة فارغة
   if (!items.length) {
@@ -113,7 +114,16 @@ export default function SimpleSlider({
       <Swiper
         modules={[Pagination, A11y, Autoplay, Keyboard, Mousewheel, EffectFade]}
         onSwiper={(sw) => (swiperRef.current = sw)}
-        onSlideChange={(sw) => setCurrent(sw.realIndex + 1)}
+        onSlideChange={(sw) => {
+          setCurrent(sw.realIndex + 1);
+          // Preload للصورة التالية
+          const next = items[(sw.realIndex + 1) % items.length];
+          if (next?.src) {
+            const img = new Image();
+            img.decoding = "async";
+            img.src = next.src;
+          }
+        }}
         effect={effect}
         fadeEffect={effect === "fade" ? { crossFade: true } : undefined}
         pagination={{ clickable: true, dynamicBullets: true }}
@@ -139,13 +149,13 @@ export default function SimpleSlider({
               className={`relative w-full ${heightClasses} bg-gray-200 overflow-hidden transition-transform duration-200 ease-out active:scale-[0.985]`}
               onClick={(e) => openPreview(e, it)}
             >
-              {/* 👇 نفس سلوك CarSlider الأصلي: object-cover (زوم) */}
+              {/* object-cover (زوم) */}
               <img
                 src={it.src}
                 alt={it.alt || (isRTL ? "صورة السجاد" : "Rug image")}
                 className="w-full h-full object-cover transition-transform duration-[900ms] ease-[cubic-bezier(0.25,1,0.5,1)] group-hover:scale-105"
                 draggable={false}
-                loading="lazy"
+                loading={idx === 0 ? "eager" : "lazy"}
                 decoding="async"
               />
 
@@ -155,11 +165,27 @@ export default function SimpleSlider({
               />
               {(it.title || it.caption) && (
                 <div className="absolute bottom-6 inset-x-0 z-10 text-white px-6 select-none pointer-events-none">
-                  <h3 className="text-[clamp(16px,3vw,22px)] font-extrabold text-yellow-400 drop-shadow-lg mb-1">
+                  <h3
+                    className="text-[clamp(16px,3vw,22px)] font-extrabold text-yellow-400 drop-shadow-lg mb-1"
+                    style={{
+                      display: "-webkit-box",
+                      WebkitLineClamp: 1,
+                      WebkitBoxOrient: "vertical",
+                      overflow: "hidden",
+                    }}
+                  >
                     {it.title || (isRTL ? "خدمة السجاد" : "Rug service")}
                   </h3>
                   {it.caption && (
-                    <p className="text-[clamp(12px,2.5vw,16px)] opacity-90 leading-snug truncate text-ellipsis overflow-hidden whitespace-nowrap">
+                    <p
+                      className="text-[clamp(12px,2.5vw,16px)] opacity-90 leading-snug"
+                      style={{
+                        display: "-webkit-box",
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: "vertical",
+                        overflow: "hidden",
+                      }}
+                    >
                       {it.caption}
                     </p>
                   )}
@@ -173,12 +199,20 @@ export default function SimpleSlider({
       {selectedImage && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md animate-fade-in"
+          role="dialog"
+          aria-modal="true"
+          onTouchStart={(e) => (startYRef.current = e.touches[0].clientY)}
+          onTouchEnd={(e) => {
+            const dy = e.changedTouches[0].clientY - startYRef.current;
+            if (dy > 60) {
+              setSelectedImage(null);
+              resumeAutoplay(500);
+            }
+          }}
           onClick={() => {
             setSelectedImage(null);
             resumeAutoplay(500);
           }}
-          role="dialog"
-          aria-modal="true"
         >
           <button
             onClick={(e) => {
@@ -186,12 +220,12 @@ export default function SimpleSlider({
               setSelectedImage(null);
               resumeAutoplay(500);
             }}
-            className="absolute top-5 right-5 text-white hover:text-yellow-400 transition"
+            className="absolute top-5 right-5 text-white hover:text-yellow-400 transition w-11 h-11 flex items-center justify-center"
             aria-label={isRTL ? "إغلاق المعاينة" : "Close preview"}
             type="button"
             data-no-preview
           >
-            <X className="w-7 h-7" />
+            <X className="w-6 h-6" />
           </button>
           <img
             src={selectedImage.src}

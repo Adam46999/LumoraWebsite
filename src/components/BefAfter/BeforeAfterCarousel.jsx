@@ -1,3 +1,4 @@
+// src/components/BefAfter/BeforeAfterCarousel.jsx
 import React from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
@@ -29,6 +30,7 @@ export default function BeforeAfterCarousel({
         slidesPerView={1}
         loop
         allowTouchMove={false}
+        className="mt-4"
       >
         {items.map((item, index) => (
           <SwiperSlide key={index}>

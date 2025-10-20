@@ -50,7 +50,7 @@ function BeforeAfter({ beforeImage, afterImage }) {
     setSliderX(percent);
   };
 
-  // 🔹 Demo لطيف جدًا: غمزة واحدة لتوضيح الفكرة (50% → 54% → 50%)
+  // 🔹 Demo غمزة (50% → 54% → 50%)
   useEffect(() => {
     const prefersReduced =
       typeof window !== "undefined" &&
@@ -65,22 +65,22 @@ function BeforeAfter({ beforeImage, afterImage }) {
     timeoutId = window.setTimeout(() => {
       const startVal = 50;
       const peakVal = 54;
-      const duration = 900; // ~0.9s
+      const duration = 900;
       let startTs;
 
       const animate = (ts) => {
-        if (hasInteractedRef.current) return; // أوقف عند أول تفاعل
+        if (hasInteractedRef.current) return;
         if (!startTs) startTs = ts;
         const p = Math.min(1, (ts - startTs) / duration);
 
-        const ease = 0.5 - 0.5 * Math.cos(Math.PI * p); // ease-in-out
+        const ease = 0.5 - 0.5 * Math.cos(Math.PI * p);
         const val = startVal + Math.sin(ease * Math.PI) * (peakVal - startVal);
         setSliderX(val);
 
         if (p < 1) {
           rafId = requestAnimationFrame(animate);
         } else {
-          setSliderX(50); // ثبّت الوسط في النهاية
+          setSliderX(50);
         }
       };
 
@@ -118,8 +118,8 @@ function BeforeAfter({ beforeImage, afterImage }) {
 
     const up = () => {
       dragState.current.dragging = false;
-      // سناب للوسط إذا قريب منه (±4%)
-      setSliderX((v) => (Math.abs(v - 50) <= 4 ? 50 : v));
+      // سناب ألين: ±6%
+      setSliderX((v) => (Math.abs(v - 50) <= 6 ? 50 : v));
       window.removeEventListener("mousemove", move);
       window.removeEventListener("mouseup", up);
     };
@@ -131,15 +131,15 @@ function BeforeAfter({ beforeImage, afterImage }) {
   // لمس
   const onPointerDownTouch = (e) => {
     hideHintOnce();
-    const t = e.touches[0];
+    const t0 = e.touches[0];
     dragState.current = {
       dragging: true,
-      startX: t.clientX,
-      startY: t.clientY,
+      startX: t0.clientX,
+      startY: t0.clientY,
       locked: false,
       preventedScroll: false,
     };
-    updateSlider(t.clientX);
+    updateSlider(t0.clientX);
 
     const move = (ev) => {
       const tt = ev.touches[0];
@@ -161,7 +161,7 @@ function BeforeAfter({ beforeImage, afterImage }) {
 
     const up = () => {
       dragState.current.dragging = false;
-      setSliderX((v) => (Math.abs(v - 50) <= 4 ? 50 : v));
+      setSliderX((v) => (Math.abs(v - 50) <= 6 ? 50 : v));
       window.removeEventListener("touchmove", move, { passive: false });
       window.removeEventListener("touchend", up);
       dragState.current.preventedScroll = false;
@@ -230,11 +230,13 @@ function BeforeAfter({ beforeImage, afterImage }) {
         onTouchStartDouble(e);
       }}
       className={[
-        // ✅ ارتفاعات ثابتة زي الأقسام الثانية (عدّلها لو لزم)
         "relative w-full overflow-hidden rounded-xl shadow-md bg-gray-100 select-none",
-        "h-[360px] sm:h-[420px] lg:h-[460px]",
+        // 👇 ثبّت نسبة العرض/الارتفاع لتقليل CLS:
+        "aspect-[16/9] sm:aspect-[16/9] lg:aspect-[16/9]",
         isFullscreen ? "fixed inset-0 z-[9999] rounded-none h-auto" : "",
       ].join(" ")}
+      aria-roledescription="before-after"
+      aria-label={t?.beforeAfterAria || "مقارنة قبل/بعد"}
     >
       {/* زر ملء الشاشة */}
       <button
@@ -244,7 +246,7 @@ function BeforeAfter({ beforeImage, afterImage }) {
           hideHintOnce();
           toggleFullscreen();
         }}
-        className="absolute top-2 right-2 z-40 h-9 w-9 rounded-full bg-black/45 text-white backdrop-blur-md flex items-center justify-center hover:bg黑/55 hover:bg-black/55 transition"
+        className="absolute top-2 right-2 z-40 h-10 w-10 rounded-full bg-black/45 text-white backdrop-blur-md flex items-center justify-center hover:bg-black/55 transition"
         aria-label={
           isFullscreen
             ? t?.exitFullscreen || "خروج من ملء الشاشة"
@@ -275,7 +277,7 @@ function BeforeAfter({ beforeImage, afterImage }) {
         style={{ clipPath: `inset(0 ${100 - sliderX}% 0 0)` }}
       />
 
-      {/* تدرّج ظل أضيق خلف الفاصل (لرفع التباين بدون إزعاج) */}
+      {/* تدرّج ظل أضيق خلف الفاصل */}
       <div
         className="pointer-events-none absolute top-0 h-full z-20"
         style={{
@@ -303,20 +305,32 @@ function BeforeAfter({ beforeImage, afterImage }) {
           transform: "translate(-50%, -50%)",
         }}
       >
-        {/* مساحة لمس (56px) — عملية للموبايل */}
+        {/* مساحة لمس (أكبر) */}
         <div
-          className="absolute -inset-7 cursor-ew-resize"
+          className="absolute -inset-8 cursor-ew-resize"
           style={{ touchAction: "pan-y" }}
           onMouseDown={onPointerDownMouse}
           onTouchStart={onPointerDownTouch}
           aria-hidden="true"
         />
-        {/* المقبض المرئي */}
+        {/* المقبض المرئي مع ARIA كـ slider */}
         <div
+          role="slider"
+          aria-label={t?.beforeAfterAria || "مقارنة قبل بعد"}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={Math.round(sliderX)}
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === "ArrowLeft") setSliderX((v) => Math.max(0, v - 5));
+            if (e.key === "ArrowRight") setSliderX((v) => Math.min(100, v + 5));
+            if (e.key === "Home") setSliderX(0);
+            if (e.key === "End") setSliderX(100);
+          }}
           className="h-10 w-10 rounded-full border-4 border-white bg-blue-600 shadow-md pointer-events-none flex items-center justify-center"
-          aria-hidden="true"
+          aria-hidden="false"
         >
-          <svg viewBox="0 0 24 24" className="w-4 h-4 text-white">
+          <svg viewBox="0 0 24 24" className="w-4 h-4 text-white" aria-hidden>
             <path
               d="M8 12h8M11 9l-3 3 3 3M13 9l3 3-3 3"
               fill="none"
@@ -340,12 +354,39 @@ function BeforeAfter({ beforeImage, afterImage }) {
         </div>
       )}
 
-      {/* طبقة سحب على كامل الصورة (للي يفضّل السحب بأي مكان) */}
+      {/* أزرار سريعة “قبل/بعد” (مفيدة على الموبايل) */}
+      <button
+        type="button"
+        className="absolute left-2 bottom-2 z-40 text-xs px-2 py-1 rounded bg-black/45 text-white hover:bg-black/60 transition"
+        onClick={(e) => {
+          e.stopPropagation();
+          hideHintOnce();
+          setSliderX(15);
+        }}
+        aria-label={t?.beforeAlt || "قبل"}
+      >
+        {t?.beforeAlt || "قبل"}
+      </button>
+      <button
+        type="button"
+        className="absolute right-2 bottom-2 z-40 text-xs px-2 py-1 rounded bg-black/45 text-white hover:bg-black/60 transition"
+        onClick={(e) => {
+          e.stopPropagation();
+          hideHintOnce();
+          setSliderX(85);
+        }}
+        aria-label={t?.afterAlt || "بعد"}
+      >
+        {t?.afterAlt || "بعد"}
+      </button>
+
+      {/* طبقة سحب على كامل الصورة (اختياري) */}
       <div
         className="absolute inset-0 z-10 cursor-ew-resize"
         style={{ touchAction: "pan-y" }}
         onMouseDown={onPointerDownMouse}
         onTouchStart={onPointerDownTouch}
+        aria-hidden="true"
       />
     </div>
   );

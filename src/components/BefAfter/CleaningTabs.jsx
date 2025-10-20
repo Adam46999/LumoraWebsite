@@ -8,24 +8,14 @@ export default function CleaningTabs({
   onChange,
   defaultActive = "sofa",
   counts = { cars: 0, sofa: 0, rugs: 0 },
-  labels = {
-    cars: "سيارات",
-    sofa: "كنب-فرش",
-    rugs: "سجاد",
-  },
-  // ✅ عناوين مختصرة للموبايل (اختياري)
-  labelsShort = {
-    cars: "سيارة",
-    sofa: "كنب",
-    rugs: "سجاد",
-  },
+  labels = { cars: "سيارات", sofa: "كنب-فرش", rugs: "سجاد" },
+  labelsShort = { cars: "سيارة", sofa: "كنب", rugs: "سجاد" },
   sticky = true,
   icons = { cars: Car, sofa: Armchair, rugs: Layers },
   className = "",
 }) {
   const isRTL = useMemo(() => ["ar", "he"].includes(lang), [lang]);
 
-  // تحكّم داخلي/خارجي
   const controlled = active !== undefined && typeof onChange === "function";
   const [internal, setInternal] = useState(defaultActive);
   const current = controlled ? active : internal;
@@ -62,7 +52,7 @@ export default function CleaningTabs({
     },
   ];
 
-  // تنقّل لوحة المفاتيح (واعي للـ RTL)
+  // تنقّل لوحة المفاتيح (RTL-aware)
   useEffect(() => {
     const node = wrapRef.current;
     if (!node) return;
@@ -91,13 +81,55 @@ export default function CleaningTabs({
     };
     node.addEventListener("keydown", handler);
     return () => node.removeEventListener("keydown", handler);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [current, isRTL, TABS]);
+  }, [current, isRTL]); // TABS ثابتة
+
+  // سحب للتبديل بين التبويبات (Mobile gesture)
+  useEffect(() => {
+    const node = wrapRef.current;
+    if (!node) return;
+    const order = ["cars", "sofa", "rugs"];
+    let startX = 0,
+      startY = 0,
+      locked = false;
+
+    const onTouchStart = (e) => {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      locked = false;
+    };
+    const onTouchMove = (e) => {
+      const dx = e.touches[0].clientX - startX;
+      const dy = e.touches[0].clientY - startY;
+      if (!locked && (Math.abs(dx) > 8 || Math.abs(dy) > 8)) {
+        locked = Math.abs(dx) >= Math.abs(dy);
+      }
+      if (locked) e.preventDefault();
+    };
+    const onTouchEnd = (e) => {
+      const dx = e.changedTouches?.[0]?.clientX - startX;
+      if (Math.abs(dx) > 40) {
+        const i = order.indexOf(active ?? defaultActive);
+        const step = isRTL ? (dx > 0 ? 1 : -1) : dx > 0 ? -1 : 1;
+        const next = order[(i + step + order.length) % order.length];
+        setCurrent(next);
+        tabRefs.current[next]?.focus();
+      }
+    };
+
+    node.addEventListener("touchstart", onTouchStart, { passive: true });
+    node.addEventListener("touchmove", onTouchMove, { passive: false });
+    node.addEventListener("touchend", onTouchEnd, { passive: true });
+    return () => {
+      node.removeEventListener("touchstart", onTouchStart);
+      node.removeEventListener("touchmove", onTouchMove);
+      node.removeEventListener("touchend", onTouchEnd);
+    };
+  }, [active, defaultActive, isRTL]);
 
   return (
     <div
       ref={wrapRef}
-      className={["z-50 w-full", className].join(" ")}
+      className={["z-30 w-full", className].join(" ")}
       style={
         sticky
           ? {
@@ -107,7 +139,6 @@ export default function CleaningTabs({
           : undefined
       }
     >
-      {/* ✅ Edge-to-Edge على الموبايل */}
       <div className="-mx-4 sm:mx-0">
         <div
           dir={isRTL ? "rtl" : "ltr"}
@@ -130,25 +161,24 @@ export default function CleaningTabs({
                 <button
                   key={id}
                   ref={(el) => (tabRefs.current[id] = el)}
-                  id={`${uid}-tab-${id}`}
+                  id={`tab-${id}`}
                   role="tab"
                   type="button"
                   aria-selected={selected}
-                  aria-controls={`${uid}-panel-${id}`}
+                  aria-controls={`panel-${id}`}
                   tabIndex={selected ? 0 : -1}
                   onClick={() => setCurrent(id)}
                   className={[
-                    "relative rounded-lg sm:rounded-xl font-semibold select-none text-center",
+                    "relative rounded-xl sm:rounded-xl font-semibold select-none text-center",
                     "flex flex-col items-center justify-center",
-                    "py-3.5 sm:py-3 px-2 sm:px-3 min-h-[64px] sm:min-h-[58px]",
-                    "transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/80",
+                    "py-3 sm:py-2.5 px-3 sm:px-3 min-h-[56px] sm:min-h-[60px]",
+                    "transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/80",
                     selected
                       ? "text-white bg-gradient-to-b from-blue-600 to-blue-700 shadow-[0_10px_22px_-14px_rgba(37,99,235,0.55)]"
                       : "text-gray-900 dark:text-gray-100 bg-white/60 dark:bg-white/5 hover:bg-white/85 dark:hover:bg-white/10 border border-white/60 dark:border-white/10",
                   ].join(" ")}
                   title={fullLabel}
                 >
-                  {/* ✅ شارة العدّاد في الزاوية */}
                   {count > 0 && (
                     <span
                       className={[
@@ -166,17 +196,20 @@ export default function CleaningTabs({
                     </span>
                   )}
 
-                  <Icon className="w-5 h-5 sm:w-5 sm:h-5 mb-1" />
-
-                  {/* ✅ نص قصير للموبايل (سطر واحد، بدون inline-style) */}
+                  <Icon className="w-5 h-5 sm:w-5 sm:h-5 mb-1" aria-hidden />
                   <span className="block sm:hidden px-1 whitespace-nowrap overflow-hidden text-ellipsis text-[clamp(13px,3.6vw,14px)] leading-snug">
                     {shortLabel}
                   </span>
-
-                  {/* ✅ نص طويل للشاشات الأكبر (سطر واحد أيضًا) */}
                   <span className="hidden sm:block px-1 whitespace-nowrap overflow-hidden text-ellipsis text-[clamp(12px,3.2vw,13.5px)] leading-snug">
                     {fullLabel}
                   </span>
+
+                  {selected && (
+                    <span
+                      aria-hidden="true"
+                      className="absolute bottom-1.5 left-1/2 -translate-x-1/2 h-1 w-8 rounded-full bg-white/70"
+                    />
+                  )}
                 </button>
               );
             })}
