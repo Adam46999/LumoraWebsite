@@ -1,6 +1,9 @@
+/* ===================== Tailwind base ===================== */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ===================== Global ===================== */
 
 /* سلوك تمرير ناعم */
 html {
@@ -102,12 +105,12 @@ body {
 
 /* يطفي الأصفر فورًا ويكسر hover مؤقتًا بعد الضغط */
 .clicked {
-  background-color: rgba(250, 204, 21, 0.9) !important; /* أصفر */
+  background-color: rgba(250, 204, 21, 0.9) !important;
   color: #000 !important;
   transition: background-color 0.15s ease-out, color 0.15s ease-out;
 }
 
-/* تعطيل مؤقت للـ hover لجزء من الثانية حتى ما يظل مضوي */
+/* تعطيل مؤقت للـ hover لجزء من الثانية */
 .no-hover {
   pointer-events: none !important;
 }
@@ -148,3 +151,111 @@ body {
     transform: translate(-50%, -50%) scale(3.2);
   }
 }
+
+/* ===================== Swiper Pagination (كبسولة أنيقة) ===================== */
+
+/* كبسولة خلف نقاط الـ Pagination لثبات التباين */
+.bullets-on-gradient {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 10px;
+  display: flex;
+  justify-content: center;
+  z-index: 20;
+  pointer-events: none;
+}
+.bullets-on-gradient::before {
+  content: "";
+  display: inline-block;
+  min-width: 110px;
+  height: 28px;
+  padding: 0 8px;
+  border-radius: 9999px;
+  background: rgba(0, 0, 0, 0.3);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+
+/* ضبْط نقاط Swiper داخل الكبسولة */
+.swiper-pagination-bullets {
+  position: relative !important;
+  inset: auto !important;
+  transform: translateY(-1px);
+  display: inline-flex !important;
+  gap: 6px;
+  padding: 0 8px;
+}
+
+/* شكل النقاط */
+.swiper-pagination-bullet {
+  width: 7px;
+  height: 7px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.6);
+  opacity: 1;
+  transition: transform 0.2s ease, background-color 0.2s ease,
+    box-shadow 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+.swiper-pagination-bullet-active {
+  background: #fff;
+  transform: scale(1.12);
+}
+
+/* تكبير الهِت-إيريا بدون تكبير المرئي */
+.swiper-pagination-bullet::after {
+  content: "";
+  position: absolute;
+  inset: -8px;
+}
+
+/* ===================== Slide Progress (شريط أنحف ومتدرّج) ===================== */
+@keyframes slideProgress {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0%);
+  }
+}
+.slide-progress {
+  animation: slideProgress linear forwards;
+}
+
+/* ===================== Skeleton خلف الصور ===================== */
+.skeleton-shimmer {
+  background: linear-gradient(
+      100deg,
+      rgba(255, 255, 255, 0.06) 20%,
+      rgba(255, 255, 255, 0.16) 28%,
+      rgba(255, 255, 255, 0.06) 36%
+    ),
+    linear-gradient(#0b1020, #0b1020);
+  background-size: 180% 100%, 100% 100%;
+  animation: shimmer 1.6s infinite linear;
+}
+@media (prefers-color-scheme: light) {
+  .skeleton-shimmer {
+    background: linear-gradient(
+        100deg,
+        rgba(0, 0, 0, 0.06) 20%,
+        rgba(0, 0, 0, 0.12) 28%,
+        rgba(0, 0, 0, 0.06) 36%
+      ),
+      linear-gradient(#f3f4f6, #f3f4f6);
+    background-size: 180% 100%, 100% 100%;
+  }
+}
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0, 0 0;
+  }
+  100% {
+    background-position: -20% 0, 0 0;
+  }
+}
+
+/* ===================== ملاحظات ===================== */
+/* 1) تأكد أن هذا الملف يُحمَّل بعد استيراد "swiper/css" ليأخذ أولوية. */
+/* 2) أزلنا أي تعريف سابق لـ .swiper .bullets-on-gradient حتى لا يتعارض مع الكبسولة الجديدة. */
+/* 3) لا يوجد أي تعديل على منطق السلايدر — فقط تنسيق/جماليات. */

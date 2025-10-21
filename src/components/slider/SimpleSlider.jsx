@@ -30,8 +30,8 @@ export default function SimpleSlider({
   loop = true,
   effect = "slide",
   showEmpty = true,
-  heightClasses = "aspect-[16/9]",
-  touchPreset = "balanced", // fast | balanced | heavy
+  heightClasses = "", // سنستبدله بنِسَب ثابتة أفضل
+  touchPreset = "balanced",
 }) {
   const { lang } = useLanguage();
   const isRTL = useMemo(() => ["ar", "he"].includes(lang), [lang]);
@@ -52,8 +52,8 @@ export default function SimpleSlider({
     return (
       <div
         className={[
-          "max-w-5xl mx-auto relative rounded-3xl overflow-hidden",
-          heightClasses,
+          "max-w-7xl mx-auto relative rounded-3xl overflow-hidden",
+          "aspect-[4/3] sm:aspect-[16/10] lg:aspect-[16/9]",
           "bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-800 dark:to-gray-700",
           "flex items-center justify-center",
         ].join(" ")}
@@ -91,7 +91,6 @@ export default function SimpleSlider({
     if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
     if (sw?.autoplay?.running) sw.autoplay.stop();
   }, []);
-
   const resumeAutoplay = useCallback((delay = 1200) => {
     const sw = swiperRef.current;
     if (!sw) return;
@@ -107,7 +106,7 @@ export default function SimpleSlider({
 
   return (
     <div
-      className="max-w-5xl mx-auto relative rounded-3xl overflow-hidden group"
+      className="max-w-7xl mx-auto relative rounded-3xl overflow-hidden group"
       dir={isRTL ? "rtl" : "ltr"}
       aria-roledescription="carousel"
       aria-label={isRTL ? "معرض صور السجاد" : "Rug images carousel"}
@@ -121,31 +120,31 @@ export default function SimpleSlider({
       }}
       style={{ WebkitTapHighlightColor: "transparent" }}
     >
+      <div className="bullets-on-gradient" aria-hidden="true" />
+
       {items.length > 1 && (
-        <>
-          <div
-            className="absolute top-3 end-4 z-20 bg-black/55 text-white text-[12px] sm:text-sm px-2.5 py-1 rounded-full backdrop-blur-md select-none"
-            aria-live="polite"
-          >
-            {current} / {items.length}
-          </div>
-          <div className="absolute top-0 left-0 right-0 h-[3px] z-20 bg-black/15">
-            <div
-              key={current}
-              className={["h-full", paused ? "" : "slide-progress"].join(" ")}
-              style={
-                !paused
-                  ? {
-                      animationDuration: `${autoplayDelay}ms`,
-                      background: "rgba(59,130,246,.9)",
-                    }
-                  : { background: "rgba(59,130,246,.4)" }
-              }
-              aria-hidden="true"
-            />
-          </div>
-        </>
+        <div
+          className="absolute top-3 end-4 z-20 bg-black/65 text-white text-[12px] sm:text-sm px-2.5 py-1 rounded-full backdrop-blur-md select-none"
+          aria-live="polite"
+        >
+          {current} / {items.length}
+        </div>
       )}
+      <div className="absolute top-0 left-0 right-0 h-[3px] z-20 bg-black/15">
+        <div
+          key={current}
+          className={["h-full", paused ? "" : "slide-progress"].join(" ")}
+          style={
+            !paused
+              ? {
+                  animationDuration: `${autoplayDelay}ms`,
+                  background: "rgba(59,130,246,.9)",
+                }
+              : { background: "rgba(59,130,246,.4)" }
+          }
+          aria-hidden="true"
+        />
+      </div>
 
       <Swiper
         modules={[Pagination, A11y, Autoplay, Keyboard, EffectFade]}
@@ -161,7 +160,7 @@ export default function SimpleSlider({
         }}
         effect={effect}
         fadeEffect={effect === "fade" ? { crossFade: true } : undefined}
-        pagination={{ clickable: true, dynamicBullets: true }}
+        pagination={{ clickable: true }}
         keyboard={{ enabled: !selectedImage }}
         autoplay={
           prefersReduced
@@ -171,7 +170,6 @@ export default function SimpleSlider({
         slidesPerView={1}
         loop={loop}
         speed={prefersReduced ? 0 : cfg.speed}
-        // 💡 سحب فقط لتغيير السلايد
         simulateTouch
         allowTouchMove
         touchStartPreventDefault
@@ -202,8 +200,9 @@ export default function SimpleSlider({
       >
         {items.map((it, idx) => (
           <SwiperSlide key={idx}>
+            {/* سجاد: cover أفضل بصريًا */}
             <div
-              className={`relative w-full ${heightClasses} bg-gray-200 overflow-hidden active:scale-[0.99]`}
+              className="relative w-full overflow-hidden active:scale-[0.99] aspect-[4/3] sm:aspect-[16/10] lg:aspect-[16/9] bg-gray-200"
               onClick={(e) => openPreview(e, it)}
               style={{ willChange: "transform" }}
             >
@@ -215,6 +214,7 @@ export default function SimpleSlider({
                 draggable={false}
                 loading={idx === 0 ? "eager" : "lazy"}
                 decoding="async"
+                sizes="(max-width: 640px) 100vw, 70vw"
               />
               <div
                 className="absolute inset-x-0 bottom-0 h-24 sm:h-28 bg-gradient-to-t from-black/60 via-black/20 to-transparent pointer-events-none"
@@ -222,7 +222,7 @@ export default function SimpleSlider({
               />
               {(it.title || it.caption) && (
                 <div className="absolute bottom-4 inset-x-0 z-10 text-white px-5 select-none pointer-events-none">
-                  <h3 className="text-[clamp(15px,3vw,19px)] font-extrabold drop-shadow line-clamp-1">
+                  <h3 className="text-[clamp(16px,3vw,20px)] font-extrabold drop-shadow line-clamp-1">
                     {it.title || (isRTL ? "خدمة السجاد" : "Rug service")}
                   </h3>
                   {it.caption && (
@@ -236,8 +236,6 @@ export default function SimpleSlider({
           </SwiperSlide>
         ))}
       </Swiper>
-
-      {/* ✔️ لا أزرار نقر يمين/يسار — السحب فقط */}
 
       {selectedImage && (
         <div

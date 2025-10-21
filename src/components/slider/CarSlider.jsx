@@ -13,7 +13,6 @@ import "swiper/css/effect-fade";
 import { useLanguage } from "../../context/LanguageContext";
 import { X } from "lucide-react";
 
-/** إعدادات لمس سلسة */
 const PRESETS = {
   fast: { threshold: 3, resistanceRatio: 0.5, speed: 360, touchRatio: 1.1 },
   balanced: {
@@ -30,18 +29,16 @@ export default function CarSlider({
   autoplayDelay = 3200,
   loop = true,
   effect = "slide",
-  touchPreset = "balanced", // fast | balanced | heavy
+  touchPreset = "balanced",
 }) {
   const { lang } = useLanguage();
   const isRTL = useMemo(() => ["ar", "he"].includes(lang), [lang]);
 
   const [current, setCurrent] = useState(1);
   const [selectedImage, setSelectedImage] = useState(null);
-  const [paused, setPaused] = useState(false); // تجميد شريط التقدّم بصريًا أثناء اللمس
+  const [paused, setPaused] = useState(false);
   const swiperRef = useRef(null);
   const resumeTimerRef = useRef(null);
-
-  // لمنع فتح المودال بعد سحب بسيط
   const gestureRef = useRef({ downX: 0, downY: 0, moved: false });
 
   const prefersReduced =
@@ -49,13 +46,11 @@ export default function CarSlider({
     window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 
   if (!items.length) return null;
-
   const cfg = PRESETS[touchPreset] ?? PRESETS.balanced;
 
   const openPreview = useCallback((e, it) => {
     if (e.defaultPrevented) return;
-    // لا تفتح المودال إذا صار سحب
-    if (gestureRef.current.moved) return;
+    if (gestureRef.current.moved) return; // سحب؟ لا تفتح مودال
     setSelectedImage(it);
     const sw = swiperRef.current;
     if (sw?.autoplay?.running) sw.autoplay.stop();
@@ -66,7 +61,6 @@ export default function CarSlider({
     if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
     if (sw?.autoplay?.running) sw.autoplay.stop();
   }, []);
-
   const resumeAutoplay = useCallback((delay = 1200) => {
     const sw = swiperRef.current;
     if (!sw) return;
@@ -82,7 +76,13 @@ export default function CarSlider({
 
   return (
     <div
-      className="max-w-5xl mx-auto relative rounded-3xl overflow-hidden group"
+      className={[
+        // (1) إطار + ظل راقي + حلقة خفيفة
+        "max-w-7xl mx-auto relative overflow-hidden group",
+        "rounded-3xl ring-1 ring-white/10 dark:ring-white/5",
+        "shadow-[0_25px_60px_-30px_rgba(0,0,0,.45)]",
+        // (4) edge-to-edge بالموبايل (بدون padding هنا)
+      ].join(" ")}
       dir={isRTL ? "rtl" : "ltr"}
       aria-roledescription="carousel"
       aria-label="معرض صور الخدمة"
@@ -96,32 +96,45 @@ export default function CarSlider({
       }}
       style={{ WebkitTapHighlightColor: "transparent" }}
     >
-      {/* عدّاد + شريط تقدّم (يتجمّد بصريًا أثناء اللمس) */}
+      {/* خلفية تدرّج ناعمة خلف السلايدر (1+4) */}
+      <div
+        className="absolute inset-0 -z-10 pointer-events-none
+        bg-gradient-to-b from-slate-50 to-slate-100
+        dark:from-slate-900 dark:to-slate-950"
+        aria-hidden="true"
+      />
+
+      {/* طبقة خفيفة أسفل النقاط لرفع التباين (6) */}
+      <div className="bullets-on-gradient" aria-hidden="true" />
+
+      {/* عدّاد علوي بزجاجية (3) */}
       {items.length > 1 && (
-        <>
-          <div
-            className="absolute top-3 end-4 z-20 bg-black/55 text-white text-[12px] sm:text-sm px-2.5 py-1 rounded-full backdrop-blur-md select-none"
-            aria-live="polite"
-          >
-            {current} / {items.length}
-          </div>
-          <div className="absolute top-0 left-0 right-0 h-[3px] z-20 bg-black/15">
-            <div
-              key={current}
-              className={["h-full", paused ? "" : "slide-progress"].join(" ")}
-              style={
-                !paused
-                  ? {
-                      animationDuration: `${autoplayDelay}ms`,
-                      background: "rgba(59,130,246,.9)",
-                    }
-                  : { background: "rgba(59,130,246,.4)" }
-              }
-              aria-hidden="true"
-            />
-          </div>
-        </>
+        <div
+          className="absolute top-3 end-4 z-20 text-[12px] sm:text-sm px-2.5 py-1
+          rounded-full bg-black/45 text-white backdrop-blur-md select-none"
+          aria-live="polite"
+        >
+          {current} / {items.length}
+        </div>
       )}
+
+      {/* (5) سطر تقدم أنحف + متدرّج */}
+      <div className="absolute top-0 left-0 right-0 h-[2px] z-20 bg-black/10">
+        <div
+          key={current}
+          className={["h-full", paused ? "" : "slide-progress"].join(" ")}
+          style={
+            !paused
+              ? {
+                  animationDuration: `${autoplayDelay}ms`,
+                  background:
+                    "linear-gradient(90deg, rgba(59,130,246,.95), rgba(96,165,250,.95), rgba(37,99,235,.95))",
+                }
+              : { background: "rgba(59,130,246,.45)" }
+          }
+          aria-hidden="true"
+        />
+      </div>
 
       <Swiper
         modules={[Pagination, A11y, Autoplay, Keyboard, EffectFade]}
@@ -137,7 +150,7 @@ export default function CarSlider({
         }}
         effect={effect}
         fadeEffect={effect === "fade" ? { crossFade: true } : undefined}
-        pagination={{ clickable: true, dynamicBullets: true }}
+        pagination={{ clickable: true }}
         keyboard={{ enabled: !selectedImage }}
         autoplay={
           prefersReduced
@@ -147,7 +160,6 @@ export default function CarSlider({
         slidesPerView={1}
         loop={loop}
         speed={prefersReduced ? 0 : cfg.speed}
-        // 💡 سحب فقط لتغيير السلايد
         simulateTouch
         allowTouchMove
         touchStartPreventDefault
@@ -158,7 +170,6 @@ export default function CarSlider({
         followFinger
         touchRatio={cfg.touchRatio}
         style={{ touchAction: "pan-y" }}
-        // حراسة النقر مقابل السحب
         onTouchStart={(sw, e) => {
           const t = e.touches?.[0];
           gestureRef.current = {
@@ -171,21 +182,38 @@ export default function CarSlider({
           const t = e.touches?.[0];
           const dx = Math.abs((t?.clientX ?? 0) - gestureRef.current.downX);
           const dy = Math.abs((t?.clientY ?? 0) - gestureRef.current.downY);
-          // إذا تحرك لمسًا واضحًا، اعتبرها سحب
-          if (dx > 6 || dy > 6) gestureRef.current.moved = dx >= dy; // نفضّل الأفقي
+          if (dx > 6 || dy > 6) gestureRef.current.moved = dx >= dy;
         }}
         observer
         observeParents
-        className="rounded-3xl shadow-2xl"
+        className="rounded-3xl"
       >
         {items.map((it, idx) => (
           <SwiperSlide key={idx}>
+            {/* (10) سكيليتون خفيف خلف الصورة (سيُغطى بعد العرض) */}
             <div
-              className="relative w-full bg-black/35 overflow-hidden active:scale-[0.99] aspect-[16/9]"
+              className="absolute inset-0 -z-10 pointer-events-none skeleton-shimmer rounded-3xl"
+              aria-hidden="true"
+            />
+
+            {/* أحجام أكبر: 4/3 جوال، 16/10 متوسط، 16/9 كبير */}
+            <div
+              className="relative w-full bg-black/25 overflow-hidden active:scale-[0.99]
+              aspect-[4/3] sm:aspect-[16/10] lg:aspect-[16/9]"
               onClick={(e) => openPreview(e, it)}
               style={{ willChange: "transform" }}
             >
-              {/* خلفية خفيفة */}
+              {/* خلفية ناعمة بنقشة خفيفة (2 لسيارات contain) */}
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  background:
+                    "radial-gradient(ellipse at center, rgba(255,255,255,.18), transparent 60%)",
+                }}
+                aria-hidden="true"
+              />
+
+              {/* خلفية باهتة للصورة لزيادة العمق */}
               <img
                 src={it.src}
                 alt=""
@@ -195,28 +223,42 @@ export default function CarSlider({
                 draggable={false}
                 loading={idx === 0 ? "eager" : "lazy"}
                 decoding="async"
+                sizes="(max-width: 640px) 100vw, 70vw"
               />
-              {/* الصورة الرئيسية */}
+
+              {/* الصورة الرئيسية (contain للسيارات) + micro-hover (8) */}
               <img
                 src={it.src}
                 alt={it.alt || "صورة الخدمة"}
-                className="absolute inset-0 w-full h-full object-contain transition-transform duration-[480ms] ease-[cubic-bezier(0.25,1,0.5,1)] group-hover:scale-[1.02]"
+                className="absolute inset-0 w-full h-full object-contain transition-transform duration-[520ms]
+                ease-[cubic-bezier(.22,1,.36,1)] group-hover:scale-[1.02] group-hover:brightness-[1.02]"
                 style={{ willChange: "transform", transform: "translateZ(0)" }}
                 draggable={false}
                 loading={idx === 0 ? "eager" : "lazy"}
                 decoding="async"
+                sizes="(max-width: 640px) 100vw, 70vw"
               />
+
+              {/* تدرّج نص سفلي */}
               <div
-                className="absolute inset-x-0 bottom-0 h-24 sm:h-28 bg-gradient-to-t from-black/65 via-black/20 to-transparent pointer-events-none"
+                className="absolute inset-x-0 bottom-0 h-24 sm:h-28 bg-gradient-to-t
+                from-black/65 via-black/20 to-transparent pointer-events-none"
                 aria-hidden="true"
               />
+
               {(it.title || it.caption) && (
                 <div className="absolute bottom-4 inset-x-0 z-10 text-white px-5 select-none pointer-events-none">
-                  <h3 className="text-[clamp(15px,3vw,19px)] font-extrabold drop-shadow line-clamp-1">
+                  <h3 className="text-[clamp(16px,3vw,20px)] font-extrabold tracking-tight drop-shadow-[0_2px_10px_rgba(0,0,0,.6)] line-clamp-1">
                     {it.title || "خدمة السيارات"}
+                    {/* (2) شارة صغيرة إن وُجد caption */}
+                    {it.caption && (
+                      <span className="ms-2 align-middle text-[11px] px-2 py-0.5 rounded-full bg-white/20">
+                        تفاصيل
+                      </span>
+                    )}
                   </h3>
                   {it.caption && (
-                    <p className="text-[clamp(12px,2.5vw,15px)] opacity-90 leading-snug line-clamp-2">
+                    <p className="text-[clamp(12px,2.5vw,15px)] opacity-90 leading-snug line-clamp-2 drop-shadow-[0_1px_6px_rgba(0,0,0,.55)]">
                       {it.caption}
                     </p>
                   )}
@@ -227,8 +269,7 @@ export default function CarSlider({
         ))}
       </Swiper>
 
-      {/* ✔️ ما في أي أزرار نقر يمين/يسار — السحب فقط يغيّر السلايد */}
-
+      {/* مودال المعاينة (3/7 تحسين شكلي) */}
       {selectedImage && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 animate-fade-in"
@@ -246,7 +287,8 @@ export default function CarSlider({
               setSelectedImage(null);
               resumeAutoplay(600);
             }}
-            className="absolute top-5 right-5 text-white hover:text-blue-200 transition w-11 h-11 flex items-center justify-center"
+            className="absolute top-5 right-5 text-white w-11 h-11 flex items-center justify-center
+            rounded-full bg-white/10 hover:bg-white/15 backdrop-blur-md transition"
             aria-label="إغلاق المعاينة"
             type="button"
             data-no-preview
@@ -256,7 +298,7 @@ export default function CarSlider({
           <img
             src={selectedImage.src}
             alt={selectedImage.alt || "معاينة الصورة"}
-            className="max-w-[92%] max-h-[84%] rounded-2xl shadow-2xl border border-white/15 object-contain"
+            className="max-w-[92%] max-h-[84%] rounded-2xl shadow-2xl ring-1 ring-white/20 border border-white/10 object-contain"
             loading="eager"
             decoding="async"
             style={{ willChange: "transform", transform: "translateZ(0)" }}
