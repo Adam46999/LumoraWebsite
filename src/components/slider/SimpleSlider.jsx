@@ -13,14 +13,25 @@ import "swiper/css/effect-fade";
 import { useLanguage } from "../../context/LanguageContext";
 import { X } from "lucide-react";
 
+const PRESETS = {
+  fast: { threshold: 3, resistanceRatio: 0.5, speed: 360, touchRatio: 1.1 },
+  balanced: {
+    threshold: 4,
+    resistanceRatio: 0.65,
+    speed: 420,
+    touchRatio: 1.05,
+  },
+  heavy: { threshold: 6, resistanceRatio: 0.8, speed: 520, touchRatio: 0.95 },
+};
+
 export default function SimpleSlider({
   items = [],
   autoplayDelay = 3200,
-  speed = 380,
   loop = true,
   effect = "slide",
   showEmpty = true,
   heightClasses = "aspect-[16/9]",
+  touchPreset = "balanced", // fast | balanced | heavy
 }) {
   const { lang } = useLanguage();
   const isRTL = useMemo(() => ["ar", "he"].includes(lang), [lang]);
@@ -30,7 +41,7 @@ export default function SimpleSlider({
   const [paused, setPaused] = useState(false);
   const swiperRef = useRef(null);
   const resumeTimerRef = useRef(null);
-  const startYRef = useRef(0);
+  const gestureRef = useRef({ downX: 0, downY: 0, moved: false });
 
   const prefersReduced =
     typeof window !== "undefined" &&
@@ -65,9 +76,11 @@ export default function SimpleSlider({
     );
   }
 
+  const cfg = PRESETS[touchPreset] ?? PRESETS.balanced;
+
   const openPreview = useCallback((e, it) => {
     if (e.defaultPrevented) return;
-    if (e.target.closest("[data-no-preview]")) return;
+    if (gestureRef.current.moved) return;
     setSelectedImage(it);
     const sw = swiperRef.current;
     if (sw?.autoplay?.running) sw.autoplay.stop();
@@ -79,7 +92,7 @@ export default function SimpleSlider({
     if (sw?.autoplay?.running) sw.autoplay.stop();
   }, []);
 
-  const resumeAutoplay = useCallback((delay = 1000) => {
+  const resumeAutoplay = useCallback((delay = 1200) => {
     const sw = swiperRef.current;
     if (!sw) return;
     if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
@@ -155,24 +168,37 @@ export default function SimpleSlider({
             ? false
             : { delay: autoplayDelay, disableOnInteraction: false }
         }
-        // لمس سريع جدًا
         slidesPerView={1}
         loop={loop}
-        speed={prefersReduced ? 0 : speed}
+        speed={prefersReduced ? 0 : cfg.speed}
+        // 💡 سحب فقط لتغيير السلايد
         simulateTouch
         allowTouchMove
         touchStartPreventDefault
         shortSwipes
         longSwipes={false}
-        threshold={3}
-        resistanceRatio={0.5}
+        threshold={cfg.threshold}
+        resistanceRatio={cfg.resistanceRatio}
         followFinger
-        touchRatio={1.1}
-        watchSlidesProgress={false}
+        touchRatio={cfg.touchRatio}
+        style={{ touchAction: "pan-y" }}
+        onTouchStart={(sw, e) => {
+          const t = e.touches?.[0];
+          gestureRef.current = {
+            downX: t?.clientX ?? 0,
+            downY: t?.clientY ?? 0,
+            moved: false,
+          };
+        }}
+        onTouchMove={(sw, e) => {
+          const t = e.touches?.[0];
+          const dx = Math.abs((t?.clientX ?? 0) - gestureRef.current.downX);
+          const dy = Math.abs((t?.clientY ?? 0) - gestureRef.current.downY);
+          if (dx > 6 || dy > 6) gestureRef.current.moved = dx >= dy;
+        }}
         observer
         observeParents
         className="rounded-3xl shadow-2xl"
-        style={{ touchAction: "pan-y" }}
       >
         {items.map((it, idx) => (
           <SwiperSlide key={idx}>
@@ -184,7 +210,7 @@ export default function SimpleSlider({
               <img
                 src={it.src}
                 alt={it.alt || (isRTL ? "صورة السجاد" : "Rug image")}
-                className="w-full h-full object-cover transition-transform duration-[520ms] ease-[cubic-bezier(0.25,1,0.5,1)] group-hover:scale-[1.02]"
+                className="w-full h-full object-cover transition-transform duration-[480ms] ease-[cubic-bezier(0.25,1,0.5,1)] group-hover:scale-[1.02]"
                 style={{ transform: "translateZ(0)", willChange: "transform" }}
                 draggable={false}
                 loading={idx === 0 ? "eager" : "lazy"}
@@ -196,27 +222,11 @@ export default function SimpleSlider({
               />
               {(it.title || it.caption) && (
                 <div className="absolute bottom-4 inset-x-0 z-10 text-white px-5 select-none pointer-events-none">
-                  <h3
-                    className="text-[clamp(15px,3vw,19px)] font-extrabold drop-shadow"
-                    style={{
-                      display: "-webkit-box",
-                      WebkitLineClamp: 1,
-                      WebkitBoxOrient: "vertical",
-                      overflow: "hidden",
-                    }}
-                  >
+                  <h3 className="text-[clamp(15px,3vw,19px)] font-extrabold drop-shadow line-clamp-1">
                     {it.title || (isRTL ? "خدمة السجاد" : "Rug service")}
                   </h3>
                   {it.caption && (
-                    <p
-                      className="text-[clamp(12px,2.5vw,15px)] opacity-90 leading-snug"
-                      style={{
-                        display: "-webkit-box",
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: "vertical",
-                        overflow: "hidden",
-                      }}
-                    >
+                    <p className="text-[clamp(12px,2.5vw,15px)] opacity-90 leading-snug line-clamp-2">
                       {it.caption}
                     </p>
                   )}
@@ -227,49 +237,13 @@ export default function SimpleSlider({
         ))}
       </Swiper>
 
-      {/* مناطق نقر للتنقّل */}
-      {items.length > 1 && (
-        <>
-          <button
-            type="button"
-            className="absolute inset-y-0 left-0 w-1/3 md:w-1/4 z-30 bg-transparent"
-            aria-label={isRTL ? "السابق" : "Previous"}
-            onPointerDown={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              swiperRef.current?.slidePrev();
-            }}
-            data-no-preview
-            style={{ touchAction: "manipulation" }}
-          />
-          <button
-            type="button"
-            className="absolute inset-y-0 right-0 w-1/3 md:w-1/4 z-30 bg-transparent"
-            aria-label={isRTL ? "التالي" : "Next"}
-            onPointerDown={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              swiperRef.current?.slideNext();
-            }}
-            data-no-preview
-            style={{ touchAction: "manipulation" }}
-          />
-        </>
-      )}
+      {/* ✔️ لا أزرار نقر يمين/يسار — السحب فقط */}
 
       {selectedImage && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 animate-fade-in"
           role="dialog"
           aria-modal="true"
-          onTouchStart={(e) => (startYRef.current = e.touches[0].clientY)}
-          onTouchEnd={(e) => {
-            const dy = e.changedTouches[0].clientY - startYRef.current;
-            if (dy > 60) {
-              setSelectedImage(null);
-              resumeAutoplay(600);
-            }
-          }}
           onClick={() => {
             setSelectedImage(null);
             resumeAutoplay(600);

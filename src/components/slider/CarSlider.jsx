@@ -5,7 +5,7 @@ import {
   A11y,
   Autoplay,
   Keyboard,
-  EffectFade, // شلّنا Mousewheel لأنه يبطّئ على الموبايل
+  EffectFade,
 } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
@@ -13,22 +13,36 @@ import "swiper/css/effect-fade";
 import { useLanguage } from "../../context/LanguageContext";
 import { X } from "lucide-react";
 
+/** إعدادات لمس سلسة */
+const PRESETS = {
+  fast: { threshold: 3, resistanceRatio: 0.5, speed: 360, touchRatio: 1.1 },
+  balanced: {
+    threshold: 4,
+    resistanceRatio: 0.65,
+    speed: 420,
+    touchRatio: 1.05,
+  },
+  heavy: { threshold: 6, resistanceRatio: 0.8, speed: 520, touchRatio: 0.95 },
+};
+
 export default function CarSlider({
   items = [],
   autoplayDelay = 3200,
-  speed = 380, // انتقال أسرع لإحساس استجابة
   loop = true,
   effect = "slide",
+  touchPreset = "balanced", // fast | balanced | heavy
 }) {
   const { lang } = useLanguage();
   const isRTL = useMemo(() => ["ar", "he"].includes(lang), [lang]);
 
   const [current, setCurrent] = useState(1);
   const [selectedImage, setSelectedImage] = useState(null);
-  const [paused, setPaused] = useState(false);
+  const [paused, setPaused] = useState(false); // تجميد شريط التقدّم بصريًا أثناء اللمس
   const swiperRef = useRef(null);
   const resumeTimerRef = useRef(null);
-  const startYRef = useRef(0);
+
+  // لمنع فتح المودال بعد سحب بسيط
+  const gestureRef = useRef({ downX: 0, downY: 0, moved: false });
 
   const prefersReduced =
     typeof window !== "undefined" &&
@@ -36,9 +50,12 @@ export default function CarSlider({
 
   if (!items.length) return null;
 
+  const cfg = PRESETS[touchPreset] ?? PRESETS.balanced;
+
   const openPreview = useCallback((e, it) => {
     if (e.defaultPrevented) return;
-    if (e.target.closest("[data-no-preview]")) return;
+    // لا تفتح المودال إذا صار سحب
+    if (gestureRef.current.moved) return;
     setSelectedImage(it);
     const sw = swiperRef.current;
     if (sw?.autoplay?.running) sw.autoplay.stop();
@@ -50,7 +67,7 @@ export default function CarSlider({
     if (sw?.autoplay?.running) sw.autoplay.stop();
   }, []);
 
-  const resumeAutoplay = useCallback((delay = 1000) => {
+  const resumeAutoplay = useCallback((delay = 1200) => {
     const sw = swiperRef.current;
     if (!sw) return;
     if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
@@ -69,10 +86,9 @@ export default function CarSlider({
       dir={isRTL ? "rtl" : "ltr"}
       aria-roledescription="carousel"
       aria-label="معرض صور الخدمة"
-      // لمس فوري: أوقف الأوتوبلاي وحرّك progress
-      onTouchStart={(e) => {
+      onTouchStart={() => {
         setPaused(true);
-        stopAutoplay(e);
+        stopAutoplay();
       }}
       onTouchEnd={() => {
         setPaused(false);
@@ -80,7 +96,7 @@ export default function CarSlider({
       }}
       style={{ WebkitTapHighlightColor: "transparent" }}
     >
-      {/* عدّاد + شريط تقدّم هادئ */}
+      {/* عدّاد + شريط تقدّم (يتجمّد بصريًا أثناء اللمس) */}
       {items.length > 1 && (
         <>
           <div
@@ -128,24 +144,39 @@ export default function CarSlider({
             ? false
             : { delay: autoplayDelay, disableOnInteraction: false }
         }
-        // 💡 إعدادات لمس فورية
         slidesPerView={1}
         loop={loop}
-        speed={prefersReduced ? 0 : speed}
-        simulateTouch={true}
-        allowTouchMove={true}
-        touchStartPreventDefault={true} // يمنع تأخير المتصفح
-        shortSwipes={true} // سحب قصير = انتقال
+        speed={prefersReduced ? 0 : cfg.speed}
+        // 💡 سحب فقط لتغيير السلايد
+        simulateTouch
+        allowTouchMove
+        touchStartPreventDefault
+        shortSwipes
         longSwipes={false}
-        threshold={3} // أقل = أسرع
-        resistanceRatio={0.5} // حافة ألين
-        followFinger={true}
-        touchRatio={1.1} // إحساس أسرع
-        watchSlidesProgress={false}
+        threshold={cfg.threshold}
+        resistanceRatio={cfg.resistanceRatio}
+        followFinger
+        touchRatio={cfg.touchRatio}
+        style={{ touchAction: "pan-y" }}
+        // حراسة النقر مقابل السحب
+        onTouchStart={(sw, e) => {
+          const t = e.touches?.[0];
+          gestureRef.current = {
+            downX: t?.clientX ?? 0,
+            downY: t?.clientY ?? 0,
+            moved: false,
+          };
+        }}
+        onTouchMove={(sw, e) => {
+          const t = e.touches?.[0];
+          const dx = Math.abs((t?.clientX ?? 0) - gestureRef.current.downX);
+          const dy = Math.abs((t?.clientY ?? 0) - gestureRef.current.downY);
+          // إذا تحرك لمسًا واضحًا، اعتبرها سحب
+          if (dx > 6 || dy > 6) gestureRef.current.moved = dx >= dy; // نفضّل الأفقي
+        }}
         observer
         observeParents
         className="rounded-3xl shadow-2xl"
-        style={{ touchAction: "pan-y" }} // لا تتعارض مع التمرير العمودي
       >
         {items.map((it, idx) => (
           <SwiperSlide key={idx}>
@@ -154,7 +185,7 @@ export default function CarSlider({
               onClick={(e) => openPreview(e, it)}
               style={{ willChange: "transform" }}
             >
-              {/* خلفية خفيفة جداً + ترقية GPU */}
+              {/* خلفية خفيفة */}
               <img
                 src={it.src}
                 alt=""
@@ -169,7 +200,7 @@ export default function CarSlider({
               <img
                 src={it.src}
                 alt={it.alt || "صورة الخدمة"}
-                className="absolute inset-0 w-full h-full object-contain transition-transform duration-[520ms] ease-[cubic-bezier(0.25,1,0.5,1)] group-hover:scale-[1.02]"
+                className="absolute inset-0 w-full h-full object-contain transition-transform duration-[480ms] ease-[cubic-bezier(0.25,1,0.5,1)] group-hover:scale-[1.02]"
                 style={{ willChange: "transform", transform: "translateZ(0)" }}
                 draggable={false}
                 loading={idx === 0 ? "eager" : "lazy"}
@@ -181,27 +212,11 @@ export default function CarSlider({
               />
               {(it.title || it.caption) && (
                 <div className="absolute bottom-4 inset-x-0 z-10 text-white px-5 select-none pointer-events-none">
-                  <h3
-                    className="text-[clamp(15px,3vw,19px)] font-extrabold drop-shadow"
-                    style={{
-                      display: "-webkit-box",
-                      WebkitLineClamp: 1,
-                      WebkitBoxOrient: "vertical",
-                      overflow: "hidden",
-                    }}
-                  >
+                  <h3 className="text-[clamp(15px,3vw,19px)] font-extrabold drop-shadow line-clamp-1">
                     {it.title || "خدمة السيارات"}
                   </h3>
                   {it.caption && (
-                    <p
-                      className="text-[clamp(12px,2.5vw,15px)] opacity-90 leading-snug"
-                      style={{
-                        display: "-webkit-box",
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: "vertical",
-                        overflow: "hidden",
-                      }}
-                    >
+                    <p className="text-[clamp(12px,2.5vw,15px)] opacity-90 leading-snug line-clamp-2">
                       {it.caption}
                     </p>
                   )}
@@ -212,50 +227,13 @@ export default function CarSlider({
         ))}
       </Swiper>
 
-      {/* مناطق نقر للتنقّل (خفيفة، بدون منع لمس السحب) */}
-      {items.length > 1 && (
-        <>
-          <button
-            type="button"
-            className="absolute inset-y-0 left-0 w-1/3 md:w-1/4 z-30 bg-transparent"
-            aria-label={isRTL ? "السابق" : "Previous"}
-            onPointerDown={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              swiperRef.current?.slidePrev();
-            }}
-            data-no-preview
-            style={{ touchAction: "manipulation" }}
-          />
-          <button
-            type="button"
-            className="absolute inset-y-0 right-0 w-1/3 md:w-1/4 z-30 bg-transparent"
-            aria-label={isRTL ? "التالي" : "Next"}
-            onPointerDown={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              swiperRef.current?.slideNext();
-            }}
-            data-no-preview
-            style={{ touchAction: "manipulation" }}
-          />
-        </>
-      )}
+      {/* ✔️ ما في أي أزرار نقر يمين/يسار — السحب فقط يغيّر السلايد */}
 
-      {/* المعاينة */}
       {selectedImage && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 animate-fade-in"
           role="dialog"
           aria-modal="true"
-          onTouchStart={(e) => (startYRef.current = e.touches[0].clientY)}
-          onTouchEnd={(e) => {
-            const dy = e.changedTouches[0].clientY - startYRef.current;
-            if (dy > 60) {
-              setSelectedImage(null);
-              resumeAutoplay(600);
-            }
-          }}
           onClick={() => {
             setSelectedImage(null);
             resumeAutoplay(600);
