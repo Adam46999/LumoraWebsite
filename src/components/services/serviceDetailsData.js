@@ -80,7 +80,7 @@ export const serviceDetails = {
         name_ar: "تنظيف المقاعد فقط",
         name_en: "Seats Only",
         duration: "2 ساعه و20 دقيقه",
-        price: "400 ₪",
+        price: "ابتداء من 400 ₪  ",
         features_ar: ["تنظيف عميق للمقاعد (قماش/جلد)", "إزالة البقع والروائح"],
         features_en: [
           "Deep seat cleaning (fabric/leather)",
@@ -88,10 +88,10 @@ export const serviceDetails = {
         ],
       },
       {
-        name_ar: "تنظيف الأرضيات فقط",
+        name_ar: " تنظيف ارضيات السياره ",
         name_en: "Floor Only",
         duration: "40 دقيقه",
-        price: "150 ₪",
+        price: "ابتداء من 150 ₪  ",
         features_ar: ["تنظيف الأرضيات والفرش السفلي", "إزالة الغبار والرواسب"],
         features_en: ["Floor & mat cleaning", "Dust & residue removal"],
       },
@@ -139,8 +139,7 @@ export const serviceDetails = {
       {
         name_ar: "غسيل لومورا",
         name_en: "LUMORA Wash",
-        duration: "30 دقيقة",
-        price: "80 ₪",
+        price: "80 سياره / 100 جيب ₪",
         features_ar: [
           "تنظيف خارجي شامل وتجفيف يدوي",
           "معطّر مجاني ومنعّم للسطح",
@@ -155,8 +154,7 @@ export const serviceDetails = {
       {
         name_ar: "غسيل VIP",
         name_en: "VIP Wash",
-        duration: "45 دقيقة",
-        price: "130 ₪",
+        price: " 130 سياره / 150 جيب  ₪",
         features_ar: [
           "تنظيف داخلي وخارجي عميق (بدون بخار)",
           "معطّر فاخر ولمعة نهائية",

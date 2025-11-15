@@ -1,14 +1,8 @@
+// src/components/slider/SimpleSlider.jsx
 import { useMemo, useRef, useState, useCallback, useEffect } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
-import {
-  Pagination,
-  A11y,
-  Autoplay,
-  Keyboard,
-  EffectFade,
-} from "swiper/modules";
+import { A11y, Autoplay, Keyboard, EffectFade } from "swiper/modules";
 import "swiper/css";
-import "swiper/css/pagination";
 import "swiper/css/effect-fade";
 import { useLanguage } from "../../context/LanguageContext";
 import { X } from "lucide-react";
@@ -30,13 +24,13 @@ export default function SimpleSlider({
   loop = true,
   effect = "slide",
   showEmpty = true,
-  heightClasses = "", // سنستبدله بنِسَب ثابتة أفضل
+  heightClasses = "",
   touchPreset = "balanced",
 }) {
   const { lang } = useLanguage();
   const isRTL = useMemo(() => ["ar", "he"].includes(lang), [lang]);
 
-  const [current, setCurrent] = useState(1);
+  const [current, setCurrent] = useState(1); // 1-based للعرض
   const [selectedImage, setSelectedImage] = useState(null);
   const [paused, setPaused] = useState(false);
   const swiperRef = useRef(null);
@@ -77,6 +71,14 @@ export default function SimpleSlider({
   }
 
   const cfg = PRESETS[touchPreset] ?? PRESETS.balanced;
+  const total = items.length;
+  const activeIndex = current - 1; // نحولها لـ 0-based للنقاط
+
+  // ثوابت شريط الدوتس (نفس روح كارسلايدر)
+  const DOT_SIZE = 10;
+  const DOT_GAP = 8;
+  const GLIDER_WIDTH = 16;
+  const DOTS_PADDING_X = 12; // px-3 => 3 * 4px
 
   const openPreview = useCallback((e, it) => {
     if (e.defaultPrevented) return;
@@ -97,6 +99,18 @@ export default function SimpleSlider({
     if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
     resumeTimerRef.current = setTimeout(() => sw?.autoplay?.start?.(), delay);
   }, []);
+
+  // التنقل بالنقر على النقاط
+  const slideToIndex = useCallback(
+    (idx) => {
+      const sw = swiperRef.current;
+      if (!sw) return;
+      if (loop && typeof sw.slideToLoop === "function")
+        sw.slideToLoop(idx, cfg.speed);
+      else sw.slideTo(idx, cfg.speed);
+    },
+    [loop, cfg.speed]
+  );
 
   useEffect(() => {
     if (!prefersReduced) return;
@@ -130,6 +144,7 @@ export default function SimpleSlider({
           {current} / {items.length}
         </div>
       )}
+
       <div className="absolute top-0 left-0 right-0 h-[3px] z-20 bg-black/15">
         <div
           key={current}
@@ -147,7 +162,7 @@ export default function SimpleSlider({
       </div>
 
       <Swiper
-        modules={[Pagination, A11y, Autoplay, Keyboard, EffectFade]}
+        modules={[A11y, Autoplay, Keyboard, EffectFade]}
         onSwiper={(sw) => (swiperRef.current = sw)}
         onSlideChange={(sw) => {
           setCurrent(sw.realIndex + 1);
@@ -160,7 +175,6 @@ export default function SimpleSlider({
         }}
         effect={effect}
         fadeEffect={effect === "fade" ? { crossFade: true } : undefined}
-        pagination={{ clickable: true }}
         keyboard={{ enabled: !selectedImage }}
         autoplay={
           prefersReduced
@@ -200,7 +214,6 @@ export default function SimpleSlider({
       >
         {items.map((it, idx) => (
           <SwiperSlide key={idx}>
-            {/* سجاد: cover أفضل بصريًا */}
             <div
               className="relative w-full overflow-hidden active:scale-[0.99] aspect-[4/3] sm:aspect-[16/10] lg:aspect-[16/9] bg-gray-200"
               onClick={(e) => openPreview(e, it)}
@@ -236,6 +249,50 @@ export default function SimpleSlider({
           </SwiperSlide>
         ))}
       </Swiper>
+
+      {/* ===== دوتس + Glider في الأسفل ===== */}
+      {total > 1 && (
+        <div className="absolute inset-x-0 bottom-0 pb-[max(12px,env(safe-area-inset-bottom))] z-30 flex items-center justify-center pointer-events-none">
+          <div className="relative inline-flex items-center justify-start gap-[8px] px-3 py-2 rounded-full bg-black/40 backdrop-blur-md pointer-events-auto">
+            {/* glider خلف النقطة النشطة */}
+            <span
+              className="absolute left-0 top-1/2 -translate-y-1/2 h-6 rounded-full bg-white/20 transition-transform duration-250 ease-out"
+              style={{
+                width: GLIDER_WIDTH,
+                transform: `translateX(${
+                  DOTS_PADDING_X +
+                  DOT_SIZE / 2 -
+                  GLIDER_WIDTH / 2 +
+                  activeIndex * (DOT_SIZE + DOT_GAP)
+                }px) translateY(-50%)`,
+              }}
+              aria-hidden="true"
+            />
+
+            {items.map((_, idx) => {
+              const active = idx === activeIndex;
+              return (
+                <button
+                  key={idx}
+                  type="button"
+                  aria-label={`اذهب إلى الشريحة ${idx + 1}`}
+                  onClick={() => slideToIndex(idx)}
+                  className={[
+                    "relative rounded-full transition-all duration-200 ease-out outline-none border border-white/40",
+                    active
+                      ? "bg-white shadow-[0_0_6px_rgba(0,0,0,0.35)] scale-110"
+                      : "bg-white/70 hover:bg-white",
+                  ].join(" ")}
+                  style={{
+                    width: DOT_SIZE,
+                    height: DOT_SIZE,
+                  }}
+                />
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {selectedImage && (
         <div
