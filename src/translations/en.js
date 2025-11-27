@@ -95,4 +95,21 @@ Kills 99.9% of bacteria and germs.`,
   carSeatsTitle: "Car Interior Cleaning",
   carSeatsDescription:
     "Seats, floor, or both — with optional exterior wash bundle.",
+  header: {
+    brand: "Lumora",
+    menu_title: "Navigation",
+
+    services: "Services",
+    gallery: "Gallery",
+    contact: "Contact Us",
+
+    carpet_clean: "Carpet Cleaning",
+    sofa_clean: "Sofa Cleaning",
+    car_clean: "Car Cleaning",
+
+    choose_language: "Choose Language",
+    ar: "Arabic",
+    en: "English",
+    he: "Hebrew",
+  },
 };

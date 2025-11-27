@@ -7,63 +7,32 @@ export default function DesktopNav({ navItems, activeId, scrollToSection }) {
 
   return (
     <nav
-      className={`hidden md:flex ${
-        isRTL ? "space-x-reverse space-x-6" : "space-x-6"
+      className={`hidden md:flex items-center gap-6 ${
+        isRTL ? "flex-row-reverse" : ""
       }`}
     >
       {navItems.map((item) => {
         const isActive = activeId === item.id;
 
         return (
-          <div key={item.id} className="relative group">
-            {item.subItems ? (
-              <>
-                {/* زر رئيسي ينقلك للقسم الخاص به */}
-                <button
-                  type="button"
-                  onClick={() => scrollToSection(item.id)}
-                  className={`font-medium cursor-pointer ${
-                    isActive ? "text-blue-600" : "text-gray-800"
-                  } hover:text-blue-600`}
-                >
-                  {item.label}
-                </button>
-
-                {/* القائمة المنسدلة للعناصر الفرعية */}
-                <div
-                  className={`absolute top-full ${
-                    isRTL ? "right-0" : "left-0"
-                  } mt-2 w-60 bg-white shadow-lg rounded-md p-3 opacity-0 group-hover:opacity-100 transition-opacity z-40`}
-                >
-                  {item.subItems.map((sub) => (
-                    <button
-                      key={sub.id}
-                      type="button"
-                      onClick={() => scrollToSection(sub.id)}
-                      className={`flex items-center gap-3 p-2 w-full rounded hover:bg-blue-50 transition text-gray-700 ${
-                        isRTL ? "flex-row-reverse text-right" : "text-left"
-                      }`}
-                    >
-                      {sub.icon && (
-                        <sub.icon className="w-5 h-5 text-blue-500" />
-                      )}
-                      <span>{sub.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </>
-            ) : (
-              <button
-                type="button"
-                onClick={() => scrollToSection(item.id)}
-                className={`font-medium ${
-                  isActive ? "text-blue-600" : "text-gray-800"
-                } hover:text-blue-600`}
-              >
-                {item.label}
-              </button>
-            )}
-          </div>
+          <button
+            key={item.id}
+            type="button"
+            onClick={() => scrollToSection(item.id)}
+            className={`relative text-sm md:text-base font-medium transition-colors ${
+              isActive ? "text-blue-600" : "text-gray-800"
+            } hover:text-blue-600`}
+          >
+            {item.label}
+            {/* خط سفلي أنيق للقسم الفعّال */}
+            <span
+              className={`absolute ${
+                isRTL ? "right-0" : "left-0"
+              } -bottom-1 h-[2px] rounded-full bg-blue-500 transition-all ${
+                isActive ? "w-full opacity-100" : "w-0 opacity-0"
+              }`}
+            />
+          </button>
         );
       })}
     </nav>

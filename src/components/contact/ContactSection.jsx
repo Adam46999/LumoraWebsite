@@ -1,22 +1,40 @@
+// src/components/contact/ContactSection.jsx
 import { useState } from "react";
 import { useLanguage } from "../../context/LanguageContext";
-import ContactHeader from "./ContactHeader"; // إبقِ العنوان الذي اخترته
+import ContactHeader from "./ContactHeader";
 import ContactForm from "./ContactForm";
-// (اختياري) روابط إضافية
-// import ContactLinks from "./ContactLinks";
+import { saveContactMessage } from "../../services/contactMessages";
 
 export default function ContactSection() {
   const { lang, t } = useLanguage();
   const [toast, setToast] = useState({ type: "", message: "" });
 
-  const handleSend = async () => {
-    // اربط API/EmailJS هنا
-    await new Promise((r) => setTimeout(r, 900));
-    setToast({
-      type: "success",
-      message: lang === "ar" ? "تم الإرسال بنجاح ✅" : "Sent successfully ✅",
-    });
-    setTimeout(() => setToast({ type: "", message: "" }), 2400);
+  // 🔗 هذه هي الدالة التي يستدعيها ContactForm عند الإرسال
+  const handleSend = async (data) => {
+    // data = { subject, name, phone, message, channel }
+    try {
+      await saveContactMessage(data); // حفظ في Firestore
+
+      setToast({
+        type: "success",
+        message:
+          lang === "ar"
+            ? "تم إرسال رسالتك بنجاح ✅"
+            : "Your message was sent successfully ✅",
+      });
+    } catch (err) {
+      console.error("Error saving contact message:", err);
+      setToast({
+        type: "error",
+        message:
+          lang === "ar"
+            ? "حدث خطأ أثناء الإرسال ❌"
+            : "Something went wrong while sending ❌",
+      });
+    } finally {
+      // إخفاء التوست بعد ثانيتين ونص تقريبًا
+      setTimeout(() => setToast({ type: "", message: "" }), 2400);
+    }
   };
 
   return (
@@ -32,7 +50,11 @@ export default function ContactSection() {
         aria-live="polite"
       >
         {toast.message && (
-          <div className="px-4 py-2 rounded-lg shadow-md text-white text-sm font-medium bg-emerald-600">
+          <div
+            className={`px-4 py-2 rounded-lg shadow-md text-white text-sm font-medium ${
+              toast.type === "error" ? "bg-rose-600" : "bg-emerald-600"
+            }`}
+          >
             {toast.message}
           </div>
         )}

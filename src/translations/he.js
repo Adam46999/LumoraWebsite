@@ -81,4 +81,21 @@ export default {
   heroHighlight2: "לספות, רכבים ושטיחים",
   heroSubtitle:
     "אנו מציעים שירותי ניקוי עמוק לספות ביתיות, פנים וחוץ של רכבים, ושטיחים – באמצעות מכשירי קיטור מודרניים וחומרים בטוחים לשימוש.",
+  header: {
+    brand: "Lumora",
+    menu_title: "תפריט ראשי",
+
+    services: "שירותים",
+    gallery: "גלריית תמונות",
+    contact: "צור קשר",
+
+    carpet_clean: "ניקוי שטיחים",
+    sofa_clean: "ניקוי ספות",
+    car_clean: "ניקוי רכבים",
+
+    choose_language: "בחר שפה",
+    ar: "ערבית",
+    en: "אנגלית",
+    he: "עברית",
+  },
 };

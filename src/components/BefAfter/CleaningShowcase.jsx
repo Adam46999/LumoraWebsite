@@ -50,59 +50,83 @@ export default function CleaningShowcase({
     });
   }, [carsImages, rugsImages, sofaPairs]);
 
+  // نصوص الهيدر
   const title =
     t?.cleaningShowcaseTitle ||
-    (isRTL ? "شوف الفرق بنفسك" : "See the difference");
+    (isRTL ? "معرض نتائج التنظيف" : "Cleaning results gallery");
 
-  const subtitleFragment = t?.cleaningShowcaseSubtitle ? (
-    t.cleaningShowcaseSubtitle
-  ) : isRTL ? (
-    <>
-      <span>نتائجنا: سيارات</span>
-      <span className="mx-1 text-gray-400">·</span>
-      <span>كنب وفرش</span>
-      <span className="mx-1 text-gray-400">·</span>
-      <span className="px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 dark:bg-white/10 dark:text-gray-200 text-[12px]">
-        قبل/بعد
-      </span>
-      <span className="mx-1 text-gray-400">·</span>
-      <span>سجاد</span>
-    </>
-  ) : (
-    <>
-      <span>Our results: Cars</span>
-      <span className="mx-1 text-gray-400">·</span>
-      <span>Upholstery</span>
-      <span className="mx-1 text-gray-400">·</span>
-      <span className="px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 dark:bg-white/10 dark:text-gray-200 text-[12px]">
-        before/after
-      </span>
-      <span className="mx-1 text-gray-400">·</span>
-      <span>Rugs</span>
-    </>
-  );
+  const subtitle =
+    t?.cleaningShowcaseSubtitle ||
+    (isRTL
+      ? "لقطات حقيقية من شغلنا – اسحب وشوف بنفسك كيف كان وكيف صار."
+      : "Real work from our clients – swipe and see the before/after yourself.");
+
+  const chips = isRTL
+    ? [
+        { key: "cars", label: "سيارات" },
+        { key: "sofa", label: "كنب وفرش" },
+        { key: "beforeafter", label: "قبل / بعد" },
+        { key: "rugs", label: "سجاد" },
+      ]
+    : [
+        { key: "cars", label: "Cars" },
+        { key: "sofa", label: "Upholstery" },
+        { key: "beforeafter", label: "Before / After" },
+        { key: "rugs", label: "Rugs" },
+      ];
 
   return (
     <section
       id="cleaning-showcase"
-      className="max-w-6xl mx-auto px-3 sm:px-4 py-8 sm:py-10"
+      className="max-w-6xl mx-auto px-3 sm:px-4 py-10 sm:py-12"
     >
-      {/* الهيدر */}
-      <header className="text-center mb-4 sm:mb-6">
-        <h2 className="text-[clamp(18px,4.5vw,32px)] font-extrabold tracking-tight !text-slate-800 dark:!text-slate-100">
+      {/* الهيدر المحسَّن */}
+      <header className="text-center mb-6 sm:mb-8">
+        {/* بادج بسيطة فوق العنوان */}
+        <div className="inline-flex items-center gap-2 rounded-full border border-blue-100/80 dark:border-blue-500/30 bg-white/90 dark:bg-slate-900/70 px-3 py-1 shadow-sm text-[11px] sm:text-xs text-blue-700 dark:text-blue-200 mb-2">
+          <span className="inline-block h-1.5 w-1.5 rounded-full bg-blue-500 dark:bg-blue-300" />
+          <span>{isRTL ? "شاهد نماذج من شغلنا" : "A glimpse of our work"}</span>
+        </div>
+
+        {/* العنوان */}
+        <h2 className="text-[clamp(20px,4.6vw,32px)] font-extrabold tracking-tight text-blue-900 dark:text-blue-200">
           {title}
         </h2>
 
-        {/* فاصل بسيط */}
-        <div className="mx-auto mt-2 h-px w-12 rounded-full bg-gray-200 dark:bg-white/10" />
-
-        {/* وصف */}
-        <p className="mt-2 text-gray-600 dark:text-gray-300 leading-relaxed max-w-[42ch] mx-auto text-[clamp(12px,3.5vw,16px)] font-normal">
-          {subtitleFragment}
+        {/* الوصف */}
+        <p className="mt-2 text-gray-600 dark:text-gray-300 leading-relaxed max-w-[44ch] mx-auto text-[clamp(12px,3.1vw,15px)]">
+          {subtitle}
         </p>
+
+        {/* شِبسات الأنواع */}
+        <div className="mt-3 sm:mt-4 flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
+          {chips.map((chip) => {
+            const isHighlight = chip.key === "beforeafter";
+            return (
+              <span
+                key={chip.key}
+                className={[
+                  "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] sm:text-xs",
+                  "transition-transform duration-150",
+                  isHighlight
+                    ? "bg-gradient-to-l from-blue-600 to-blue-500 text-white shadow-md"
+                    : "border border-slate-200/80 dark:border-white/10 bg-white/95 dark:bg-white/5 text-slate-700 dark:text-slate-100 shadow-sm",
+                ].join(" ")}
+              >
+                <span
+                  className={[
+                    "h-1.5 w-1.5 rounded-full",
+                    isHighlight ? "bg-emerald-300" : "bg-emerald-500/90",
+                  ].join(" ")}
+                />
+                <span>{chip.label}</span>
+              </span>
+            );
+          })}
+        </div>
       </header>
 
-      {/* زيادة مسافة صغيرة قبل التبويبات */}
+      {/* التبويبات */}
       <div className="mt-3 sm:mt-4">
         <CleaningTabs
           lang={lang}
@@ -127,7 +151,9 @@ export default function CleaningShowcase({
           {carsImages.length ? (
             <CarSlider items={carsImages} />
           ) : (
-            <EmptyState text={isRTL ? "لا صور للسيارات" : "No car images"} />
+            <EmptyState
+              text={isRTL ? "لا صور للسيارات حالياً" : "No car images yet"}
+            />
           )}
         </Panel>
 
@@ -136,7 +162,7 @@ export default function CleaningShowcase({
             <BeforeAfterCarousel items={sofaPairs} />
           ) : (
             <EmptyState
-              text={isRTL ? "لا صور قبل/بعد" : "No before/after items"}
+              text={isRTL ? "لا صور قبل/بعد حالياً" : "No before/after items"}
             />
           )}
         </Panel>
@@ -145,7 +171,9 @@ export default function CleaningShowcase({
           {rugsImages.length ? (
             <SimpleSlider items={rugsImages} />
           ) : (
-            <EmptyState text={isRTL ? "لا صور للسجاد" : "No rug images"} />
+            <EmptyState
+              text={isRTL ? "لا صور للسجاد حالياً" : "No rug images yet"}
+            />
           )}
         </Panel>
       </div>

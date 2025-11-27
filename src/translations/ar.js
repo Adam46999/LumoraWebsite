@@ -102,4 +102,25 @@ export default {
   carSeatsTitle: "تنظيف فرش السيارات",
   carSeatsDescription:
     "مقاعد، أرضيات، أو الاثنين معًا — مع إمكانية باقة مع غسيل خارجي.",
+
+  header: {
+    brand: "Lumora",
+    menu_title: "القائمة الرئيسية",
+
+    // الأقسام
+    services: "الخدمات",
+    gallery: "معرض الصور",
+    contact: "تواصل معنا",
+
+    // خدمات فرعية
+    carpet_clean: "تنظيف سجاد",
+    sofa_clean: "تنظيف كنب",
+    car_clean: "تنظيف سيارات",
+
+    // اللغة
+    choose_language: "اختر اللغة",
+    ar: "العربية",
+    en: "الإنجليزية",
+    he: "العبرية",
+  },
 };

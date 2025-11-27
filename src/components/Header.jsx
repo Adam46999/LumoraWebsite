@@ -1,9 +1,7 @@
+// src/components/Header.jsx
 import { useState, useEffect } from "react";
+import { Menu } from "lucide-react";
 import {
-  Menu, // ✅ هذا هو المطلوب
-  Search,
-  ShoppingCart,
-  User,
   Layers as CarpetIcon,
   Sofa as SofaIcon,
   CarFront as CarIcon,
@@ -14,14 +12,13 @@ import DesktopNav from "../header/DesktopNav";
 
 export default function Header({ scrollToSection }) {
   const { lang, setLang } = useLanguage();
+  const isRTL = lang === "ar" || lang === "he";
 
   const [menuOpen, setMenuOpen] = useState(false);
-  const [dropdownOpen, setDropdownOpen] = useState(false); // ✅ جديد
+  const [langOpen, setLangOpen] = useState(false);
 
-  const [activeId, setActiveId] = useState("home");
-
+  // 🔹 ما في "الرئيسية" زي ما طلبت
   const navItems = [
-    { id: "home", label: "الرئيسية" },
     {
       id: "services",
       label: "الخدمات",
@@ -29,14 +26,22 @@ export default function Header({ scrollToSection }) {
         { id: "carpet", label: "تنظيف سجاد", icon: CarpetIcon },
         { id: "sofa", label: "تنظيف كنب", icon: SofaIcon },
         { id: "car", label: "تنظيف سيارات", icon: CarIcon },
-        // أضف باقي الخدمات هنا
       ],
     },
-    { id: "beforeafter", label: "قبل / بعد" },
+    { id: "beforeafter", label: "معرض الصور" },
     { id: "contact", label: "تواصل معنا" },
   ];
 
-  // ScrollSpy: تحديث الرابط النشط حسب موقع التمرير
+  // 🔹 القسم المفعّل (اللي تحته الخط)
+  const [activeId, setActiveId] = useState(navItems[0]?.id || null);
+
+  // دالة موحّدة: تحدّث activeId + تنزل على القسم
+  const handleNavClick = (id) => {
+    setActiveId(id);
+    if (scrollToSection) scrollToSection(id);
+  };
+
+  // ScrollSpy (لو المستخدم نزل يدوي بالسكرول)
   useEffect(() => {
     const handleScroll = () => {
       const offsets = navItems.map((item) => {
@@ -54,96 +59,82 @@ export default function Header({ scrollToSection }) {
       if (visible) setActiveId(visible.id);
     };
 
-    // ✅ إضافة استجابة لتغيير الرابط (hash)
-    const handleHashChange = () => {
-      const idFromUrl = window.location.hash.replace("#", "");
-      if (idFromUrl) setActiveId(idFromUrl);
-    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
 
-    window.addEventListener("scroll", handleScroll);
-    window.addEventListener("hashchange", handleHashChange);
-
-    handleScroll(); // عند فتح الصفحة
-    handleHashChange(); // إذا فتحنا رابط فيه هاش
-
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-      window.removeEventListener("hashchange", handleHashChange);
-    };
-  }, []);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [navItems]);
 
   return (
-    <header className="bg-[#F3F4F6] shadow-sm fixed top-0 left-0 w-full z-50">
-      <div className="max-w-7xl mx-auto px-5 py-3 flex justify-between items-center">
-        {/* شعار */}
-        <div className="text-[#2563EB] font-bold text-xl tracking-tight">
+    <header
+      className="fixed top-0 left-0 w-full z-50 bg-white/90 backdrop-blur-md border-b border-gray-200"
+      dir={isRTL ? "rtl" : "ltr"}
+    >
+      <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
+        {/* زر المنيو - موبايل */}
+        <button
+          className="md:hidden p-2 rounded-lg hover:bg-gray-100"
+          onClick={() => setMenuOpen(true)}
+          aria-label="Open menu"
+        >
+          <Menu className="w-6 h-6 text-gray-800" />
+        </button>
+
+        {/* اللوجو */}
+        <div className="font-extrabold text-xl tracking-tight text-blue-600">
           Lumora
         </div>
 
-        {/* الروابط - ديسكتوب */}
-        <DesktopNav
-          navItems={navItems}
-          activeId={activeId}
-          scrollToSection={scrollToSection}
-        />
-
-        {/* أيقونات - ديسكتوب */}
-        <div className="hidden md:flex items-center space-x-5 text-gray-700">
-          <Search className="w-5 h-5 hover:text-[#2563EB] cursor-pointer" />
-          <ShoppingCart className="w-5 h-5 hover:text-[#2563EB] cursor-pointer" />
-          <User className="w-5 h-5 hover:text-[#2563EB] cursor-pointer" />
-          {/* زر تغيير اللغة Dropdown */}
-          <div className="relative text-sm text-gray-700">
-            {/* زر اللغة للجوال */}
-
-            <button
-              onClick={() => setDropdownOpen(!dropdownOpen)}
-              className="flex items-center gap-1 px-2 py-1 border border-gray-300 rounded-md hover:bg-gray-100 transition"
-            >
-              🌐 {lang.toUpperCase()}
-            </button>
-
-            {dropdownOpen && (
-              <div className="absolute right-0 mt-2 w-32 bg-white border border-gray-200 rounded-md shadow-md z-50">
-                <button
-                  onClick={() => {
-                    setLang("ar");
-                    setDropdownOpen(false);
-                  }}
-                  className="w-full px-3 py-2 text-right hover:bg-gray-100"
-                >
-                  AR العربية
-                </button>
-                <button
-                  onClick={() => {
-                    setLang("en");
-                    setDropdownOpen(false);
-                  }}
-                  className="w-full px-3 py-2 text-right hover:bg-gray-100"
-                >
-                  EN English
-                </button>
-                <button
-                  onClick={() => {
-                    setLang("he");
-                    setDropdownOpen(false);
-                  }}
-                  className="w-full px-3 py-2 text-right hover:bg-gray-100"
-                >
-                  HE עברית
-                </button>
-              </div>
-            )}
-          </div>
+        {/* النافبار - ديسكتوب */}
+        <div className="hidden md:flex flex-1 justify-center">
+          <DesktopNav
+            navItems={navItems}
+            activeId={activeId}
+            scrollToSection={handleNavClick} // ✅ مهم
+          />
         </div>
 
-        {/* زر القائمة - موبايل */}
-        <button
-          className="md:hidden text-gray-800"
-          onClick={() => setMenuOpen(true)}
-        >
-          <Menu size={28} />
-        </button>
+        {/* اختيار اللغة - ديسكتوب */}
+        <div className="hidden md:block relative">
+          <button
+            onClick={() => setLangOpen((o) => !o)}
+            className="flex items-center gap-2 px-3 py-1.5 text-sm border border-gray-300 rounded-full bg-white hover:bg-gray-50"
+          >
+            🌐 {lang.toUpperCase()}
+          </button>
+
+          {langOpen && (
+            <div className="absolute right-0 mt-2 w-32 bg-white border border-gray-200 rounded-md shadow-md text-sm z-50">
+              <button
+                onClick={() => {
+                  setLang("ar");
+                  setLangOpen(false);
+                }}
+                className="w-full px-3 py-2 text-right hover:bg-gray-100"
+              >
+                AR العربية
+              </button>
+              <button
+                onClick={() => {
+                  setLang("en");
+                  setLangOpen(false);
+                }}
+                className="w-full px-3 py-2 text-right hover:bg-gray-100"
+              >
+                EN English
+              </button>
+              <button
+                onClick={() => {
+                  setLang("he");
+                  setLangOpen(false);
+                }}
+                className="w-full px-3 py-2 text-right hover:bg-gray-100"
+              >
+                HE עברית
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* السايدبار - موبايل */}
@@ -151,8 +142,7 @@ export default function Header({ scrollToSection }) {
         menuOpen={menuOpen}
         setMenuOpen={setMenuOpen}
         navItems={navItems}
-        activeId={activeId} // ✅ أضفنا هذا
-        scrollToSection={scrollToSection}
+        scrollToSection={handleNavClick} // ✅ نفس الدالة
       />
     </header>
   );

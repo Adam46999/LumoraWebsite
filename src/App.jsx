@@ -1,11 +1,14 @@
 // src/App.jsx
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import useSectionNavigation from "./hooks/useSectionNavigation";
 import Header from "./components/Header";
 import Hero from "./components/hero/Hero";
 import Services from "./components/services/Services";
 import CleaningShowcase from "./components/BefAfter/CleaningShowcase";
 import ContactSection from "./components/contact/ContactSection";
+
+// ✅ لوحة الأدمن
+import AdminMessages from "./components/admin/AdminMessages";
 
 // قبل/بعد (كنب)
 import before1 from "./assets/before1.jpg";
@@ -17,7 +20,7 @@ import after3 from "./assets/after3.jpg";
 import before4 from "./assets/before4.jpg";
 import after4 from "./assets/after4.jpg";
 
-// سيارات (car2 محذوفة عندك)
+// سيارات
 import car1 from "./assets/car1.jpg";
 import car3 from "./assets/car3.jpg";
 import car4 from "./assets/car4.jpg";
@@ -30,8 +33,9 @@ import car10 from "./assets/car10.jpg";
 
 function App() {
   const { scrollToSection, shakeTarget } = useSectionNavigation();
+  const [adminMode, setAdminMode] = useState(false); // وضع الأدمن
 
-  // احسب ارتفاع الهيدر وخزّنه بمتغيّر CSS عالمي
+  // احسب ارتفاع الهيدر وخزّنه
   useEffect(() => {
     const setHeaderVar = () => {
       const el = document.getElementById("site-header");
@@ -43,7 +47,7 @@ function App() {
     return () => window.removeEventListener("resize", setHeaderVar);
   }, []);
 
-  // بيانات الكنب (قبل/بعد)
+  // صور الكنب
   const sofaPairs = [
     { before: before1, after: after1 },
     { before: before2, after: after2 },
@@ -51,25 +55,26 @@ function App() {
     { before: before4, after: after4 },
   ];
 
-  // ✅ ترتيب السيارات مع تبديل car6 ⇄ car1:
-  // car6 تصبح الأولى، و car1 يصبح في موضع car6 السابق (السادس)
+  // صور السيارات
   const carSrcs = [car6, car3, car4, car5, car1, car7, car8, car9, car10];
-
-  // ولّد العناصر مع كابتشن تلقائي "سيارة 1..n"
   const carsImages = carSrcs.map((src, i) => ({
     src,
     caption: `سيارة ${i + 1}`,
   }));
 
-  // سجاد (مجرد أمثلة كما كانت)
   const rugsImages = [
     { src: after3, caption: "تنظيف سجاد عميق" },
     { src: before3, caption: "إزالة بقع صعبة" },
   ];
 
+  // إذا الأدمن مفتوح نعرض لوحة الأدمن فقط
+  if (adminMode) {
+    return <AdminMessages onExit={() => setAdminMode(false)} />;
+  }
+
+  // الموقع الرئيسي
   return (
-    <div className="font-sans">
-      {/* لفّ الهيدر لتحديد ارتفاعه */}
+    <div className="font-sans relative min-h-screen">
       <div id="site-header">
         <Header scrollToSection={scrollToSection} />
       </div>
@@ -107,6 +112,26 @@ function App() {
       >
         <ContactSection />
       </section>
+
+      {/* 🌙 زر أدمن مخفي مع كتابة مزخرفة "Lumora" */}
+      <button
+        type="button"
+        onClick={() => setAdminMode(true)}
+        aria-label="لوحة الأدمن"
+        className="
+          fixed bottom-3 right-3 z-[9999]
+          opacity-0 hover:opacity-40 
+          transition-opacity duration-500 
+          text-[15px] tracking-wide font-semibold
+          text-white select-none
+        "
+        style={{
+          fontFamily: "'Cinzel', serif",
+          textShadow: "0 0 6px rgba(0,0,0,0.6)",
+        }}
+      >
+        Lumora ✦
+      </button>
     </div>
   );
 }

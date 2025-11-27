@@ -15,72 +15,53 @@ export default function Header({
   const [menuOpen, setMenuOpen] = useState(false);
   const ref = useRef(null);
 
+  // منع السكرول لما السايدبار مفتوحة
   useEffect(() => {
     document.body.style.overflow = menuOpen ? "hidden" : "";
   }, [menuOpen]);
 
+  // ظلّ بسيط عند السكورل
   useEffect(() => {
     const el = ref.current;
     const onScroll = () => {
-      const s = window.scrollY > 2;
-      el?.classList.toggle("shadow-lg", s);
-      el?.classList.toggle("border-b", s);
+      const scrolled = window.scrollY > 2;
+      el?.classList.toggle("shadow-md", scrolled);
+      el?.classList.toggle("border-b", scrolled);
     };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const t = {
-    home: { ar: "الرئيسية", en: "Home", he: "ראשי" }[lang] || "Home",
-    store: { ar: "المتجر", en: "Store", he: "חנות" }[lang] || "Store",
-  };
-
   return (
     <header
       ref={ref}
-      className="sticky top-0 z-50 bg-white/80 backdrop-blur-md transition-shadow border-gray-200"
       dir={isRTL ? "rtl" : "ltr"}
+      className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-transparent transition-shadow"
     >
-      <div className="max-w-7xl mx-auto px-3 sm:px-4">
+      <div className="max-w-7xl mx-auto px-4">
         <div className="flex items-center gap-3 min-h-[64px]">
-          {/* زر منيو للموبايل */}
+          {/* زر المنيو - موبايل */}
           <button
             onClick={() => setMenuOpen(true)}
             className="md:hidden p-2 rounded-lg hover:bg-gray-100"
             aria-label="Open menu"
           >
-            <Menu className="w-6 h-6" />
+            <Menu className="w-6 h-6 text-gray-800" />
           </button>
 
           {/* الشعار */}
-          <a
-            href="/"
-            className="flex items-center gap-2 font-extrabold text-gray-900"
-          >
-            <img src="/logo.svg" alt="Logo" className="w-8 h-8 rounded-xl" />
-            <span className="hidden sm:block">BrandName</span>
-          </a>
+          <div className="flex items-center gap-2 font-extrabold text-gray-900">
+            {/* لو عندك لوجو حقيقي حط مساره هون */}
+            {/* <img src="/logo.svg" alt="Logo" className="w-9 h-9 rounded-xl" /> */}
+            <span className="text-lg sm:text-xl tracking-tight text-blue-600">
+              Lumora
+            </span>
+          </div>
 
-          {/* روابط أساسية */}
-          <nav className="hidden md:flex items-center ms-2">
-            <a
-              href="/"
-              className="px-3 py-2 rounded-lg text-gray-700 hover:text-blue-600 hover:bg-blue-50"
-            >
-              {t.home}
-            </a>
-            <a
-              href="/store"
-              className="px-3 py-2 rounded-lg text-gray-700 hover:text-blue-600 hover:bg-blue-50"
-            >
-              {t.store}
-            </a>
-          </nav>
-
-          {/* ناڤ الأقسام (للصفحة الرئيسية) */}
+          {/* ناڤ الأقسام - ديسكتوب */}
           {!!navItems.length && (
-            <div className="hidden md:block ms-4">
+            <div className="hidden md:flex ms-8">
               <DesktopNav
                 navItems={navItems}
                 activeId={activeId}
@@ -89,12 +70,12 @@ export default function Header({
             </div>
           )}
 
-          {/* Spacer علشان العناصر تكون مرتبة */}
+          {/* فاصل يدز العناصر لليمين/اليسار */}
           <div className="ms-auto" />
         </div>
       </div>
 
-      {/* سايدبار موبايل */}
+      {/* سايدبار الموبايل */}
       <SidebarMenu
         menuOpen={menuOpen}
         setMenuOpen={setMenuOpen}
