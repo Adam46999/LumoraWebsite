@@ -1,387 +1,386 @@
-// src/components/services/ServiceModal.jsx
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useLanguage } from "../../context/LanguageContext";
-import { X, Clock, DollarSign, CheckCircle2, ChevronDown } from "lucide-react";
+import {
+  X,
+  CheckCircle2,
+  Info,
+  ShieldCheck,
+  Clock,
+  Tag,
+  MessageCircle,
+  HelpCircle,
+} from "lucide-react";
 import { serviceDetails } from "./serviceDetailsData";
+
+function getText(lang, ar, en) {
+  return lang === "ar" ? ar : en;
+}
 
 export default function ServiceModal({
   isOpen,
   onClose,
   selected,
   onOrderNow,
+  onQuickQuestion,
 }) {
-  const { lang } = useLanguage();
+  const { lang, t } = useLanguage();
 
-  // Hooks ثابتة
-  const [activeIdx, setActiveIdx] = useState(null);
-  const [sqm, setSqm] = useState(""); // للسجاد
-  const startY = useRef(null);
-  const [dragY, setDragY] = useState(0);
+  const details = useMemo(() => {
+    if (!selected) return null;
+    return serviceDetails?.[selected.id] || null;
+  }, [selected]);
+
+  const first = details?.cards?.[0] || null;
+
+  // ✅ booking inputs
+  const [preferredTime, setPreferredTime] = useState("today"); // today | tomorrow | week
+  const [note, setNote] = useState("");
+  const [isOpening, setIsOpening] = useState(false);
+
+  // reset when open changes
+  useEffect(() => {
+    if (!isOpen) return;
+    setPreferredTime("today");
+    setNote("");
+    setIsOpening(false);
+  }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen) return;
+    const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    setActiveIdx(null);
-    setSqm("");
     return () => {
-      document.body.style.overflow = "auto";
-      setDragY(0);
+      document.body.style.overflow = prev;
     };
   }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen) return;
-    const onKey = (e) => e.key === "Escape" && onClose?.();
+    const onKey = (e) => {
+      if (e.key === "Escape") onClose?.();
+    };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [isOpen, onClose]);
 
-  // بيانات
-  const details = selected?.id ? serviceDetails[selected.id] : null;
-  if (!isOpen || !details) return null;
+  if (!isOpen || !selected) return null;
 
-  const isCarpet = details.id === "carpet";
-  const isCarSeats = details.id === "carSeats";
-  const selectedCard = activeIdx != null ? details.cards[activeIdx] : null;
+  const title =
+    details?.[lang === "ar" ? "title_ar" : "title_en"] ||
+    t?.[selected.titleKey] ||
+    selected.id;
 
-  const colorBtn =
-    {
-      blue: "bg-blue-600 hover:bg-blue-700",
-      amber: "bg-amber-500 hover:bg-amber-600",
-      teal: "bg-teal-600 hover:bg-teal-700",
-      emerald: "bg-emerald-600 hover:bg-emerald-700",
-    }[details.color] || "bg-blue-600 hover:bg-blue-700";
+  const subtitle =
+    details?.[lang === "ar" ? "subtitle_ar" : "subtitle_en"] ||
+    t?.[selected.descriptionKey] ||
+    "";
 
-  // سحب للإغلاق (أسهل على الجوال)
-  const onTouchStart = (e) => {
-    startY.current = e.touches[0].clientY;
+  const includes =
+    (lang === "ar" ? first?.features_ar : first?.features_en) || [];
+  const duration = first?.duration;
+  const price = first?.price;
+
+  const prefOptions = [
+    { key: "today", label: getText(lang, "اليوم", "Today") },
+    { key: "tomorrow", label: getText(lang, "بكرة", "Tomorrow") },
+    { key: "week", label: getText(lang, "هذا الأسبوع", "This week") },
+  ];
+
+  const payload = { preferredTime, note };
+
+  const safeOpen = (fn) => {
+    if (isOpening) return;
+    setIsOpening(true);
+    try {
+      fn?.(payload);
+    } finally {
+      // يرجّع الحالة بسرعة حتى لو المتصفح منع popup
+      window.setTimeout(() => setIsOpening(false), 700);
+    }
   };
-  const onTouchMove = (e) => {
-    if (startY.current == null) return;
-    const dy = e.touches[0].clientY - startY.current;
-    if (dy > 0) setDragY(Math.min(dy, 180));
-  };
-  const onTouchEnd = () => {
-    if (dragY > 60) onClose?.();
-    setDragY(0);
-    startY.current = null;
-  };
-
-  // السجاد
-  const unit = isCarpet
-    ? Number((details.cards?.[0]?.price || "0").split(" ")[0]) || 0
-    : 0;
-  const total = isCarpet && sqm ? `${unit * Number(sqm)} ₪` : "";
-  const canBook = isCarpet ? Number(sqm) > 0 : activeIdx != null;
-
-  const makePayload = () => ({
-    serviceId: details.id,
-    serviceName:
-      lang === "ar"
-        ? selectedCard?.name_ar || details.title_ar
-        : selectedCard?.name_en || details.title_en,
-    duration: selectedCard?.duration || (lang === "ar" ? "غير محدد" : "N/A"),
-    price: isCarpet ? total || selectedCard?.price : selectedCard?.price,
-    note: isCarpet
-      ? lang === "ar"
-        ? `المساحة: ${sqm} م²`
-        : `Area: ${sqm} m²`
-      : "",
-    lang,
-  });
-
-  // Badge “الأكثر طلبًا” لباقة 550 في carSeats
-  const isMostPopular = (card) =>
-    details.id === "carSeats" &&
-    Number(String(card.price).replace(/[^\d]/g, "")) === 550;
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/60"
-      onClick={onClose}
-    >
-      <div
-        dir={lang === "ar" ? "rtl" : "ltr"}
-        onClick={(e) => e.stopPropagation()}
-        className="relative w-[100vw] md:max-w-3xl bg-white rounded-t-2xl md:rounded-2xl shadow-xl overflow-hidden"
-        style={{
-          transform: dragY ? `translateY(${dragY}px)` : undefined,
-          transition: dragY ? "none" : "transform 200ms ease",
-          maxHeight: "100dvh",
-        }}
-        onTouchStart={onTouchStart}
-        onTouchMove={onTouchMove}
-        onTouchEnd={onTouchEnd}
-        role="dialog"
-        aria-modal="true"
-      >
-        {/* شريط علوي ثابت على الموبايل (عنوان + إغلاق) */}
-        <div
-          className="sticky top-0 z-10 bg-white/95 backdrop-blur border-b px-4 sm:px-6"
-          style={{ paddingTop: "max(env(safe-area-inset-top), 10px)" }}
-        >
-          <div className="h-12 flex items-center justify-between">
-            <h2 className="font-bold text-[clamp(15px,4vw,18px)] truncate pe-2">
-              {lang === "ar" ? details.title_ar : details.title_en}
-            </h2>
-            <button
-              aria-label={lang === "ar" ? "إغلاق" : "Close"}
-              onClick={onClose}
-              className="rounded-full p-2 text-gray-700 hover:bg-gray-100"
-              style={{ width: 40, height: 40 }}
-            >
-              <X size={20} />
-            </button>
-          </div>
-        </div>
+    <div className="fixed inset-0 z-[60]" role="dialog" aria-modal="true">
+      <button
+        type="button"
+        className="absolute inset-0 bg-black/40 backdrop-blur-[1px]"
+        onClick={onClose}
+        aria-label={getText(lang, "إغلاق", "Close")}
+      />
 
-        {/* صورة الهيدر تظهر فقط من md وطالع */}
-        <div className="hidden md:block">
-          <div className="relative aspect-[16/9] w-full">
+      <div className="relative w-full h-full p-4 sm:p-6 flex items-start sm:items-center justify-center">
+        <div
+          className="w-full max-w-3xl max-h-[calc(100vh-2rem)] sm:max-h-[calc(100vh-3rem)] rounded-3xl bg-white shadow-2xl border border-gray-100 overflow-hidden flex flex-col"
+          dir={lang === "ar" ? "rtl" : "ltr"}
+        >
+          {/* Header */}
+          <div className="relative h-44 sm:h-56 shrink-0">
             <img
-              src={details.image}
-              alt={lang === "ar" ? details.title_ar : details.title_en}
-              className="absolute inset-0 w-full h-full object-cover"
-              loading="lazy"
-              decoding="async"
+              src={details?.image || selected.image}
+              alt={title}
+              className="w-full h-full object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/25 to-transparent" />
-            <div className="absolute bottom-3 start-3 pe-12">
-              <p className="text-white/90 text-sm">
-                {lang === "ar" ? details.subtitle_ar : details.subtitle_en}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+
+            <button
+              type="button"
+              onClick={onClose}
+              className="absolute top-4 end-4 rounded-full bg-white/90 hover:bg-white text-gray-900 p-2 shadow-sm transition"
+              aria-label={getText(lang, "إغلاق", "Close")}
+            >
+              <X size={18} />
+            </button>
+
+            <div className="absolute bottom-4 start-4 end-4">
+              <h3 className="text-2xl sm:text-3xl font-extrabold text-white drop-shadow">
+                {title}
+              </h3>
+              {subtitle ? (
+                <p className="mt-2 text-white/90 text-sm sm:text-base max-w-2xl">
+                  {subtitle}
+                </p>
+              ) : null}
+            </div>
+          </div>
+
+          {/* Body */}
+          <div className="flex-1 overflow-y-auto px-5 sm:px-8 pt-6 pb-5">
+            {/* Quick info */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
+              <div className="rounded-2xl border border-gray-100 bg-white px-4 py-3 shadow-sm">
+                <div className="flex items-center gap-2 text-gray-700">
+                  <Clock size={16} />
+                  <span className="text-xs font-black">
+                    {getText(lang, "المدة", "Duration")}
+                  </span>
+                </div>
+                <div className="mt-1 text-sm font-bold text-gray-900">
+                  {duration || getText(lang, "حسب الحالة", "Varies")}
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-gray-100 bg-white px-4 py-3 shadow-sm">
+                <div className="flex items-center gap-2 text-gray-700">
+                  <Tag size={16} />
+                  <span className="text-xs font-black">
+                    {getText(lang, "السعر", "Price")}
+                  </span>
+                </div>
+                <div className="mt-1 text-sm font-bold text-gray-900">
+                  {price || getText(lang, "حسب الحالة", "Varies")}
+                </div>
+              </div>
+
+              <div className="hidden sm:block rounded-2xl border border-gray-100 bg-white px-4 py-3 shadow-sm">
+                <div className="flex items-center gap-2 text-gray-700">
+                  <ShieldCheck size={16} />
+                  <span className="text-xs font-black">
+                    {getText(lang, "الضمان", "Assurance")}
+                  </span>
+                </div>
+                <div className="mt-1 text-sm font-bold text-gray-900">
+                  {getText(lang, "جودة وتعقيم", "Quality & Sanitization")}
+                </div>
+              </div>
+            </div>
+
+            {/* Includes */}
+            <div className="rounded-3xl border border-gray-100 bg-white shadow-sm p-5 sm:p-6">
+              <div className="flex items-center gap-2 text-blue-700">
+                <CheckCircle2 size={18} />
+                <h4 className="text-lg font-extrabold">
+                  {getText(lang, "يشمل", "Includes")}
+                </h4>
+              </div>
+
+              <ul className="mt-4 grid gap-2">
+                {includes.length ? (
+                  includes.map((item, idx) => (
+                    <li
+                      key={idx}
+                      className="flex items-start gap-2 text-gray-700"
+                    >
+                      <span className="mt-1 h-2 w-2 rounded-full bg-blue-600 shrink-0" />
+                      <span className="text-sm leading-relaxed">{item}</span>
+                    </li>
+                  ))
+                ) : (
+                  <li className="text-sm text-gray-600">
+                    {getText(
+                      lang,
+                      "تفاصيل إضافية عند التواصل.",
+                      "More details on request."
+                    )}
+                  </li>
+                )}
+              </ul>
+            </div>
+
+            {/* Booking inputs (واضحة وبسيطة) */}
+            <div className="mt-4 rounded-3xl border border-gray-100 bg-white shadow-sm p-5 sm:p-6">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <h4 className="text-lg font-extrabold text-gray-900">
+                    {getText(lang, "تفاصيل الحجز", "Booking details")}
+                  </h4>
+                  <p className="mt-1 text-sm text-gray-600">
+                    {getText(
+                      lang,
+                      "اختياري — يساعدنا نرد عليك أسرع وبشكل أدق.",
+                      "Optional — helps us respond faster and more accurately."
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              {/* preferred time */}
+              <div className="mt-4">
+                <div className="text-xs font-black text-gray-700 mb-2">
+                  {getText(lang, "الوقت المفضل", "Preferred time")}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {prefOptions.map((o) => {
+                    const active = preferredTime === o.key;
+                    return (
+                      <button
+                        key={o.key}
+                        type="button"
+                        onClick={() => setPreferredTime(o.key)}
+                        className={[
+                          "rounded-full px-4 py-2 text-sm font-bold border transition",
+                          active
+                            ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+                            : "bg-white text-gray-700 border-gray-200 hover:bg-blue-50 hover:border-blue-200",
+                        ].join(" ")}
+                      >
+                        {o.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* note */}
+              <div className="mt-4">
+                <div className="text-xs font-black text-gray-700 mb-2">
+                  {getText(lang, "ملاحظة", "Note")}
+                </div>
+                <textarea
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  rows={3}
+                  placeholder={getText(
+                    lang,
+                    "مثال: بقع قهوة / حيوان أليف / العنوان / ملاحظات خاصة…",
+                    "Example: coffee stains / pets / address / special notes…"
+                  )}
+                  className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-300"
+                />
+              </div>
+
+              {/* what happens next */}
+              <div className="mt-4 rounded-2xl bg-blue-50/60 border border-blue-100 px-4 py-3 text-sm text-blue-900">
+                {getText(
+                  lang,
+                  "بعد الإرسال: بنرد عليك سريعًا لتأكيد السعر والموعد.",
+                  "After sending: we’ll reply quickly to confirm price and schedule."
+                )}
+              </div>
+            </div>
+
+            {/* Notes */}
+            <div className="mt-4 rounded-3xl border border-gray-100 bg-amber-50/40 p-5 sm:p-6">
+              <div className="flex items-center gap-2 text-amber-900">
+                <Info size={18} />
+                <h4 className="text-lg font-extrabold">
+                  {getText(lang, "ملاحظات", "Notes")}
+                </h4>
+              </div>
+              <p className="mt-3 text-sm text-amber-950/80 leading-relaxed">
+                {getText(
+                  lang,
+                  "لتحديد السعر النهائي بدقة، نحتاج معرفة الحجم/الحالة. احجز عبر واتساب وسنرد عليك بسرعة.",
+                  "Final pricing depends on size/condition. Book via WhatsApp and we’ll reply quickly."
+                )}
               </p>
             </div>
           </div>
-        </div>
 
-        {/* المحتوى يتمرّج تحت الشريط */}
-        <div
-          className="overflow-y-auto overscroll-contain"
-          style={{
-            WebkitOverflowScrolling: "touch",
-            maxHeight: "calc(100dvh - 56px - 64px)",
-          }}
-        >
-          <div className="p-4 sm:p-6">
-            {/* carSeats: Radio List مبسّطة للموبايل */}
-            {details.id === "carSeats" ? (
-              <ul className="space-y-3">
-                {details.cards.map((card, i) => (
-                  <MobileOptionItem
-                    key={i}
-                    lang={lang}
-                    card={card}
-                    active={activeIdx === i}
-                    onSelect={() => setActiveIdx(i)}
-                    mostPopular={isMostPopular(card)}
-                  />
-                ))}
-              </ul>
-            ) : (
-              // باقي الخدمات: شبكة 1 عمود على الموبايل / 2 من md
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                {details.cards.map((card, i) => {
-                  const active = activeIdx === i;
-                  return (
-                    <button
-                      key={i}
-                      type="button"
-                      onClick={() => setActiveIdx(i)}
-                      className={`relative text-left rounded-xl border p-4 sm:p-5 transition ${
-                        active
-                          ? "border-emerald-400 ring-2 ring-emerald-200"
-                          : "border-gray-200 hover:border-gray-300"
-                      }`}
-                    >
-                      {/* السعر */}
-                      {card.price && (
-                        <span className="absolute top-2.5 end-2.5 rounded-full bg-black/70 text-white text-[11px] px-2.5 py-1">
-                          {isCarpet && i === 0 && total ? total : card.price}
-                        </span>
-                      )}
+          {/* Footer */}
+          <div className="sticky bottom-0 border-t border-gray-100 bg-white/95 backdrop-blur px-5 sm:px-8 py-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              {/* ✅ Chips قوية بدل سطر نص */}
+              <div className="flex flex-wrap items-center gap-2">
+                {duration ? (
+                  <span className="rounded-full bg-gray-900 text-white px-3 py-1 text-xs font-extrabold inline-flex items-center gap-2">
+                    <Clock size={14} />
+                    {duration}
+                  </span>
+                ) : null}
 
-                      <h3 className="text-base sm:text-lg font-bold mb-1.5">
-                        {lang === "ar" ? card.name_ar : card.name_en}
-                      </h3>
+                {price ? (
+                  <span className="rounded-full bg-blue-600 text-white px-3 py-1 text-xs font-extrabold inline-flex items-center gap-2">
+                    <Tag size={14} />
+                    {price}
+                  </span>
+                ) : null}
 
-                      <div className="flex items-center gap-3 text-gray-700 text-sm mb-2.5">
-                        <span className="inline-flex items-center gap-1">
-                          <Clock size={16} /> {card.duration}
-                        </span>
-                        <span className="inline-flex items-center gap-1">
-                          <DollarSign size={16} /> {card.price}
-                        </span>
-                      </div>
-
-                      <ul className="space-y-1.5 text-gray-700 text-[13px] leading-relaxed">
-                        {(lang === "ar" ? card.features_ar : card.features_en)
-                          .slice(0, 3)
-                          .map((f, idx) => (
-                            <li key={idx} className="flex items-center gap-2">
-                              <CheckCircle2
-                                className="text-emerald-500"
-                                size={15}
-                              />
-                              {f}
-                            </li>
-                          ))}
-                      </ul>
-
-                      {/* حاسبة السجاد – أول كرت فقط */}
-                      {details.id === "carpet" && i === 0 && (
-                        <div className="mt-3">
-                          <label className="block text-xs text-gray-600 mb-1.5">
-                            {lang === "ar" ? "المساحة (م²)" : "Area (m²)"}
-                          </label>
-                          <div className="flex items-center gap-2">
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setSqm((v) =>
-                                  String(Math.max(1, Number(v || 0) - 1))
-                                )
-                              }
-                              className="px-3 py-2 rounded-lg border"
-                            >
-                              −
-                            </button>
-                            <input
-                              type="number"
-                              min="1"
-                              step="1"
-                              value={sqm}
-                              onChange={(e) => setSqm(e.target.value)}
-                              placeholder={
-                                lang === "ar" ? "مثال: 12" : "e.g., 12"
-                              }
-                              className="w-24 text-center rounded-lg border py-2"
-                            />
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setSqm((v) => String(Number(v || 0) + 1))
-                              }
-                              className="px-3 py-2 rounded-lg border"
-                            >
-                              +
-                            </button>
-                          </div>
-                          <p className="mt-1.5 text-xs text-gray-600">
-                            {lang === "ar"
-                              ? total
-                                ? `المجموع: ${total}`
-                                : `السعر: ${unit} ₪ / متر — الطول × العرض = المساحة`
-                              : total
-                              ? `Total: ${total}`
-                              : `Price: ${unit} ₪ / m² — length × width = area`}
-                          </p>
-                        </div>
-                      )}
-                    </button>
-                  );
-                })}
+                <span className="text-xs font-semibold text-gray-500">
+                  {getText(
+                    lang,
+                    "يرسل رسالة جاهزة على واتساب — بدون تعبئة فورم",
+                    "Sends a pre-filled WhatsApp message — no form needed"
+                  )}
+                </span>
               </div>
-            )}
-          </div>
-        </div>
 
-        {/* شريط أزرار سفلي (مع إلغاء) — آمن للحافة */}
-        <div
-          className="sticky bottom-0 bg-white border-t px-4 sm:px-6 py-3 flex items-center justify-between gap-2"
-          style={{ paddingBottom: "max(env(safe-area-inset-bottom), 10px)" }}
-        >
-          <button
-            onClick={onClose}
-            className="px-4 py-3 rounded-xl border text-gray-700 font-medium min-w-[110px]"
-          >
-            {lang === "ar" ? "إلغاء" : "Cancel"}
-          </button>
-          <button
-            disabled={!(isCarpet ? Number(sqm) > 0 : activeIdx != null)}
-            onClick={() => onOrderNow?.(makePayload())}
-            className={`px-5 sm:px-6 py-3 rounded-xl text-white font-semibold min-w-[140px] ${
-              (isCarpet ? Number(sqm) > 0 : activeIdx != null)
-                ? colorBtn
-                : "bg-gray-300"
-            }`}
-          >
-            {lang === "ar" ? "احجز الآن" : "Book Now"}
-          </button>
+              {/* ✅ CTA: primary + secondary + loading */}
+              <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  disabled={isOpening}
+                  className="rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-800 font-bold px-4 py-2.5 transition active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {getText(lang, "إغلاق", "Close")}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => safeOpen(onQuickQuestion)}
+                  disabled={!onQuickQuestion || isOpening}
+                  className="rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-900 font-extrabold px-4 py-2.5 transition active:scale-95 inline-flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  <HelpCircle size={16} />
+                  {isOpening
+                    ? getText(lang, "جاري الفتح…", "Opening…")
+                    : getText(lang, "سؤال سريع", "Quick question")}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => safeOpen(onOrderNow)}
+                  disabled={!onOrderNow || isOpening}
+                  className={[
+                    "rounded-xl bg-gray-900 hover:bg-gray-800 text-white font-extrabold px-5 py-2.5 transition active:scale-95",
+                    "inline-flex items-center justify-center gap-2",
+                    "shadow-sm",
+                  ].join(" ")}
+                >
+                  <MessageCircle size={16} aria-hidden="true" />
+                  {isOpening
+                    ? getText(lang, "جاري الفتح…", "Opening…")
+                    : getText(
+                        lang,
+                        "احجز الآن (واتساب)",
+                        "Book now (WhatsApp)"
+                      )}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-  );
-}
-
-/* عنصر خيار مبسّط موبايل لخدمة carSeats */
-function MobileOptionItem({ lang, card, active, onSelect, mostPopular }) {
-  const [open, setOpen] = useState(false);
-  const title = lang === "ar" ? card.name_ar : card.name_en;
-  const feats = (lang === "ar" ? card.features_ar : card.features_en) || [];
-
-  return (
-    <li
-      className={`rounded-xl border p-3.5 ${
-        active
-          ? "border-emerald-400 ring-2 ring-emerald-200"
-          : "border-gray-200"
-      }`}
-    >
-      <label className="flex items-start gap-3">
-        <input
-          type="radio"
-          name="carSeatsOption"
-          checked={active}
-          onChange={onSelect}
-          className="mt-1 h-5 w-5 accent-emerald-600"
-        />
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between gap-2">
-            <h3 className="text-[15px] font-bold truncate">{title}</h3>
-            <span className="rounded-full bg-black/70 text-white text-[11px] px-2.5 py-1 shrink-0">
-              {card.price}
-            </span>
-          </div>
-          <div className="mt-1.5 text-gray-700 text-[13px] flex items-center gap-3">
-            <span className="inline-flex items-center gap-1">
-              <Clock size={14} /> {card.duration}
-            </span>
-            {mostPopular && (
-              <span className="text-[11px] px-2 py-0.5 rounded-full bg-amber-500 text-white">
-                {lang === "ar" ? "الأكثر طلبًا" : "Most popular"}
-              </span>
-            )}
-          </div>
-
-          <button
-            type="button"
-            onClick={() => setOpen((v) => !v)}
-            className="mt-2 inline-flex items-center gap-1 text-[13px] text-emerald-700"
-          >
-            {open
-              ? lang === "ar"
-                ? "إخفاء التفاصيل"
-                : "Hide details"
-              : lang === "ar"
-              ? "عرض التفاصيل"
-              : "Show details"}
-            <ChevronDown
-              size={16}
-              className={`transition ${open ? "rotate-180" : ""}`}
-            />
-          </button>
-
-          {open && (
-            <ul className="mt-2 space-y-1 text-gray-700 text-[13px]">
-              {feats.slice(0, 5).map((f, idx) => (
-                <li key={idx} className="flex items-center gap-2">
-                  <CheckCircle2 className="text-emerald-500" size={14} /> {f}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </label>
-    </li>
   );
 }

@@ -7,8 +7,8 @@ import Services from "./components/services/Services";
 import CleaningShowcase from "./components/BefAfter/CleaningShowcase";
 import ContactSection from "./components/contact/ContactSection";
 
-// ✅ لوحة الأدمن
-import AdminMessages from "./components/admin/AdminMessages";
+// ✅ لوحة الأدمن الكاملة (بدل AdminMessages)
+import AdminPanel from "./components/admin/AdminPanel";
 
 // قبل/بعد (كنب)
 import before1 from "./assets/before1.jpg";
@@ -33,7 +33,7 @@ import car10 from "./assets/car10.jpg";
 
 function App() {
   const { scrollToSection, shakeTarget } = useSectionNavigation();
-  const [adminMode, setAdminMode] = useState(false); // وضع الأدمن
+  const [adminMode, setAdminMode] = useState(false);
 
   // احسب ارتفاع الهيدر وخزّنه
   useEffect(() => {
@@ -67,9 +67,9 @@ function App() {
     { src: before3, caption: "إزالة بقع صعبة" },
   ];
 
-  // إذا الأدمن مفتوح نعرض لوحة الأدمن فقط
+  // ✅ إذا الأدمن مفتوح نعرض لوحة الأدمن فقط
   if (adminMode) {
-    return <AdminMessages onExit={() => setAdminMode(false)} />;
+    return <AdminPanel onExit={() => setAdminMode(false)} />;
   }
 
   // الموقع الرئيسي
@@ -113,7 +113,7 @@ function App() {
         <ContactSection />
       </section>
 
-      {/* 🌙 زر أدمن مخفي مع كتابة مزخرفة "Lumora" */}
+      {/* 🌙 زر أدمن مخفي */}
       <button
         type="button"
         onClick={() => setAdminMode(true)}

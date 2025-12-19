@@ -1,5 +1,5 @@
 // src/components/BefAfter/BeforeAfterCarousel.jsx
-import React from "react";
+import React, { useMemo } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import "swiper/css/navigation";
@@ -8,33 +8,58 @@ import BeforeAfter from "./BeforeAfter";
 import { useLanguage } from "../../context/LanguageContext";
 
 export default function BeforeAfterCarousel({
+  // ✅ supports both old/new names
   items,
+  pairs,
   hideDescription = false,
 }) {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
+
+  // ✅ always an array -> prevents "map of undefined"
+  const list = useMemo(() => {
+    if (Array.isArray(items)) return items;
+    if (Array.isArray(pairs)) return pairs;
+    return [];
+  }, [items, pairs]);
+
+  if (!list.length) {
+    // optional: render nothing if empty (keeps UI clean)
+    return null;
+  }
+
+  const title =
+    t?.beforeAfterTitle1 ||
+    (lang === "ar" ? "قبل / بعد التنظيف" : "Before / After");
+
+  const subtitle =
+    t?.beforeAfterTitle2 ||
+    (lang === "ar"
+      ? "اسحب الخط وشوف الفرق."
+      : "Drag the line to see the difference.");
 
   return (
-    <section className="max-w-5xl mx-auto px-4 my-8 sm:my-10">
-      <h2
-        className="text-center font-extrabold text-gray-900
-                     text-[clamp(20px,4.5vw,32px)] tracking-tight"
-      >
-        <span className="text-black">{t.beforeAfterTitle1}</span>
-        <span className="text-blue-600 ms-1">{t.beforeAfterTitle2}</span>
-      </h2>
+    <section className="mt-2">
+      {!hideDescription ? (
+        <div className="text-center">
+          <h3 className="text-lg sm:text-xl font-extrabold text-slate-900">
+            {title}
+            <span className="text-blue-600 ms-1">{subtitle}</span>
+          </h3>
+        </div>
+      ) : null}
 
       <Swiper
         modules={[Navigation]}
         navigation
         spaceBetween={30}
         slidesPerView={1}
-        loop
-        allowTouchMove={false}
+        loop={list.length > 1}
+        allowTouchMove
         className="mt-4"
       >
-        {items.map((item, index) => (
+        {list.map((item, index) => (
           <SwiperSlide key={index}>
-            <BeforeAfter beforeImage={item.before} afterImage={item.after} />
+            <BeforeAfter beforeImage={item?.before} afterImage={item?.after} />
           </SwiperSlide>
         ))}
       </Swiper>

@@ -1,5 +1,7 @@
-// header/SidebarMenu.jsx
-import { X, ChevronLeft, ChevronRight, Globe2 } from "lucide-react";
+// src/header/SidebarMenu.jsx
+import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
+import { X, ChevronLeft, ChevronRight, Globe2, Check } from "lucide-react";
 import { useLanguage } from "../context/LanguageContext";
 
 export default function SidebarMenu({
@@ -7,106 +9,304 @@ export default function SidebarMenu({
   setMenuOpen,
   navItems,
   scrollToSection,
+  activeId, // ✅ (6)
+  hintText, // ✅ (5)
+  labels, // ✅ (12)
 }) {
   const { lang, setLang } = useLanguage();
   const isRTL = lang === "ar" || lang === "he";
 
+  const [openParentId, setOpenParentId] = useState(null);
+
+  const ArrowIcon = useMemo(
+    () => (isRTL ? ChevronLeft : ChevronRight),
+    [isRTL]
+  );
+
+  // reset expanded state when closed
+  useEffect(() => {
+    if (!menuOpen) setOpenParentId(null);
+  }, [menuOpen]);
+
+  // close on ESC
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onKeyDown = (e) => {
+      if (e.key === "Escape") setMenuOpen(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [menuOpen, setMenuOpen]);
+
+  // lock scroll
+  useEffect(() => {
+    if (!menuOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev || "";
+    };
+  }, [menuOpen]);
+
   if (!menuOpen) return null;
 
-  const ArrowIcon = isRTL ? ChevronLeft : ChevronRight;
+  const handleGo = (id) => {
+    try {
+      scrollToSection?.(id);
+    } finally {
+      setMenuOpen(false);
+      setOpenParentId(null);
+    }
+  };
 
-  return (
+  const handleLang = (next) => setLang(next);
+
+  const ui = (
     <div
-      className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm"
+      className="fixed inset-0 z-[99999] bg-black/80"
       onClick={() => setMenuOpen(false)}
+      role="presentation"
     >
-      <div
+      <aside
         className={`fixed top-0 ${
           isRTL ? "right-0" : "left-0"
-        } h-full w-80 max-w-[82%] bg-white shadow-2xl flex flex-col p-5`}
+        } h-full w-80 max-w-[82%] bg-white shadow-2xl flex flex-col`}
         dir={isRTL ? "rtl" : "ltr"}
         onClick={(e) => e.stopPropagation()}
+        aria-label="Mobile menu"
       >
-        {/* الهيدر فوق */}
-        <div className="flex items-center justify-between mb-6">
-          <div
-            className={`flex flex-col ${isRTL ? "items-end" : "items-start"}`}
-          >
-            {/* اللوجو / الأيقونة */}
-            <div className="flex items-center gap-2 mb-1">
+        {/* Header */}
+        <div className="p-5 border-b border-gray-100">
+          <div className="flex items-center justify-between">
+            <button
+              type="button"
+              onClick={() => handleGo("home")}
+              className="flex items-center gap-2 select-none"
+              aria-label="Go to home"
+            >
               <span className="text-blue-600 text-xl">🧼</span>
-              <span className="font-extrabold text-gray-900 text-lg tracking-tight">
+              <span className="font-extrabold text-lg tracking-tight text-blue-600">
                 Lumora
               </span>
-            </div>
+            </button>
 
-            {/* عنوان المنيو */}
-            <span className="text-sm font-medium text-gray-600 bg-gray-100 px-3 py-1 rounded-full shadow-sm">
-              القائمة الرئيسية
-            </span>
+            <button
+              type="button"
+              className="p-2 rounded-xl hover:bg-gray-100 active:bg-gray-200 transition"
+              onClick={() => setMenuOpen(false)}
+              aria-label="Close menu"
+            >
+              <X className="w-5 h-5 text-gray-800" />
+            </button>
+          </div>
+
+          {/* ✅ (5) Hint text موحّد حسب اللغة */}
+          <p
+            className={`mt-2 text-sm text-gray-500 ${
+              isRTL ? "text-right" : "text-left"
+            }`}
+          >
+            {hintText ||
+              (lang === "en"
+                ? "Fast, clear navigation."
+                : lang === "he"
+                ? "ניווט מהיר וברור."
+                : "تنقّل بسرعة، وكل شيء واضح.")}
+          </p>
+        </div>
+
+        {/* Nav */}
+        <div className="flex-1 overflow-y-auto p-4">
+          <div className="flex flex-col gap-2">
+            {navItems.map((item) => {
+              const hasSub =
+                Array.isArray(item.subItems) && item.subItems.length > 0;
+              const isOpen = openParentId === item.id;
+              const isActive = activeId === item.id; // ✅ (6)
+
+              const baseBtn =
+                "w-full px-4 py-3 rounded-2xl border transition flex items-center justify-between";
+              const activeStyle = "border-blue-200 bg-blue-50 text-blue-800";
+              const normalStyle =
+                "border-gray-100 hover:bg-gray-50 active:bg-gray-100";
+
+              if (!hasSub) {
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => handleGo(item.id)}
+                    className={`${baseBtn} ${
+                      isActive ? activeStyle : normalStyle
+                    } ${isRTL ? "flex-row-reverse text-right" : "text-left"}`}
+                  >
+                    <span className="font-semibold">{item.label}</span>
+                    <ArrowIcon
+                      className={`w-4 h-4 ${
+                        isActive ? "text-blue-600" : "text-gray-400"
+                      }`}
+                    />
+                  </button>
+                );
+              }
+
+              return (
+                <div
+                  key={item.id}
+                  className="rounded-2xl border border-gray-100 overflow-hidden"
+                >
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setOpenParentId((prev) =>
+                        prev === item.id ? null : item.id
+                      )
+                    }
+                    className={`w-full px-4 py-3 hover:bg-gray-50 active:bg-gray-100 transition flex items-center justify-between ${
+                      isRTL ? "flex-row-reverse text-right" : "text-left"
+                    }`}
+                    aria-expanded={isOpen}
+                    aria-haspopup="true"
+                  >
+                    <span
+                      className={`font-semibold ${
+                        isActive ? "text-blue-700" : "text-gray-800"
+                      }`}
+                    >
+                      {item.label}
+                    </span>
+                    <span className="flex items-center gap-2">
+                      <span className="text-xs text-gray-400">
+                        {isOpen ? "−" : "+"}
+                      </span>
+                      <ArrowIcon
+                        className={`w-4 h-4 text-gray-400 transition-transform ${
+                          isOpen ? "rotate-90" : "rotate-0"
+                        }`}
+                      />
+                    </span>
+                  </button>
+
+                  {isOpen && (
+                    <div className="px-3 pb-3">
+                      <button
+                        type="button"
+                        onClick={() => handleGo(item.id)}
+                        className={`w-full px-3 py-2 rounded-xl hover:bg-gray-50 active:bg-gray-100 transition text-sm font-semibold text-blue-700 ${
+                          isRTL ? "text-right" : "text-left"
+                        }`}
+                      >
+                        {lang === "en"
+                          ? `View ${item.label}`
+                          : lang === "he"
+                          ? `הצג ${item.label}`
+                          : `عرض ${item.label}`}
+                      </button>
+
+                      <div className="h-px bg-gray-100 my-2" />
+
+                      <div className="flex flex-col gap-1">
+                        {item.subItems.map((sub) => {
+                          const Icon = sub.icon;
+                          const isSubActive = activeId === sub.id; // ✅ (6)
+                          return (
+                            <button
+                              key={sub.id}
+                              type="button"
+                              onClick={() => handleGo(sub.id)}
+                              className={`w-full px-3 py-3 rounded-xl transition flex items-center gap-3 ${
+                                isRTL
+                                  ? "flex-row-reverse text-right"
+                                  : "text-left"
+                              } ${
+                                isSubActive
+                                  ? "bg-blue-50 text-blue-800"
+                                  : "hover:bg-gray-50 active:bg-gray-100"
+                              }`}
+                            >
+                              {Icon ? (
+                                <Icon className="w-4 h-4 text-blue-600" />
+                              ) : null}
+                              <span className="text-sm font-medium">
+                                {sub.label}
+                              </span>
+                              {isSubActive ? (
+                                <Check className="w-4 h-4 ms-auto text-blue-600" />
+                              ) : null}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
 
           <button
-            className="p-2 rounded-full hover:bg-gray-100 text-gray-500 hover:text-red-500"
-            onClick={() => setMenuOpen(false)}
+            type="button"
+            onClick={() => handleGo("contact")}
+            className="mt-4 w-full px-4 py-3 rounded-2xl bg-blue-600 text-white font-extrabold hover:bg-blue-700 active:bg-blue-800 transition"
           >
-            <X className="w-5 h-5" />
+            {labels?.ctaShort ||
+              (lang === "en" ? "Book" : lang === "he" ? "הזמן" : "احجز")}
           </button>
         </div>
 
-        {/* الأقسام – بشكل كروت مرتّبة */}
-        <nav
-          className={`flex-1 space-y-3 ${
-            isRTL ? "text-right" : "text-left"
-          } overflow-y-auto pb-4`}
-        >
-          {navItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => {
-                scrollToSection(item.id);
-                setMenuOpen(false);
-              }}
-              className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/80 text-gray-900 font-medium shadow-sm hover:bg-blue-50 hover:border-blue-400 transition-all"
-            >
-              <span
-                className={`flex items-center gap-3 ${
-                  isRTL ? "flex-row-reverse" : ""
-                }`}
-              >
-                <span className="w-2 h-2 rounded-full bg-blue-500" />
-                <span className="text-sm">{item.label}</span>
-              </span>
-
-              <ArrowIcon className="w-4 h-4 text-gray-400" />
-            </button>
-          ))}
-        </nav>
-
-        {/* اختيار اللغة – شكل ألطف */}
-        <div
-          className={`mt-2 pt-4 border-t border-gray-200 ${
-            isRTL ? "text-right" : "text-left"
-          }`}
-        >
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-gray-700">
-              اختر اللغة
-            </span>
+        {/* Language */}
+        <div className="p-4 border-t border-gray-100">
+          <div
+            className={`flex items-center gap-2 mb-3 ${
+              isRTL ? "flex-row-reverse" : ""
+            }`}
+          >
             <Globe2 className="w-4 h-4 text-gray-500" />
+            <span className="text-sm font-bold text-gray-700">
+              {labels?.langLabel ||
+                (lang === "en" ? "Language" : lang === "he" ? "שפה" : "اللغة")}
+            </span>
           </div>
 
-          <select
-            value={lang}
-            onChange={(e) => setLang(e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="ar">العربية</option>
-            <option value="en">English</option>
-            <option value="he">עברית</option>
-          </select>
+          <div className="grid grid-cols-3 gap-2">
+            <button
+              type="button"
+              onClick={() => handleLang("ar")}
+              className={`px-3 py-2 rounded-xl border text-sm font-bold transition ${
+                lang === "ar"
+                  ? "border-blue-600 text-blue-700 bg-blue-50"
+                  : "border-gray-200 hover:bg-gray-50"
+              }`}
+            >
+              AR
+            </button>
+            <button
+              type="button"
+              onClick={() => handleLang("en")}
+              className={`px-3 py-2 rounded-xl border text-sm font-bold transition ${
+                lang === "en"
+                  ? "border-blue-600 text-blue-700 bg-blue-50"
+                  : "border-gray-200 hover:bg-gray-50"
+              }`}
+            >
+              EN
+            </button>
+            <button
+              type="button"
+              onClick={() => handleLang("he")}
+              className={`px-3 py-2 rounded-xl border text-sm font-bold transition ${
+                lang === "he"
+                  ? "border-blue-600 text-blue-700 bg-blue-50"
+                  : "border-gray-200 hover:bg-gray-50"
+              }`}
+            >
+              HE
+            </button>
+          </div>
         </div>
-      </div>
+      </aside>
     </div>
   );
+
+  return createPortal(ui, document.body);
 }
