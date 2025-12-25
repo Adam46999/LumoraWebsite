@@ -1,13 +1,12 @@
 // src/App.jsx
 import { useEffect, useState } from "react";
-import useSectionNavigation from "./hooks/useSectionNavigation";
 import Header from "./components/Header";
 import Hero from "./components/hero/Hero";
 import Services from "./components/services/Services";
 import CleaningShowcase from "./components/BefAfter/CleaningShowcase";
 import ContactSection from "./components/contact/ContactSection";
 
-// ✅ لوحة الأدمن الكاملة (بدل AdminMessages)
+// ✅ لوحة الأدمن الكاملة
 import AdminPanel from "./components/admin/AdminPanel";
 
 // قبل/بعد (كنب)
@@ -32,8 +31,14 @@ import car9 from "./assets/car9.jpg";
 import car10 from "./assets/car10.jpg";
 
 function App() {
-  const { scrollToSection, shakeTarget } = useSectionNavigation();
   const [adminMode, setAdminMode] = useState(false);
+
+  // ✅ Scroll بسيط بدون هوك (اقل ملفات / اقل خربطة)
+  const scrollToSection = (id) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   // احسب ارتفاع الهيدر وخزّنه
   useEffect(() => {
@@ -72,7 +77,6 @@ function App() {
     return <AdminPanel onExit={() => setAdminMode(false)} />;
   }
 
-  // الموقع الرئيسي
   return (
     <div className="font-sans relative min-h-screen">
       <div id="site-header">
@@ -81,21 +85,11 @@ function App() {
 
       <Hero />
 
-      <section
-        id="services"
-        className={`py-20 px-6 transition-all duration-300 ${
-          shakeTarget === "services" ? "animate-shake" : ""
-        }`}
-      >
+      <section id="services" className="py-20 px-6">
         <Services />
       </section>
 
-      <section
-        id="beforeafter"
-        className={`py-24 px-6 transition-all duration-300 ${
-          shakeTarget === "beforeafter" ? "animate-shake" : ""
-        }`}
-      >
+      <section id="beforeafter" className="py-24 px-6">
         <CleaningShowcase
           defaultTab="sofa"
           carsImages={carsImages}
@@ -104,12 +98,7 @@ function App() {
         />
       </section>
 
-      <section
-        id="contact"
-        className={`py-20 px-6 transition-all duration-300 ${
-          shakeTarget === "contact" ? "animate-shake" : ""
-        }`}
-      >
+      <section id="contact" className="py-20 px-6">
         <ContactSection />
       </section>
 
@@ -120,8 +109,8 @@ function App() {
         aria-label="لوحة الأدمن"
         className="
           fixed bottom-3 right-3 z-[9999]
-          opacity-0 hover:opacity-40 
-          transition-opacity duration-500 
+          opacity-0 hover:opacity-40
+          transition-opacity duration-500
           text-[15px] tracking-wide font-semibold
           text-white select-none
         "

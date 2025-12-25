@@ -101,8 +101,7 @@ export default function AdminHeader({
   setDateKey,
   onExit,
   totals,
-  onSave,
-  onReload,
+  onReload, // ✅ يبقى
   saving,
   isDirty,
   lastSavedAt,
@@ -111,8 +110,12 @@ export default function AdminHeader({
 }) {
   const [showStatsMobile, setShowStatsMobile] = useState(false);
 
+  const tabKey = String(tab || "daily")
+    .trim()
+    .toLowerCase();
+
   const lastSavedLabel = useMemo(() => {
-    if (saving) return "جارٍ الحفظ...";
+    if (saving) return "جارٍ الحفظ تلقائيًا...";
     const ms = toMillis(lastSavedAt);
     if (!ms) return "لم يتم الحفظ بعد";
     return `آخر حفظ: ${new Date(ms).toLocaleTimeString("he-IL", {
@@ -128,12 +131,13 @@ export default function AdminHeader({
     carpetsTotal: 0,
   };
 
+  const setTabSafe = (v) => setTab(String(v).trim().toLowerCase());
+
   return (
     <header
       className="sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-slate-200"
       dir="rtl"
     >
-      {/* Row 1: brand + actions (compact) */}
       <div className="max-w-6xl mx-auto px-3 sm:px-4 py-2">
         <div className="flex items-center justify-between gap-2 flex-wrap">
           <div className="flex items-center gap-3 min-w-0">
@@ -179,20 +183,9 @@ export default function AdminHeader({
               />
             </div>
 
-            <IconBtn onClick={onReload} tone="ghost" title="تحديث (Ctrl+R)">
+            {/* ✅ تحديث فقط (اختياري) */}
+            <IconBtn onClick={onReload} tone="ghost" title="تحديث">
               ⟳
-            </IconBtn>
-
-            <IconBtn
-              onClick={onSave}
-              tone={saveError ? "danger" : "primary"}
-              disabled={!isDirty || saving || isClosed}
-              className={
-                !isDirty || isClosed ? "opacity-60 cursor-not-allowed" : ""
-              }
-              title={isClosed ? "اليوم مغلق (قراءة فقط)" : "حفظ الآن (Ctrl+S)"}
-            >
-              💾
             </IconBtn>
 
             {onExit && (
@@ -203,26 +196,29 @@ export default function AdminHeader({
           </div>
         </div>
 
-        {/* Row 2: tabs + small utilities */}
         <div className="mt-2 flex items-center justify-between gap-2 flex-wrap">
           <div className="flex items-center gap-2 flex-wrap">
-            <TabPill active={tab === "daily"} onClick={() => setTab("daily")}>
-              بنود اليوم
-            </TabPill>
             <TabPill
-              active={tab === "carpets"}
-              onClick={() => setTab("carpets")}
+              active={tabKey === "daily"}
+              onClick={() => setTabSafe("daily")}
             >
-              السجاد
-            </TabPill>
-            <TabPill
-              active={tab === "messages"}
-              onClick={() => setTab("messages")}
-            >
-              الرسائل
+              🧾 اليوم
             </TabPill>
 
-            {/* Mobile: show/hide stats */}
+            <TabPill
+              active={tabKey === "carpets"}
+              onClick={() => setTabSafe("carpets")}
+            >
+              🧵 سجاد
+            </TabPill>
+
+            <TabPill
+              active={tabKey === "messages"}
+              onClick={() => setTabSafe("messages")}
+            >
+              📩 Inbox
+            </TabPill>
+
             <button
               type="button"
               onClick={() => setShowStatsMobile((p) => !p)}
@@ -234,12 +230,11 @@ export default function AdminHeader({
           </div>
 
           <div className="text-[10px] text-slate-400 hidden sm:block">
-            اختصارات: <b>Ctrl+S</b> حفظ — <b>Ctrl+R</b> تحديث
+            الحفظ تلقائي بالكامل ✅
           </div>
         </div>
       </div>
 
-      {/* Row 3: stats (hidden on mobile unless toggled) */}
       <div
         className={`max-w-6xl mx-auto px-3 sm:px-4 pb-2 ${
           showStatsMobile ? "" : "hidden sm:block"

@@ -1,87 +1,65 @@
 // src/services/managerDaily.js
-import {
-  collection,
-  doc,
-  getDoc,
-  setDoc,
-  updateDoc,
-  serverTimestamp,
-} from "firebase/firestore";
 import { db } from "../firebase";
+import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 
-const COL = "manager_daily_v2";
+const COLL = "manager_daily_v2";
 
 export function todayKey(d = new Date()) {
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
   const dd = String(d.getDate()).padStart(2, "0");
-  return `${yyyy}-${mm}-${dd}`;
+  return `${y}-${m}-${dd}`;
 }
 
 export function getEmptyDay(dateKey) {
   return {
     dateKey,
-
-    // بنود اليوم
-    entries: [],
-
-    // سجاد
-    carpetCustomers: [],
-    defaultCarpetRatePerM2: 15,
-
-    // ملاحظات
-    notes: "",
-
-    // ✅ NEW: إغلاق اليوم (قراءة فقط)
     isClosed: false,
-
-    // meta
-    createdAt: null,
+    defaultCarpetRatePerM2: 15,
+    entries: [],
+    carpetCustomers: [],
     updatedAt: null,
   };
 }
 
+// ✅ TEST: confirm Firestore write + read works
+export async function pingFirestore() {
+  const ref = doc(db, "__debug", "ping");
+  await setDoc(ref, { ok: true, at: serverTimestamp() }, { merge: true });
+  const snap = await getDoc(ref);
+  return snap.exists() ? snap.data() : null;
+}
+
 export async function fetchDay(dateKey) {
-  const ref = doc(collection(db, COL), dateKey);
+  if (!dateKey) throw new Error("fetchDay: missing dateKey");
+  const ref = doc(db, COLL, String(dateKey));
   const snap = await getDoc(ref);
 
   if (!snap.exists()) {
     return getEmptyDay(dateKey);
   }
 
-  const data = snap.data();
-
-  // ⚠️ دمج آمن بدون سحق الداتا
+  const data = snap.data() || {};
   return {
     ...getEmptyDay(dateKey),
     ...data,
-    entries: data.entries || [],
-    carpetCustomers: data.carpetCustomers || [],
-    isClosed: !!data.isClosed,
+    dateKey,
   };
 }
 
-export async function upsertDay(dateKey, payload) {
-  const ref = doc(collection(db, COL), dateKey);
+export async function upsertDay(dateKey, dayData) {
+  if (!dateKey) throw new Error("upsertDay: missing dateKey");
+  const ref = doc(db, COLL, String(dateKey));
 
-  // تنظيف undefined (Firestore يكرهها)
-  const clean = JSON.parse(
-    JSON.stringify(payload, (_, v) => (v === undefined ? null : v))
+  await setDoc(
+    ref,
+    {
+      ...dayData,
+      dateKey,
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true }
   );
 
-  const snap = await getDoc(ref);
-
-  if (!snap.exists()) {
-    await setDoc(ref, {
-      ...getEmptyDay(dateKey),
-      ...clean,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    });
-  } else {
-    await updateDoc(ref, {
-      ...clean,
-      updatedAt: serverTimestamp(),
-    });
-  }
+  return true;
 }

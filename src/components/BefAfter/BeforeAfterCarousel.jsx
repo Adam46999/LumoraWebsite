@@ -1,4 +1,3 @@
-// src/components/BefAfter/BeforeAfterCarousel.jsx
 import React, { useMemo } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
@@ -8,37 +7,39 @@ import BeforeAfter from "./BeforeAfter";
 import { useLanguage } from "../../context/LanguageContext";
 
 export default function BeforeAfterCarousel({
-  // ✅ supports both old/new names
   items,
   pairs,
   hideDescription = false,
 }) {
   const { t, lang } = useLanguage();
+  const isRTL = lang === "ar" || lang === "he";
 
-  // ✅ always an array -> prevents "map of undefined"
   const list = useMemo(() => {
     if (Array.isArray(items)) return items;
     if (Array.isArray(pairs)) return pairs;
     return [];
   }, [items, pairs]);
 
-  if (!list.length) {
-    // optional: render nothing if empty (keeps UI clean)
-    return null;
-  }
+  if (!list.length) return null;
 
   const title =
-    t?.beforeAfterTitle1 ||
-    (lang === "ar" ? "قبل / بعد التنظيف" : "Before / After");
+    t?.beforeAfterTitle ||
+    (lang === "he"
+      ? "לפני / אחרי"
+      : lang === "en"
+      ? "Before / After"
+      : "قبل / بعد");
 
   const subtitle =
-    t?.beforeAfterTitle2 ||
-    (lang === "ar"
-      ? "اسحب الخط وشوف الفرق."
-      : "Drag the line to see the difference.");
+    t?.beforeAfterSubtitle ||
+    (lang === "he"
+      ? "השוואה ישירה לפני / אחרי."
+      : lang === "en"
+      ? "Side-by-side comparison."
+      : "مقارنة مباشرة قبل / بعد.");
 
   return (
-    <section className="mt-2">
+    <section className="mt-2" dir={isRTL ? "rtl" : "ltr"}>
       {!hideDescription ? (
         <div className="text-center">
           <h3 className="text-lg sm:text-xl font-extrabold text-slate-900">
@@ -51,7 +52,7 @@ export default function BeforeAfterCarousel({
       <Swiper
         modules={[Navigation]}
         navigation
-        spaceBetween={30}
+        spaceBetween={22}
         slidesPerView={1}
         loop={list.length > 1}
         allowTouchMove

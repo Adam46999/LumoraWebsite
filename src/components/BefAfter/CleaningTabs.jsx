@@ -8,12 +8,11 @@ export default function CleaningTabs({
   labels = {},
   disableEmpty = true,
   sticky = false,
-  compactOnMobile = true,
+  compactOnMobile = true, // kept (not critical here)
   className = "",
 }) {
-  const isRTL = lang === "ar";
+  const isRTL = lang === "ar" || lang === "he";
 
-  // ✅ يبني التبويبات حسب labels فقط (فالسجاد اختفى لأنه مش ممرر)
   const tabs = useMemo(() => {
     const keys = Object.keys(labels);
     return keys.map((key) => ({
@@ -32,13 +31,9 @@ export default function CleaningTabs({
       )}
       dir={isRTL ? "rtl" : "ltr"}
     >
-      <div className="mx-auto max-w-4xl rounded-2xl border border-slate-200 bg-white shadow-sm px-3 py-3">
-        <div
-          className={[
-            "flex items-center gap-2",
-            compactOnMobile ? "overflow-x-auto no-scrollbar" : "",
-          ].join(" ")}
-        >
+      <div className="mx-auto max-w-5xl flex flex-col items-center">
+        {/* Segmented container */}
+        <div className="inline-flex items-center rounded-2xl bg-slate-100 p-1 shadow-sm border border-slate-200">
           {tabs.map((tab) => {
             const isActive = tab.key === active;
             const disabled = disableEmpty && tab.count === 0;
@@ -50,28 +45,25 @@ export default function CleaningTabs({
                 onClick={() => !disabled && onChange?.(tab.key)}
                 disabled={disabled}
                 className={[
-                  "shrink-0 rounded-full px-4 py-2 text-sm font-extrabold border transition",
+                  "relative flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-extrabold transition",
                   isActive
-                    ? "bg-slate-900 border-slate-900 text-white shadow-sm"
-                    : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50",
-                  disabled
-                    ? "opacity-50 cursor-not-allowed hover:bg-white"
-                    : "",
+                    ? "bg-white text-slate-900 shadow-sm"
+                    : "text-slate-600 hover:text-slate-900",
+                  disabled ? "opacity-40 cursor-not-allowed" : "",
                 ].join(" ")}
                 aria-pressed={isActive ? "true" : "false"}
               >
-                <span className="inline-flex items-center gap-2">
-                  <span>{tab.label}</span>
-                  <span
-                    className={[
-                      "min-w-[28px] h-6 px-2 rounded-full text-xs font-black inline-flex items-center justify-center",
-                      isActive
-                        ? "bg-white/20 text-white"
-                        : "bg-slate-100 text-slate-700",
-                    ].join(" ")}
-                  >
-                    {tab.count}
-                  </span>
+                <span>{tab.label}</span>
+
+                <span
+                  className={[
+                    "min-w-[22px] h-5 px-1.5 rounded-full text-[11px] font-black inline-flex items-center justify-center",
+                    isActive
+                      ? "bg-blue-600 text-white"
+                      : "bg-slate-200 text-slate-700",
+                  ].join(" ")}
+                >
+                  {tab.count}
                 </span>
               </button>
             );
@@ -80,8 +72,8 @@ export default function CleaningTabs({
 
         <p className="mt-3 text-center text-[12px] text-slate-500">
           {isRTL
-            ? "اختَر القسم ثم اسحب للمقارنة قبل/بعد."
-            : "Pick a category, then swipe to compare before/after."}
+            ? "اختر قسم وشاهد الفرق قبل / بعد."
+            : "Pick a category and see before/after."}
         </p>
       </div>
     </div>

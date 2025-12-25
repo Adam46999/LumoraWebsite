@@ -3,54 +3,77 @@ import {
   collection,
   addDoc,
   getDocs,
+  onSnapshot,
+  doc,
+  updateDoc,
+  deleteDoc,
+  serverTimestamp,
   query,
   orderBy,
-  updateDoc,
-  doc,
-  deleteDoc,
 } from "firebase/firestore";
 import { db } from "../firebase";
 
-const COLLECTION_NAME = "contactMessages";
+const COL = "contact_messages";
 
-// يُستعمل من الفورم لحفظ الرسالة
-export async function saveContactMessage({
-  subject,
-  name,
-  phone,
-  message,
-  channel,
-}) {
-  const docRef = await addDoc(collection(db, COLLECTION_NAME), {
-    subject,
-    name,
-    phone,
-    message,
-    channel,
+/**
+ * =========================
+ *  Public (Website)
+ * =========================
+ */
+
+// حفظ رسالة جديدة من الفورم
+export async function saveContactMessage(payload) {
+  if (!payload) return;
+  await addDoc(collection(db, COL), {
+    ...payload,
     status: "new",
-    createdAt: new Date(),
-    source: "website",
+    createdAt: serverTimestamp(),
   });
-
-  return docRef.id;
 }
 
-// يُستعمل بلوحة الأدمن لقراءة الرسائل
+/**
+ * =========================
+ *  Admin
+ * =========================
+ */
+
+// جلب كل الرسائل (مرة واحدة)
 export async function fetchMessages() {
-  const q = query(
-    collection(db, COLLECTION_NAME),
-    orderBy("createdAt", "desc")
+  const q = query(collection(db, COL), orderBy("createdAt", "desc"));
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({
+    id: d.id,
+    ...d.data(),
+  }));
+}
+
+// اشتراك realtime (Admin)
+export function subscribeMessages(onChange, onError) {
+  const q = query(collection(db, COL), orderBy("createdAt", "desc"));
+  return onSnapshot(
+    q,
+    (snap) => {
+      const list = snap.docs.map((d) => ({
+        id: d.id,
+        ...d.data(),
+      }));
+      onChange?.(list);
+    },
+    (err) => onError?.(err)
   );
-  const snapshot = await getDocs(q);
-  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
 
+// تحديث حالة رسالة (new / done)
 export async function updateMessageStatus(id, status) {
-  const ref = doc(db, COLLECTION_NAME, id);
-  await updateDoc(ref, { status });
+  if (!id) return;
+  await updateDoc(doc(db, COL, id), {
+    status,
+    updatedAt: serverTimestamp(),
+  });
 }
 
+// حذف رسالة
 export async function deleteMessage(id) {
-  const ref = doc(db, COLLECTION_NAME, id);
-  await deleteDoc(ref);
+  if (!id) return;
+  await deleteDoc(doc(db, COL, id));
 }

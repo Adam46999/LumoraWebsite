@@ -1,7 +1,9 @@
 // src/components/admin/tabs/CarpetsTab.jsx
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { money, n, uid } from "../lib/format";
 import { calcAreaM2, calcPrice, safeMode } from "./carpetsCalc";
+
+const LS_UI_KEY = "admin_carpets_ui_v1";
 
 function SegBtn({ active, children, className = "", ...props }) {
   return (
@@ -19,7 +21,13 @@ function SegBtn({ active, children, className = "", ...props }) {
   );
 }
 
-function IconBtn({ title, children, tone = "slate", ...props }) {
+function IconBtn({
+  title,
+  children,
+  tone = "slate",
+  className = "",
+  ...props
+}) {
   const cls =
     tone === "danger"
       ? "border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100"
@@ -32,7 +40,7 @@ function IconBtn({ title, children, tone = "slate", ...props }) {
       {...props}
       type="button"
       title={title}
-      className={`h-8 w-9 rounded-2xl border text-[12px] grid place-items-center ${cls}`}
+      className={`h-8 w-9 rounded-2xl border text-[12px] grid place-items-center ${cls} ${className}`}
     >
       {children}
     </button>
@@ -56,6 +64,19 @@ function inputCls(disabled) {
   }`;
 }
 
+function now() {
+  return Date.now();
+}
+
+function safeJsonParse(s, fallback) {
+  try {
+    const x = JSON.parse(s);
+    return x ?? fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 function normalizeCustomer(c) {
   return {
     id: c?.id || uid(),
@@ -65,6 +86,7 @@ function normalizeCustomer(c) {
     locked: !!c?.locked,
     notes: String(c?.notes || ""),
     doneAt: c?.doneAt || null,
+    updatedAt: c?.updatedAt || null,
     rugs: Array.isArray(c?.rugs) ? c.rugs : [],
   };
 }
@@ -78,6 +100,8 @@ function normalizeRug(r) {
     areaM2: r?.areaM2 ?? "",
     ratePerM2: r?.ratePerM2 ?? null,
     priceOverride: r?.priceOverride ?? "",
+    createdAt: r?.createdAt || null,
+    updatedAt: r?.updatedAt || null,
   };
 }
 
@@ -89,17 +113,44 @@ export default function CarpetsTab({
   onAddEntryFromCarpets,
 }) {
   const [q, setQ] = useState("");
-  const [openId, setOpenId] = useState(null); // collapsed by default
+  const [openCustomerId, setOpenCustomerId] = useState(null);
+  const [active, setActive] = useState(null); // { customerId, rugId } ONLY ONE open rug globally
+  const [toast, setToast] = useState(null);
+  const toastTimerRef = useRef(null);
+
+  const rugCardRef = useRef(new Map());
+  const inputRefs = useRef(new Map());
+
+  // restore UI state
+  useEffect(() => {
+    const saved = safeJsonParse(localStorage.getItem(LS_UI_KEY), {});
+    if (saved?.q != null) setQ(saved.q);
+    if (saved?.openCustomerId) setOpenCustomerId(saved.openCustomerId);
+    if (saved?.active?.customerId && saved?.active?.rugId)
+      setActive(saved.active);
+  }, []);
+
+  // persist UI state
+  useEffect(() => {
+    localStorage.setItem(
+      LS_UI_KEY,
+      JSON.stringify({ q, openCustomerId, active, savedAt: Date.now() })
+    );
+  }, [q, openCustomerId, active]);
+
+  const showToast = (msg, tone = "ok") => {
+    setToast({ msg, tone });
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = setTimeout(() => setToast(null), 1600);
+  };
 
   const list = useMemo(() => {
     const base = (customers || []).map(normalizeCustomer);
     if (!q.trim()) return base;
-
     const s = q.trim().toLowerCase();
-    return base.filter((c) => {
-      const hay = `${c.name} ${c.phone} ${c.notes}`.toLowerCase();
-      return hay.includes(s);
-    });
+    return base.filter((c) =>
+      `${c.name} ${c.phone} ${c.notes}`.toLowerCase().includes(s)
+    );
   }, [customers, q]);
 
   const computed = useMemo(() => {
@@ -122,41 +173,18 @@ export default function CarpetsTab({
     return { rate, perCustomer, grandTotal, grandArea, grandCount };
   }, [customers, defaultRatePerM2]);
 
+  const customerTotalsMap = useMemo(() => {
+    const m = new Map();
+    for (const x of computed.perCustomer) m.set(x.id, x);
+    return m;
+  }, [computed]);
+
+  // data patch helpers
   const patchCustomer = (id, patch) => {
     setCustomers((prev) =>
-      (prev || []).map((c) => (c.id === id ? { ...c, ...patch } : c))
-    );
-  };
-
-  const addCustomer = () => {
-    const id = uid();
-    const c = normalizeCustomer({ id, status: "open", rugs: [] });
-    setCustomers((prev) => [...(prev || []), c]);
-    setOpenId(id);
-  };
-
-  const removeCustomer = (id) => {
-    if (!window.confirm("حذف هذا الزبون وكل السجاد التابع له؟")) return;
-    setCustomers((prev) => (prev || []).filter((c) => c.id !== id));
-    if (openId === id) setOpenId(null);
-  };
-
-  const addRug = (customerId) => {
-    setCustomers((prev) =>
-      (prev || []).map((c) => {
-        if (c.id !== customerId) return c;
-        const rugs = [...(c.rugs || []), normalizeRug({ mode: "cm" })];
-        return { ...c, rugs };
-      })
-    );
-  };
-
-  const removeRug = (customerId, rugId) => {
-    setCustomers((prev) =>
-      (prev || []).map((c) => {
-        if (c.id !== customerId) return c;
-        return { ...c, rugs: (c.rugs || []).filter((r) => r.id !== rugId) };
-      })
+      (prev || []).map((c) =>
+        c.id === id ? { ...c, ...patch, updatedAt: now() } : c
+      )
     );
   };
 
@@ -166,25 +194,128 @@ export default function CarpetsTab({
         if (c.id !== customerId) return c;
         return {
           ...c,
+          updatedAt: now(),
           rugs: (c.rugs || []).map((r) =>
-            r.id === rugId ? { ...r, ...patch } : r
+            r.id === rugId ? { ...r, ...patch, updatedAt: now() } : r
           ),
         };
       })
     );
   };
 
-  const customerTotalsMap = useMemo(() => {
-    const m = new Map();
-    for (const x of computed.perCustomer) m.set(x.id, x);
-    return m;
-  }, [computed]);
+  const addCustomer = () => {
+    const id = uid();
+    const c = normalizeCustomer({
+      id,
+      status: "open",
+      rugs: [],
+      updatedAt: now(),
+    });
+    setCustomers((prev) => [...(prev || []), c]);
+    setOpenCustomerId(id);
+    setActive(null);
+    showToast("تم إنشاء زبون جديد");
+  };
+
+  const removeCustomer = (id) => {
+    if (!window.confirm("حذف هذا الزبون وكل السجاد التابع له؟")) return;
+    setCustomers((prev) => (prev || []).filter((c) => c.id !== id));
+    if (openCustomerId === id) setOpenCustomerId(null);
+    if (active?.customerId === id) setActive(null);
+    showToast("تم الحذف", "warn");
+  };
+
+  const addRug = (customerId, preferredMode = "cm") => {
+    const rugId = uid();
+    const newRug = normalizeRug({
+      id: rugId,
+      mode: safeMode(preferredMode),
+      createdAt: now(),
+      updatedAt: now(),
+    });
+
+    setCustomers((prev) =>
+      (prev || []).map((c) => {
+        if (c.id !== customerId) return c;
+        return { ...c, rugs: [...(c.rugs || []), newRug], updatedAt: now() };
+      })
+    );
+
+    setOpenCustomerId(customerId);
+    setActive({ customerId, rugId });
+
+    setTimeout(() => {
+      const key = `${customerId}:${rugId}`;
+      const el = rugCardRef.current.get(key);
+      el?.scrollIntoView?.({ behavior: "smooth", block: "center" });
+      focusFirstField(customerId, rugId, safeMode(preferredMode));
+    }, 50);
+  };
+
+  const removeRug = (customerId, rugId) => {
+    setCustomers((prev) =>
+      (prev || []).map((c) => {
+        if (c.id !== customerId) return c;
+        return {
+          ...c,
+          updatedAt: now(),
+          rugs: (c.rugs || []).filter((r) => r.id !== rugId),
+        };
+      })
+    );
+    if (active?.customerId === customerId && active?.rugId === rugId)
+      setActive(null);
+    showToast("تم حذف السجادة", "warn");
+  };
+
+  const focusKey = (cid, rid, field) => `${cid}:${rid}:${field}`;
+
+  const focusField = (cid, rid, field) => {
+    const el = inputRefs.current.get(focusKey(cid, rid, field));
+    if (el?.focus) el.focus();
+    if (el?.select) el.select();
+  };
+
+  const focusFirstField = (cid, rid, mode) => {
+    const m = safeMode(mode);
+    if (m === "cm") return focusField(cid, rid, "length");
+    if (m === "area") return focusField(cid, rid, "area");
+    return focusField(cid, rid, "price");
+  };
+
+  const commitRugAndNext = (cid, rid) => {
+    setActive(null);
+    addRug(cid, "cm");
+    showToast("تم تثبيت السجادة + فتح سجادة جديدة");
+  };
+
+  const toggleCustomerDone = (cid, done) => {
+    patchCustomer(
+      cid,
+      done ? { status: "done", doneAt: now() } : { status: "open" }
+    );
+    showToast(done ? "تم إنهاء الزبون" : "تم فتح الزبون");
+  };
+
+  const finishCustomerSmart = (cid) => {
+    patchCustomer(cid, { status: "done", doneAt: now() });
+    setActive(null);
+
+    const base = (customers || []).map(normalizeCustomer);
+    const idx = base.findIndex((x) => x.id === cid);
+    const next =
+      base.slice(idx + 1).find((x) => x.status !== "done") ||
+      base.find((x) => x.status !== "done");
+
+    setOpenCustomerId(next ? next.id : null);
+    showToast(next ? "تم إنهاء الزبون + فتح التالي" : "تم إنهاء الزبون");
+  };
 
   const addAsDailyEntry = (c) => {
     const meta = customerTotalsMap.get(c.id);
     const amount = n(meta?.total);
     if (amount <= 0) {
-      alert("لا يمكن إضافة بند بسعر 0. تأكد من إدخال البيانات أولاً.");
+      showToast("لا يمكن إضافة بند بسعر 0", "warn");
       return;
     }
     onAddEntryFromCarpets?.({
@@ -194,17 +325,32 @@ export default function CarpetsTab({
       amount,
       shop: "",
     });
+    showToast("تمت إضافة الإجمالي لليوم");
   };
 
   return (
-    <div className="space-y-3" dir="rtl">
+    <div className="space-y-3 pb-20" dir="rtl">
+      {toast ? (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50">
+          <div
+            className={`px-4 py-2 rounded-2xl text-xs font-extrabold shadow-lg border ${
+              toast.tone === "warn"
+                ? "bg-amber-50 text-amber-800 border-amber-200"
+                : "bg-emerald-50 text-emerald-800 border-emerald-200"
+            }`}
+          >
+            {toast.msg}
+          </div>
+        </div>
+      ) : null}
+
       {/* Header */}
       <section className="bg-white rounded-2xl border border-slate-200 p-3 shadow-sm space-y-2">
         <div className="flex items-center justify-between gap-2 flex-wrap">
           <div className="min-w-0">
             <h2 className="text-sm font-semibold text-slate-900">السجاد</h2>
             <p className="text-[11px] text-slate-500">
-              اختر طريقة الإدخال: طول/عرض — مساحة — سعر مباشر (بدون تشويش).
+              إدخال سريع: سجادة واحدة مفتوحة + Enter للتنقل + تثبيت بضغطة.
             </p>
           </div>
 
@@ -219,9 +365,7 @@ export default function CarpetsTab({
         <div className="flex flex-col lg:flex-row gap-2 lg:items-center lg:justify-between">
           <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
             <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 h-9">
-              <span className="text-[11px] text-slate-600">
-                سعر المتر (افتراضي)
-              </span>
+              <span className="text-[11px] text-slate-600">سعر المتر</span>
               <input
                 type="number"
                 inputMode="decimal"
@@ -273,13 +417,12 @@ export default function CarpetsTab({
         ) : (
           list
             .slice()
-            .sort((a, b) => {
-              const aDone = a.status === "done" ? 1 : 0;
-              const bDone = b.status === "done" ? 1 : 0;
-              return aDone - bDone;
-            })
+            .sort(
+              (a, b) =>
+                (a.status === "done" ? 1 : 0) - (b.status === "done" ? 1 : 0)
+            )
             .map((c) => {
-              const isOpen = openId === c.id;
+              const isOpen = openCustomerId === c.id;
               const meta = customerTotalsMap.get(c.id) || {
                 total: 0,
                 totalArea: 0,
@@ -291,10 +434,11 @@ export default function CarpetsTab({
                   key={c.id}
                   className="bg-white rounded-2xl border border-slate-200 shadow-sm"
                 >
-                  {/* Customer row */}
                   <button
                     type="button"
-                    onClick={() => setOpenId((p) => (p === c.id ? null : c.id))}
+                    onClick={() =>
+                      setOpenCustomerId((p) => (p === c.id ? null : c.id))
+                    }
                     className="w-full px-3 py-2.5 flex items-start justify-between gap-2 text-right"
                   >
                     <div className="min-w-0 flex-1">
@@ -306,7 +450,7 @@ export default function CarpetsTab({
                               : "bg-amber-50 text-amber-700 border-amber-200"
                           }`}
                         >
-                          {c.status === "done" ? "تم" : "مفتوح"}
+                          {c.status === "done" ? "🟢 مكتمل" : "🟡 قيد العمل"}
                         </span>
 
                         <div className="text-xs font-extrabold text-slate-900 truncate">
@@ -333,7 +477,9 @@ export default function CarpetsTab({
                         </span>
                         <span>
                           الإجمالي:{" "}
-                          <b className="text-slate-900">{money(meta.total)}</b>
+                          <b className="text-slate-900">
+                            {money(meta.total)} ₪
+                          </b>
                         </span>
                       </div>
                     </div>
@@ -345,7 +491,6 @@ export default function CarpetsTab({
 
                   {isOpen && (
                     <div className="px-3 pb-3 space-y-3">
-                      {/* Customer info */}
                       <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                           <div>
@@ -395,22 +540,15 @@ export default function CarpetsTab({
                           <div className="flex items-center gap-2">
                             <SegBtn
                               active={c.status !== "done"}
-                              onClick={() =>
-                                patchCustomer(c.id, { status: "open" })
-                              }
+                              onClick={() => toggleCustomerDone(c.id, false)}
                             >
-                              مفتوح
+                              ⏳ قيد العمل
                             </SegBtn>
                             <SegBtn
                               active={c.status === "done"}
-                              onClick={() =>
-                                patchCustomer(c.id, {
-                                  status: "done",
-                                  doneAt: Date.now(),
-                                })
-                              }
+                              onClick={() => toggleCustomerDone(c.id, true)}
                             >
-                              تم
+                              ✅ مكتمل
                             </SegBtn>
                           </div>
 
@@ -419,9 +557,18 @@ export default function CarpetsTab({
                               type="button"
                               onClick={() => addAsDailyEntry(c)}
                               className="h-9 px-4 rounded-2xl bg-slate-900 text-xs font-extrabold text-white hover:bg-slate-800"
-                              title="إضافة الإجمالي كبند في بنود اليوم"
+                              title="يضيف مجموع هذا الزبون كبند واحد في بنود اليوم"
                             >
-                              + إضافة كبند اليوم
+                              ➕ إضافة الإجمالي لليوم
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => finishCustomerSmart(c.id)}
+                              className="h-9 px-4 rounded-2xl bg-emerald-600 text-xs font-extrabold text-white hover:bg-emerald-700"
+                              title="ينهي الزبون ويغلقه ويفتح التالي (إن وجد)"
+                            >
+                              ✅ إنهاء الزبون
                             </button>
 
                             <IconBtn
@@ -435,251 +582,327 @@ export default function CarpetsTab({
                         </div>
                       </div>
 
-                      {/* Rugs */}
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
                           <div className="text-[12px] font-extrabold text-slate-900">
                             السجاد ({meta.rugsCount})
                           </div>
+
                           <button
                             type="button"
-                            onClick={() => addRug(c.id)}
+                            onClick={() => addRug(c.id, "cm")}
                             className="h-8 px-3 rounded-2xl border border-slate-200 bg-white text-[11px] font-extrabold text-slate-800 hover:bg-slate-50"
                           >
                             + إضافة سجادة
                           </button>
                         </div>
 
-                        {(c.rugs || []).length === 0 ? (
-                          <div className="rounded-2xl border border-slate-200 bg-white p-3 text-[12px] text-slate-500">
-                            لا يوجد سجاد. اضغط “+ إضافة سجادة”.
-                          </div>
-                        ) : (
-                          (c.rugs || []).map((rawRug, idx) => {
-                            const rug = normalizeRug(rawRug);
-                            const mode = safeMode(rug.mode);
+                        {(c.rugs || []).map((rawRug, idx) => {
+                          const rug = normalizeRug(rawRug);
+                          const mode = safeMode(rug.mode);
 
-                            const area = calcAreaM2(rug);
-                            const price = calcPrice(rug, computed.rate);
+                          const isOpenRug =
+                            active?.customerId === c.id &&
+                            active?.rugId === rug.id;
+                          const isCm = mode === "cm";
+                          const isArea = mode === "area";
+                          const isPrice = mode === "price";
 
-                            const isCm = mode === "cm";
-                            const isArea = mode === "area";
-                            const isPrice = mode === "price";
+                          const area = calcAreaM2(rug);
+                          const price = calcPrice(rug, computed.rate);
 
-                            return (
-                              <div
-                                key={rug.id}
-                                className="rounded-2xl border border-slate-200 bg-white p-3"
+                          return (
+                            <div
+                              key={rug.id}
+                              ref={(el) =>
+                                el &&
+                                rugCardRef.current.set(`${c.id}:${rug.id}`, el)
+                              }
+                              className="rounded-2xl border border-slate-200 bg-white overflow-hidden"
+                            >
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setActive((p) =>
+                                    p?.customerId === c.id &&
+                                    p?.rugId === rug.id
+                                      ? null
+                                      : { customerId: c.id, rugId: rug.id }
+                                  );
+                                  setOpenCustomerId(c.id);
+                                  setTimeout(
+                                    () => focusFirstField(c.id, rug.id, mode),
+                                    20
+                                  );
+                                }}
+                                className="w-full px-3 py-2 flex items-center justify-between"
                               >
-                                <div className="flex items-center justify-between gap-2">
-                                  <div className="text-[11px] text-slate-500">
-                                    سجادة #{idx + 1}
-                                  </div>
-
-                                  <IconBtn
-                                    title="حذف السجادة"
-                                    tone="danger"
-                                    onClick={() => removeRug(c.id, rug.id)}
-                                  >
-                                    🗑️
-                                  </IconBtn>
+                                <div className="text-[11px] text-slate-500">
+                                  سجادة #{idx + 1}
                                 </div>
-
-                                {/* Mode selector */}
-                                <div className="mt-2 flex flex-wrap gap-2">
-                                  <SegBtn
-                                    active={isCm}
-                                    onClick={() =>
-                                      patchRug(c.id, rug.id, {
-                                        mode: "cm",
-                                        // تنظيف قيم ما إلها داعي
-                                        priceOverride: "",
-                                      })
-                                    }
-                                  >
-                                    طول × عرض
-                                  </SegBtn>
-                                  <SegBtn
-                                    active={isArea}
-                                    onClick={() =>
-                                      patchRug(c.id, rug.id, {
-                                        mode: "area",
-                                        lengthCm: "",
-                                        widthCm: "",
-                                        priceOverride: "",
-                                      })
-                                    }
-                                  >
-                                    مساحة
-                                  </SegBtn>
-                                  <SegBtn
-                                    active={isPrice}
-                                    onClick={() =>
-                                      patchRug(c.id, rug.id, {
-                                        mode: "price",
-                                        lengthCm: "",
-                                        widthCm: "",
-                                        areaM2: "",
-                                      })
-                                    }
-                                  >
-                                    سعر مباشر
-                                  </SegBtn>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-[11px] text-slate-500">
+                                    {money(price)} ₪
+                                  </span>
+                                  <span className="text-[11px] text-slate-400">
+                                    {isOpenRug ? "▲" : "▼"}
+                                  </span>
                                 </div>
+                              </button>
 
-                                {/* Inputs (ONLY what’s needed) */}
-                                <div className="mt-2 grid grid-cols-1 sm:grid-cols-12 gap-2 items-end">
-                                  {isCm && (
-                                    <>
-                                      <div className="sm:col-span-6">
-                                        <div className="text-[11px] text-slate-600 mb-1">
-                                          الطول (سم)
-                                        </div>
-                                        <input
-                                          type="number"
-                                          inputMode="decimal"
-                                          value={rug.lengthCm ?? ""}
-                                          onChange={(e) =>
-                                            patchRug(c.id, rug.id, {
-                                              lengthCm: e.target.value,
-                                            })
-                                          }
-                                          className={inputCls(false)}
-                                          placeholder="مثال: 300"
-                                        />
-                                      </div>
-
-                                      <div className="sm:col-span-6">
-                                        <div className="text-[11px] text-slate-600 mb-1">
-                                          العرض (سم)
-                                        </div>
-                                        <input
-                                          type="number"
-                                          inputMode="decimal"
-                                          value={rug.widthCm ?? ""}
-                                          onChange={(e) =>
-                                            patchRug(c.id, rug.id, {
-                                              widthCm: e.target.value,
-                                            })
-                                          }
-                                          className={inputCls(false)}
-                                          placeholder="مثال: 200"
-                                        />
-                                      </div>
-                                    </>
-                                  )}
-
-                                  {isArea && (
-                                    <div className="sm:col-span-12">
-                                      <div className="text-[11px] text-slate-600 mb-1">
-                                        المساحة (م²)
-                                      </div>
-                                      <input
-                                        type="number"
-                                        inputMode="decimal"
-                                        value={rug.areaM2 ?? ""}
-                                        onChange={(e) =>
+                              {isOpenRug && (
+                                <div className="p-3 pt-0 space-y-2">
+                                  <div className="flex items-center justify-between gap-2">
+                                    <div className="mt-2 flex flex-wrap gap-2">
+                                      <SegBtn
+                                        active={isCm}
+                                        onClick={() =>
                                           patchRug(c.id, rug.id, {
-                                            areaM2: e.target.value,
+                                            mode: "cm",
+                                            priceOverride: "",
                                           })
                                         }
-                                        className={inputCls(false)}
-                                        placeholder="مثال: 6"
-                                      />
-                                    </div>
-                                  )}
-
-                                  {isPrice && (
-                                    <div className="sm:col-span-12">
-                                      <div className="text-[11px] text-slate-600 mb-1">
-                                        السعر (₪){" "}
-                                        <span className="text-slate-400">
-                                          (أساسي)
-                                        </span>
-                                      </div>
-                                      <input
-                                        type="number"
-                                        inputMode="decimal"
-                                        value={rug.priceOverride ?? ""}
-                                        onChange={(e) =>
+                                      >
+                                        طول × عرض
+                                      </SegBtn>
+                                      <SegBtn
+                                        active={isArea}
+                                        onClick={() =>
                                           patchRug(c.id, rug.id, {
-                                            priceOverride: e.target.value,
+                                            mode: "area",
+                                            lengthCm: "",
+                                            widthCm: "",
+                                            priceOverride: "",
                                           })
                                         }
-                                        className={inputCls(false)}
-                                        placeholder="مثال: 120"
-                                      />
+                                      >
+                                        مساحة
+                                      </SegBtn>
+                                      <SegBtn
+                                        active={isPrice}
+                                        onClick={() =>
+                                          patchRug(c.id, rug.id, {
+                                            mode: "price",
+                                            lengthCm: "",
+                                            widthCm: "",
+                                            areaM2: "",
+                                          })
+                                        }
+                                      >
+                                        سعر مباشر
+                                      </SegBtn>
                                     </div>
-                                  )}
+
+                                    <IconBtn
+                                      title="حذف السجادة"
+                                      tone="danger"
+                                      onClick={() => removeRug(c.id, rug.id)}
+                                      className="mt-2"
+                                    >
+                                      🗑️
+                                    </IconBtn>
+                                  </div>
+
+                                  <div className="mt-2 grid grid-cols-1 sm:grid-cols-12 gap-2 items-end">
+                                    {isCm && (
+                                      <>
+                                        <div className="sm:col-span-6">
+                                          <div className="text-[11px] text-slate-600 mb-1">
+                                            الطول (سم)
+                                          </div>
+                                          <input
+                                            ref={(el) =>
+                                              el &&
+                                              inputRefs.current.set(
+                                                focusKey(
+                                                  c.id,
+                                                  rug.id,
+                                                  "length"
+                                                ),
+                                                el
+                                              )
+                                            }
+                                            type="text"
+                                            inputMode="decimal"
+                                            value={rug.lengthCm ?? ""}
+                                            onChange={(e) => {
+                                              const v = e.target.value;
+                                              const m = String(v)
+                                                .toLowerCase()
+                                                .replace("×", "x")
+                                                .split("x");
+                                              if (m.length === 2) {
+                                                patchRug(c.id, rug.id, {
+                                                  lengthCm: m[0].trim(),
+                                                  widthCm: m[1].trim(),
+                                                });
+                                                setTimeout(
+                                                  () =>
+                                                    focusField(
+                                                      c.id,
+                                                      rug.id,
+                                                      "width"
+                                                    ),
+                                                  0
+                                                );
+                                                return;
+                                              }
+                                              patchRug(c.id, rug.id, {
+                                                lengthCm: v,
+                                              });
+                                            }}
+                                            onKeyDown={(e) => {
+                                              if (e.key === "Enter") {
+                                                e.preventDefault();
+                                                focusField(
+                                                  c.id,
+                                                  rug.id,
+                                                  "width"
+                                                );
+                                              }
+                                            }}
+                                            className={inputCls(false)}
+                                            placeholder="مثال: 300 أو 300x200"
+                                          />
+                                        </div>
+
+                                        <div className="sm:col-span-6">
+                                          <div className="text-[11px] text-slate-600 mb-1">
+                                            العرض (سم)
+                                          </div>
+                                          <input
+                                            ref={(el) =>
+                                              el &&
+                                              inputRefs.current.set(
+                                                focusKey(c.id, rug.id, "width"),
+                                                el
+                                              )
+                                            }
+                                            type="number"
+                                            inputMode="decimal"
+                                            value={rug.widthCm ?? ""}
+                                            onChange={(e) =>
+                                              patchRug(c.id, rug.id, {
+                                                widthCm: e.target.value,
+                                              })
+                                            }
+                                            onKeyDown={(e) => {
+                                              if (e.key === "Enter") {
+                                                e.preventDefault();
+                                                commitRugAndNext(c.id, rug.id);
+                                              }
+                                            }}
+                                            className={inputCls(false)}
+                                            placeholder="مثال: 200"
+                                          />
+                                        </div>
+                                      </>
+                                    )}
+
+                                    {isArea && (
+                                      <div className="sm:col-span-12">
+                                        <div className="text-[11px] text-slate-600 mb-1">
+                                          المساحة (م²)
+                                        </div>
+                                        <input
+                                          ref={(el) =>
+                                            el &&
+                                            inputRefs.current.set(
+                                              focusKey(c.id, rug.id, "area"),
+                                              el
+                                            )
+                                          }
+                                          type="number"
+                                          inputMode="decimal"
+                                          value={rug.areaM2 ?? ""}
+                                          onChange={(e) =>
+                                            patchRug(c.id, rug.id, {
+                                              areaM2: e.target.value,
+                                            })
+                                          }
+                                          onKeyDown={(e) => {
+                                            if (e.key === "Enter") {
+                                              e.preventDefault();
+                                              commitRugAndNext(c.id, rug.id);
+                                            }
+                                          }}
+                                          className={inputCls(false)}
+                                          placeholder="مثال: 6"
+                                        />
+                                      </div>
+                                    )}
+
+                                    {isPrice && (
+                                      <div className="sm:col-span-12">
+                                        <div className="text-[11px] text-slate-600 mb-1">
+                                          السعر (₪)
+                                        </div>
+                                        <input
+                                          ref={(el) =>
+                                            el &&
+                                            inputRefs.current.set(
+                                              focusKey(c.id, rug.id, "price"),
+                                              el
+                                            )
+                                          }
+                                          type="number"
+                                          inputMode="decimal"
+                                          value={rug.priceOverride ?? ""}
+                                          onChange={(e) =>
+                                            patchRug(c.id, rug.id, {
+                                              priceOverride: e.target.value,
+                                            })
+                                          }
+                                          onKeyDown={(e) => {
+                                            if (e.key === "Enter") {
+                                              e.preventDefault();
+                                              commitRugAndNext(c.id, rug.id);
+                                            }
+                                          }}
+                                          className={inputCls(false)}
+                                          placeholder="مثال: 120"
+                                        />
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  <div className="mt-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 flex flex-wrap items-center justify-between gap-2">
+                                    {!isPrice ? (
+                                      <div className="text-[11px] text-slate-600">
+                                        المساحة:{" "}
+                                        <b className="text-slate-900">
+                                          {area > 0 ? `${money(area)} م²` : "—"}
+                                        </b>
+                                      </div>
+                                    ) : null}
+
+                                    <div className="text-[11px] text-slate-600">
+                                      السعر:{" "}
+                                      <b className="text-slate-900">
+                                        {money(price)} ₪
+                                      </b>{" "}
+                                      <span className="text-slate-400">
+                                        {isPrice
+                                          ? "(سعر مباشر)"
+                                          : `(${money(computed.rate)} ₪/م²)`}
+                                      </span>
+                                    </div>
+                                  </div>
+
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      commitRugAndNext(c.id, rug.id)
+                                    }
+                                    className="h-9 w-full rounded-2xl bg-emerald-600 text-xs font-extrabold text-white hover:bg-emerald-700"
+                                  >
+                                    ✅ تثبيت السجادة
+                                  </button>
                                 </div>
-
-                                {/* Result line */}
-                                <div className="mt-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 flex flex-wrap items-center justify-between gap-2">
-                                  <div className="text-[11px] text-slate-600">
-                                    المساحة:{" "}
-                                    <b className="text-slate-900">
-                                      {area > 0 ? `${money(area)} م²` : "—"}
-                                    </b>
-                                    <span className="text-slate-400">
-                                      {" "}
-                                      {isPrice
-                                        ? "(مخفية لأنك اخترت سعر مباشر)"
-                                        : ""}
-                                    </span>
-                                  </div>
-
-                                  <div className="text-[11px] text-slate-600">
-                                    السعر:{" "}
-                                    <b className="text-slate-900">
-                                      {money(price)}
-                                    </b>
-                                    <span className="text-slate-400">
-                                      {" "}
-                                      {isPrice
-                                        ? "(سعر مباشر)"
-                                        : `(${money(computed.rate)} ₪/م²)`}
-                                    </span>
-                                  </div>
-                                </div>
-
-                                {isPrice ? (
-                                  <div className="mt-2 text-[11px] text-slate-500">
-                                    ملاحظة: هذا الوضع مخصص للسعر فقط، لذلك
-                                    أخفينا الطول/العرض/المساحة لتسهيل الشغل.
-                                  </div>
-                                ) : null}
-                              </div>
-                            );
-                          })
-                        )}
-
-                        {/* Customer footer totals */}
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                          <div className="rounded-2xl border border-slate-200 bg-white p-3">
-                            <div className="text-[11px] text-slate-500">
-                              مجموع المساحة
+                              )}
                             </div>
-                            <div className="text-sm font-extrabold text-slate-900">
-                              {money(meta.totalArea)} م²
-                            </div>
-                          </div>
-                          <div className="rounded-2xl border border-slate-200 bg-white p-3">
-                            <div className="text-[11px] text-slate-500">
-                              عدد السجاد
-                            </div>
-                            <div className="text-sm font-extrabold text-slate-900">
-                              {meta.rugsCount}
-                            </div>
-                          </div>
-                          <div className="rounded-2xl border border-slate-200 bg-white p-3">
-                            <div className="text-[11px] text-slate-500">
-                              إجمالي الزبون
-                            </div>
-                            <div className="text-sm font-extrabold text-slate-900">
-                              {money(meta.total)}
-                            </div>
-                          </div>
-                        </div>
+                          );
+                        })}
                       </div>
                     </div>
                   )}
@@ -688,6 +911,48 @@ export default function CarpetsTab({
             })
         )}
       </section>
+
+      {/* Bottom action bar (زر مهم واضح) */}
+      <div className="fixed bottom-3 left-1/2 -translate-x-1/2 w-[min(920px,calc(100%-24px))] z-40">
+        <div className="rounded-2xl border border-slate-200 bg-white/95 backdrop-blur px-2 py-2 shadow-lg flex items-center gap-2">
+          <button
+            type="button"
+            disabled={!openCustomerId}
+            onClick={() => openCustomerId && addRug(openCustomerId, "cm")}
+            className={`h-10 px-4 rounded-2xl text-xs font-extrabold ${
+              openCustomerId
+                ? "bg-blue-600 text-white hover:bg-blue-700"
+                : "bg-slate-200 text-slate-500 cursor-not-allowed"
+            }`}
+            title="إضافة سجادة جديدة (ويتم فتحها مباشرة)"
+          >
+            ➕ سجادة
+          </button>
+
+          <button
+            type="button"
+            disabled={!active?.customerId || !active?.rugId}
+            onClick={() =>
+              active?.customerId &&
+              active?.rugId &&
+              commitRugAndNext(active.customerId, active.rugId)
+            }
+            className={`h-10 px-3 rounded-2xl border text-xs font-extrabold ${
+              active?.customerId && active?.rugId
+                ? "border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-100"
+                : "border-slate-200 bg-slate-50 text-slate-400 cursor-not-allowed"
+            }`}
+            title="تثبيت السجادة الحالية وفتح سجادة جديدة"
+          >
+            ✅ تثبيت
+          </button>
+
+          <div className="flex-1" />
+          <div className="text-[11px] text-slate-500 pl-2">
+            {openCustomerId ? "جاهز للشغل السريع" : "افتح زبون للبدء"}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
