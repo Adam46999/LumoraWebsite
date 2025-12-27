@@ -108,6 +108,18 @@ export default function Header({ scrollToSection }) {
         label:
           lang === "en" ? "Gallery" : lang === "he" ? "גלריה" : "معرض الصور",
       },
+
+      // ✅ NEW: FAQ in header
+      {
+        id: "faq",
+        label:
+          lang === "en"
+            ? "FAQ"
+            : lang === "he"
+            ? "שאלות נפוצות"
+            : "الأسئلة الشائعة",
+      },
+
       {
         id: "contact",
         label:
@@ -130,6 +142,18 @@ export default function Header({ scrollToSection }) {
   // ✅ مهم: ref للديسكتوب غير ref للموبايل (عشان ما “يطلع لبرا”)
   const actionsRefDesktop = useRef(null);
   const actionsRefMobile = useRef(null);
+
+  // ✅ FIX: Adapt CONTACTS to what QuickContactSheet expects
+  const contactItems = useMemo(() => {
+    return (CONTACTS || []).map((c) => ({
+      id: c.id,
+      name: c.name,
+      phoneDisplay: c.phone, // display
+      phoneRaw: c.tel, // tel:
+      whatsappRaw: c.whatsapp, // wa.me
+      note: lang === "en" ? c.noteEn : lang === "he" ? c.noteHe : c.noteAr,
+    }));
+  }, [lang]);
 
   // ===== helper: smooth scroll + robust for sub-items =====
   const scrollToIdLocal = useCallback((id) => {
@@ -424,12 +448,11 @@ export default function Header({ scrollToSection }) {
                   <ChevronDown className="w-4 h-4 text-gray-400" />
                 </button>
 
-                {/* ✅ فقط لما يكون مفتوح */}
                 {actionsOpen && (
                   <QuickContactSheet
                     open
                     onClose={() => setActionsOpen(false)}
-                    contacts={CONTACTS}
+                    contacts={contactItems} // ✅ fixed
                     anchor={isRTL ? "start" : "end"}
                     lang={lang}
                   />
@@ -519,12 +542,11 @@ export default function Header({ scrollToSection }) {
                   <Phone className="w-4 h-4 text-gray-700" />
                 </button>
 
-                {/* ✅ فقط لما يكون مفتوح */}
                 {actionsOpen && (
                   <QuickContactSheet
                     open
                     onClose={() => setActionsOpen(false)}
-                    contacts={CONTACTS}
+                    contacts={contactItems} // ✅ fixed
                     anchor={isRTL ? "start" : "end"}
                     lang={lang}
                   />

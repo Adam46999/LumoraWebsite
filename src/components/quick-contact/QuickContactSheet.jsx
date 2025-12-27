@@ -1,16 +1,16 @@
-// src/components/quick-contact/QuickContactSheet.jsx
-import React from "react";
+import React, { useEffect, useMemo } from "react";
 import { Phone, MessageCircle, X } from "lucide-react";
 
 /**
- * Dropdown/Popover (NOT a full-screen bottom sheet)
- * - Must be rendered inside a parent: <div className="relative"> ... </div>
+ * QuickContactSheet (Professional)
+ * - Mobile: centered overlay card (premium)
+ * - Desktop: anchored popover
  *
  * props:
  * open: boolean
  * onClose: () => void
  * contacts: [{ id, name, phoneDisplay, phoneRaw, whatsappRaw, note? }]
- * anchor: "start" | "end"  (logical, respects RTL)
+ * anchor: "start" | "end"
  * lang: "ar" | "en" | "he"
  */
 export default function QuickContactSheet({
@@ -24,7 +24,48 @@ export default function QuickContactSheet({
 
   const isRTL = lang === "ar" || lang === "he";
 
-  // ✅ logical anchor: start/end depending on direction
+  const t = useMemo(
+    () => ({
+      title: lang === "en" ? "Contact" : lang === "he" ? "יצירת קשר" : "تواصل",
+      sub:
+        lang === "en"
+          ? "Choose the fastest way to reach us"
+          : lang === "he"
+          ? "בחר את הדרך המהירה ביותר ליצור קשר"
+          : "اختر أسرع طريقة للتواصل",
+      call: lang === "en" ? "Call" : lang === "he" ? "שיחה" : "اتصال",
+      wa: lang === "en" ? "WhatsApp" : lang === "he" ? "וואטסאפ" : "واتساب",
+      close: lang === "en" ? "Close" : lang === "he" ? "סגור" : "إغلاق",
+      fast:
+        lang === "en" ? "Fast reply" : lang === "he" ? "מענה מהיר" : "رد سريع",
+    }),
+    [lang]
+  );
+
+  // Close on ESC
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === "Escape") onClose?.();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  const callNow = (phoneRaw) => {
+    if (!phoneRaw) return;
+    window.location.href = `tel:${phoneRaw}`;
+  };
+
+  const waNow = (whatsappRaw) => {
+    if (!whatsappRaw) return;
+    window.open(
+      `https://wa.me/${whatsappRaw}`,
+      "_blank",
+      "noopener,noreferrer"
+    );
+  };
+
+  // Desktop anchor:
   // start = right in RTL, left in LTR
   // end   = left  in RTL, right in LTR
   const sideClass =
@@ -36,131 +77,184 @@ export default function QuickContactSheet({
       ? "left-0"
       : "right-0";
 
-  const textAlign = isRTL ? "text-right" : "text-left";
-  const rowDir = isRTL ? "flex-row-reverse" : "flex-row";
-
-  const t = {
-    title:
-      lang === "en"
-        ? "Quick contact"
-        : lang === "he"
-        ? "צור קשר מהר"
-        : "تواصل سريع",
-    hint:
-      lang === "en"
-        ? "Choose who you want to contact"
-        : lang === "he"
-        ? "בחר עם מי ליצור קשר"
-        : "اختر الشخص المناسب للتواصل",
-    call: lang === "en" ? "Call" : lang === "he" ? "שיחה" : "اتصال",
-    wa: lang === "en" ? "WhatsApp" : lang === "he" ? "וואטסאפ" : "واتساب",
-    fast:
-      lang === "en" ? "Fast reply" : lang === "he" ? "מענה מהיר" : "رد سريع",
-  };
-
-  const callNow = (phoneRaw) => {
-    window.location.href = `tel:${phoneRaw}`;
-  };
-
-  const waNow = (whatsappRaw) => {
-    window.open(
-      `https://wa.me/${whatsappRaw}`,
-      "_blank",
-      "noopener,noreferrer"
-    );
-  };
-
-  return (
+  const Card = ({ dense = false } = {}) => (
     <div
+      dir={isRTL ? "rtl" : "ltr"}
       className={[
-        "absolute top-full mt-2 z-[99999]",
-        sideClass,
-        // ✅ width that never exceeds viewport
-        "w-[320px] max-w-[calc(100vw-24px)]",
+        "bg-white rounded-3xl border border-gray-200/80",
+        "shadow-[0_18px_60px_rgba(0,0,0,0.18)]",
+        "overflow-hidden",
+        dense ? "" : "ring-1 ring-black/5",
       ].join(" ")}
-      role="dialog"
-      aria-modal="false"
+      role="document"
     >
-      {/* Card */}
-      <div className="bg-white border border-gray-200 rounded-2xl shadow-xl overflow-hidden">
-        {/* Header */}
-        <div className="px-4 py-3 border-b border-gray-100">
-          <div className={`flex items-center justify-between ${rowDir}`}>
-            <div className={`${textAlign}`}>
-              <div className="font-extrabold text-gray-900 leading-tight">
-                {t.title}
-              </div>
-              <div className="text-xs text-gray-500 mt-0.5">{t.hint}</div>
+      {/* Header */}
+      <div className="px-5 py-4">
+        <div
+          className={[
+            "flex items-start justify-between gap-3",
+            isRTL ? "flex-row-reverse" : "flex-row",
+          ].join(" ")}
+        >
+          <div className={isRTL ? "text-right" : "text-left"}>
+            <div className="text-[15px] font-extrabold tracking-tight text-gray-900">
+              {t.title}
             </div>
-
-            <button
-              type="button"
-              onClick={onClose}
-              className="p-2 rounded-xl hover:bg-gray-100 active:bg-gray-200 transition"
-              aria-label="Close"
-            >
-              <X className="w-4 h-4 text-gray-700" />
-            </button>
+            <div className="mt-1 text-xs text-gray-500">{t.sub}</div>
           </div>
-        </div>
 
-        {/* Body */}
-        <div className="p-3">
-          <div className="flex flex-col gap-2">
-            {contacts.map((c) => (
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-2 rounded-2xl hover:bg-gray-100 active:bg-gray-200 transition"
+            aria-label={t.close}
+          >
+            <X className="w-4 h-4 text-gray-700" />
+          </button>
+        </div>
+      </div>
+
+      <div className="h-px bg-gray-100" />
+
+      {/* Body */}
+      <div className={dense ? "p-3" : "p-4"}>
+        <div className="flex flex-col gap-3">
+          {contacts.map((c) => {
+            const badge = c.note || t.fast;
+
+            return (
               <div
                 key={c.id}
-                className="border border-gray-100 rounded-2xl p-3 hover:border-gray-200 transition"
+                className={[
+                  "rounded-3xl border border-gray-100",
+                  "bg-white",
+                  "p-4",
+                  "hover:border-gray-200 hover:shadow-sm transition",
+                ].join(" ")}
               >
-                {/* name + number */}
+                {/* top row */}
                 <div
-                  className={`flex items-start justify-between gap-3 ${rowDir}`}
+                  className={[
+                    "flex items-start justify-between gap-3",
+                    isRTL ? "flex-row-reverse" : "flex-row",
+                  ].join(" ")}
                 >
-                  <div className={`${textAlign}`}>
-                    <div className="font-bold text-gray-900 leading-tight">
+                  <div className={isRTL ? "text-right" : "text-left"}>
+                    <div className="text-sm font-extrabold text-gray-900 leading-tight">
                       {c.name}
                     </div>
-                    <div className="text-sm text-gray-600 mt-0.5">
+
+                    {/* Phone number should be LTR for readability */}
+                    <div className="mt-1 text-sm text-gray-600" dir="ltr">
                       {c.phoneDisplay}
                     </div>
                   </div>
 
-                  <div className="text-[11px] px-2 py-1 rounded-full bg-blue-50 text-blue-700 font-bold">
-                    {t.fast}
+                  <div
+                    className={[
+                      "shrink-0",
+                      "text-[11px] font-extrabold",
+                      "px-2.5 py-1 rounded-full",
+                      "bg-gray-50 text-gray-700 border border-gray-100",
+                    ].join(" ")}
+                  >
+                    {badge}
                   </div>
                 </div>
 
                 {/* actions */}
-                <div className="mt-3 grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      onClose?.();
-                      callNow(c.phoneRaw);
-                    }}
-                    className={`h-10 rounded-xl border border-gray-200 hover:bg-gray-50 active:bg-gray-100 transition font-bold text-sm flex items-center justify-center gap-2 ${rowDir}`}
-                  >
-                    <Phone className="w-4 h-4" />
-                    {t.call}
-                  </button>
-
+                <div className="mt-4 grid grid-cols-2 gap-2">
+                  {/* WhatsApp as primary */}
                   <button
                     type="button"
                     onClick={() => {
                       onClose?.();
                       waNow(c.whatsappRaw);
                     }}
-                    className={`h-10 rounded-xl border border-gray-200 hover:bg-gray-50 active:bg-gray-100 transition font-bold text-sm flex items-center justify-center gap-2 ${rowDir}`}
+                    className={[
+                      "h-11 rounded-2xl",
+                      "bg-blue-600 text-white",
+                      "hover:bg-blue-700 active:bg-blue-800 transition",
+                      "font-extrabold text-sm",
+                      "flex items-center justify-center gap-2",
+                      isRTL ? "flex-row-reverse" : "flex-row",
+                    ].join(" ")}
                   >
                     <MessageCircle className="w-4 h-4" />
                     {t.wa}
                   </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onClose?.();
+                      callNow(c.phoneRaw);
+                    }}
+                    className={[
+                      "h-11 rounded-2xl",
+                      "border border-gray-200 bg-white",
+                      "hover:bg-gray-50 active:bg-gray-100 transition",
+                      "font-extrabold text-sm text-gray-900",
+                      "flex items-center justify-center gap-2",
+                      isRTL ? "flex-row-reverse" : "flex-row",
+                    ].join(" ")}
+                  >
+                    <Phone className="w-4 h-4" />
+                    {t.call}
+                  </button>
                 </div>
               </div>
-            ))}
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="pb-2" />
+    </div>
+  );
+
+  return (
+    <>
+      {/* ✅ Mobile overlay (premium centered) */}
+      <div
+        className="fixed inset-0 z-[99999] md:hidden"
+        role="dialog"
+        aria-modal="true"
+        dir={isRTL ? "rtl" : "ltr"}
+      >
+        {/* backdrop closes */}
+        <div
+          className="absolute inset-0 bg-black/35"
+          onMouseDown={() => onClose?.()}
+        />
+
+        {/* layout that doesn't block backdrop clicks */}
+        <div
+          className="relative h-full w-full flex justify-center items-start px-4 pointer-events-none"
+          style={{ paddingTop: "calc(var(--app-topbar-h, 72px) + 16px)" }}
+        >
+          <div className="w-full max-w-[420px] pointer-events-auto">
+            <div className="translate-y-1">
+              <Card />
+            </div>
           </div>
         </div>
       </div>
-    </div>
+
+      {/* ✅ Desktop popover */}
+      <div
+        className={[
+          "hidden md:block",
+          "absolute top-full mt-2 z-[99999]",
+          sideClass,
+          "w-[340px]",
+        ].join(" ")}
+        role="dialog"
+        aria-modal="false"
+        dir={isRTL ? "rtl" : "ltr"}
+      >
+        <Card dense />
+      </div>
+    </>
   );
 }

@@ -1,13 +1,7 @@
 // src/components/slider/CarSlider.jsx
-import { useMemo, useRef, useState, useCallback } from "react";
+import { useMemo, useRef, useState, useCallback, useEffect } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
-import {
-  A11y,
-  Autoplay,
-  Keyboard,
-  Mousewheel,
-  EffectFade,
-} from "swiper/modules";
+import { A11y, Autoplay, Keyboard, EffectFade } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/effect-fade";
 import { useLanguage } from "../../context/LanguageContext";
@@ -16,9 +10,10 @@ import { X } from "lucide-react";
 export default function CarSlider({
   items = [],
   autoplayDelay = 3500,
-  speed = 750,
+  speed = 400, // ✅ (7)
   loop = true,
-  effect = "slide", // "slide" | "fade"
+  effect = "slide",
+  showCounter = true, // ✅ (6)
 }) {
   const { lang } = useLanguage();
   const isRTL = useMemo(() => ["ar", "he"].includes(lang), [lang]);
@@ -29,9 +24,14 @@ export default function CarSlider({
   const swiperRef = useRef(null);
   const resumeTimerRef = useRef(null);
 
+  const gestureRef = useRef({ downX: 0, downY: 0, moved: false });
+
+  const prefersReduced =
+    typeof window !== "undefined" &&
+    window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+
   if (!items.length) return null;
 
-  /* ===== Helpers ===== */
   const slideToIndex = useCallback(
     (idx) => {
       const sw = swiperRef.current;
@@ -48,27 +48,38 @@ export default function CarSlider({
     if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
     if (sw?.autoplay?.running) sw.autoplay.stop();
   }, []);
-  const resumeAutoplay = useCallback((delay = 1200) => {
-    const sw = swiperRef.current;
-    if (!sw) return;
-    if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
-    resumeTimerRef.current = setTimeout(() => sw?.autoplay?.start?.(), delay);
-  }, []);
+
+  const resumeAutoplay = useCallback(
+    (delay = 900) => {
+      const sw = swiperRef.current;
+      if (!sw || prefersReduced) return;
+      if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
+      resumeTimerRef.current = setTimeout(() => sw?.autoplay?.start?.(), delay);
+    },
+    [prefersReduced]
+  );
 
   const openPreview = useCallback((e, it) => {
     if (e.defaultPrevented) return;
     if (e.target.closest("[data-no-preview]")) return;
+    if (gestureRef.current.moved) return;
     setSelectedImage(it);
     swiperRef.current?.autoplay?.stop?.();
   }, []);
 
   const total = items.length;
 
-  // ثوابت شريط الدوتس
-  const DOT_SIZE = 10; // قطر النقطة
-  const DOT_GAP = 8; // المسافة بين النقاط
-  const GLIDER_WIDTH = 16; // عرض الـ glider الخلفي
-  const DOTS_PADDING_X = 12; // يعادل px-3 (3 * 4px)
+  // Dots
+  const DOT_SIZE = 10;
+  const DOT_GAP = 8;
+  const GLIDER_WIDTH = 16;
+  const DOTS_PADDING_X = 12;
+
+  useEffect(() => {
+    const sw = swiperRef.current;
+    if (!sw) return;
+    if (prefersReduced && sw?.autoplay?.running) sw.autoplay.stop();
+  }, [prefersReduced]);
 
   return (
     <div
@@ -77,50 +88,64 @@ export default function CarSlider({
       aria-roledescription="carousel"
       aria-label="معرض صور الخدمة"
       onTouchStart={stopAutoplay}
-      onTouchEnd={() => resumeAutoplay()}
+      onTouchEnd={() => resumeAutoplay(900)}
+      style={{ WebkitTapHighlightColor: "transparent" }}
     >
-      {/* مناطق لمس جانبية للتنقل السريع (بدون أسهم مرئية) */}
-      <button
-        aria-label="السابق"
-        className="absolute inset-y-0 left-0 w-[22%] z-20 bg-transparent pointer-events-auto"
-        onClick={() => {
-          const sw = swiperRef.current;
-          isRTL ? sw?.slideNext(speed) : sw?.slidePrev(speed);
-        }}
-        data-no-preview
-      />
-      <button
-        aria-label="التالي"
-        className="absolute inset-y-0 right-0 w-[22%] z-20 bg-transparent pointer-events-auto"
-        onClick={() => {
-          const sw = swiperRef.current;
-          isRTL ? sw?.slidePrev(speed) : sw?.slideNext(speed);
-        }}
-        data-no-preview
-      />
+      {/* ✅ (6) Counter */}
+      {showCounter && total > 1 && (
+        <div className="absolute bottom-3 end-4 z-20 bg-black/55 text-white text-[11px] sm:text-sm px-2 py-1 rounded-full backdrop-blur-md select-none">
+          {current + 1} / {total}
+        </div>
+      )}
 
-      {/* ظلال جانبية خفيفة */}
       <div className="pointer-events-none absolute inset-y-0 left-0 w-20 bg-gradient-to-r from-black/25 to-transparent z-10 hidden sm:block" />
       <div className="pointer-events-none absolute inset-y-0 right-0 w-20 bg-gradient-to-l from-black/25 to-transparent z-10 hidden sm:block" />
 
       <Swiper
-        modules={[A11y, Autoplay, Keyboard, Mousewheel, EffectFade]}
+        modules={[A11y, Autoplay, Keyboard, EffectFade]}
         onSwiper={(sw) => (swiperRef.current = sw)}
         onSlideChange={(sw) => setCurrent(sw.realIndex)}
         effect={effect}
         fadeEffect={effect === "fade" ? { crossFade: true } : undefined}
         keyboard={{ enabled: !selectedImage }}
-        autoplay={{
-          delay: autoplayDelay,
-          disableOnInteraction: false,
-          pauseOnMouseEnter: true,
-        }}
-        mousewheel
+        autoplay={
+          prefersReduced
+            ? false
+            : {
+                delay: autoplayDelay,
+                disableOnInteraction: false,
+                pauseOnMouseEnter: true,
+              }
+        }
         slidesPerView={1}
         loop={loop}
-        speed={speed}
-        grabCursor
+        speed={prefersReduced ? 0 : speed}
         simulateTouch
+        grabCursor
+        threshold={4}
+        resistanceRatio={0.65}
+        touchRatio={1.05}
+        followFinger
+        shortSwipes
+        longSwipes={false}
+        touchStartPreventDefault={false}
+        touchMoveStopPropagation
+        style={{ touchAction: "pan-y" }}
+        onTouchStart={(sw, e) => {
+          const t = e.touches?.[0];
+          gestureRef.current = {
+            downX: t?.clientX ?? 0,
+            downY: t?.clientY ?? 0,
+            moved: false,
+          };
+        }}
+        onTouchMove={(sw, e) => {
+          const t = e.touches?.[0];
+          const dx = Math.abs((t?.clientX ?? 0) - gestureRef.current.downX);
+          const dy = Math.abs((t?.clientY ?? 0) - gestureRef.current.downY);
+          if (dx > 6 || dy > 6) gestureRef.current.moved = dx >= dy;
+        }}
+        onTouchEnd={() => resumeAutoplay(900)}
         observer
         observeParents
         className="rounded-3xl shadow-2xl"
@@ -129,37 +154,47 @@ export default function CarSlider({
           <SwiperSlide key={idx}>
             <div
               className="relative w-full h-[340px] sm:h-[420px] md:h-[460px]
-               bg-slate-100 overflow-hidden
-               transition-transform duration-200 ease-out
-               active:scale-[0.985]
-               flex items-center justify-center"
+                         bg-slate-100 overflow-hidden
+                         transition-transform duration-200 ease-out
+                         active:scale-[0.985]
+                         flex items-center justify-center"
               onClick={(e) => openPreview(e, it)}
             >
-              {/* الصورة نفسها */}
+              {/* tap next/prev (بدون ما يخرب swipe) */}
+              <div
+                className="absolute inset-0 z-20"
+                data-no-preview
+                onClick={(e) => {
+                  if (gestureRef.current.moved) return;
+                  const sw = swiperRef.current;
+                  if (!sw) return;
+
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const x = e.clientX - rect.left;
+                  const isLeftHalf = x < rect.width / 2;
+
+                  if (isRTL) isLeftHalf ? sw.slideNext() : sw.slidePrev();
+                  else isLeftHalf ? sw.slidePrev() : sw.slideNext();
+                }}
+                style={{ cursor: "pointer" }}
+              />
+
               <img
                 src={it.src}
                 alt={it.alt || "صورة الخدمة"}
-                className="w-full h-full object-contain
-                 transition-transform duration-[900ms]
-                 ease-[cubic-bezier(0.25,1,0.5,1)]"
+                className="w-full h-full object-contain transition-transform duration-300 ease-[cubic-bezier(0.25,1,0.5,1)]"
                 draggable={false}
-                loading="lazy"
+                loading={idx === 0 ? "eager" : "lazy"}
                 decoding="async"
               />
 
-              {/* ⬅️⬅️⬅️ هون بالزبط تنحط طبقة الـ Texture */}
               <div
-                className="absolute inset-0 pointer-events-none
-                 bg-gradient-to-b
-                 from-white/40 via-transparent to-black/10"
+                className="absolute inset-0 pointer-events-none bg-gradient-to-b from-white/40 via-transparent to-black/10"
                 aria-hidden="true"
               />
 
-              {/* التدرّج السفلي للنص (هذا موجود عندك أصلاً) */}
               <div
-                className="absolute inset-x-0 bottom-0 h-36
-                 bg-gradient-to-t from-black/80 via-black/30 to-transparent
-                 pointer-events-none"
+                className="absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-black/80 via-black/30 to-transparent pointer-events-none"
                 aria-hidden="true"
               />
 
@@ -180,11 +215,10 @@ export default function CarSlider({
         ))}
       </Swiper>
 
-      {/* ===== Dots ===== */}
+      {/* dots */}
       {total > 1 && (
         <div className="absolute inset-x-0 bottom-0 pb-[max(12px,env(safe-area-inset-bottom))] z-30 flex items-center justify-center pointer-events-none">
           <div className="relative inline-flex items-center justify-start gap-[8px] px-3 py-2 rounded-full bg-black/40 backdrop-blur-md pointer-events-auto">
-            {/* Glider خلف النقطة النشطة */}
             <span
               className="absolute left-0 top-1/2 -translate-y-1/2 h-6 rounded-full bg-white/20 transition-transform duration-250 ease-out"
               style={{
@@ -198,10 +232,8 @@ export default function CarSlider({
               }}
               aria-hidden="true"
             />
-
-            {/* النقاط نفسها */}
             {items.map((_, idx) => {
-              const active = idx === current;
+              const activeDot = idx === current;
               return (
                 <button
                   key={idx}
@@ -210,14 +242,11 @@ export default function CarSlider({
                   onClick={() => slideToIndex(idx)}
                   className={[
                     "relative rounded-full transition-all duration-200 ease-out outline-none border border-white/40",
-                    active
+                    activeDot
                       ? "bg-white shadow-[0_0_6px_rgba(0,0,0,0.35)] scale-110"
                       : "bg-white/70 hover:bg-white",
                   ].join(" ")}
-                  style={{
-                    width: DOT_SIZE,
-                    height: DOT_SIZE,
-                  }}
+                  style={{ width: DOT_SIZE, height: DOT_SIZE }}
                 />
               );
             })}
@@ -225,7 +254,7 @@ export default function CarSlider({
         </div>
       )}
 
-      {/* مودال المعاينة */}
+      {/* preview modal */}
       {selectedImage && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md animate-fade-in"
@@ -249,6 +278,7 @@ export default function CarSlider({
           >
             <X className="w-7 h-7" />
           </button>
+
           <img
             src={selectedImage.src}
             alt={selectedImage.alt || "معاينة الصورة"}
