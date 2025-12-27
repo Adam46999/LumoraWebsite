@@ -1,3 +1,4 @@
+// src/components/BefAfter/CleaningTabs.jsx
 import React, { useMemo } from "react";
 
 export default function CleaningTabs({
@@ -69,12 +70,6 @@ export default function CleaningTabs({
             );
           })}
         </div>
-
-        <p className="mt-3 text-center text-[12px] text-slate-500">
-          {isRTL
-            ? "اختر قسم وشاهد الفرق قبل / بعد."
-            : "Pick a category and see before/after."}
-        </p>
       </div>
     </div>
   );

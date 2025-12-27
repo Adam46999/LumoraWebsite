@@ -15,7 +15,6 @@ const ExpandIcon = ({ className = "" }) => (
 );
 
 function LabelPill({ text, align = "start" }) {
-  // align: "start" | "end"
   return (
     <div
       className={[
@@ -91,7 +90,7 @@ export default function BeforeAfter({ beforeImage, afterImage }) {
       }
       style={{ WebkitTapHighlightColor: "transparent" }}
     >
-      {/* Fullscreen button (safe, no overlap with images clicks) */}
+      {/* Fullscreen button */}
       <button
         type="button"
         onClick={(e) => {
@@ -108,13 +107,11 @@ export default function BeforeAfter({ beforeImage, afterImage }) {
         <ExpandIcon className="w-5 h-5" />
       </button>
 
-      {/* Two full images side-by-side */}
+      {/* Two images side-by-side */}
       <div className="absolute inset-0 grid grid-cols-2">
         {/* BEFORE */}
         <div className="relative overflow-hidden">
-          {/* elegant label (no wrong clicks) */}
           <LabelPill text={beforeLabel} align={isRTL ? "end" : "start"} />
-
           <img
             src={beforeImage}
             alt={beforeLabel}
@@ -124,8 +121,6 @@ export default function BeforeAfter({ beforeImage, afterImage }) {
             className="w-full h-full object-cover"
             sizes="(max-width: 640px) 50vw, 35vw"
           />
-
-          {/* subtle bottom gradient for readability */}
           <div
             className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/20 via-black/5 to-transparent"
             aria-hidden="true"
@@ -135,7 +130,6 @@ export default function BeforeAfter({ beforeImage, afterImage }) {
         {/* AFTER */}
         <div className="relative overflow-hidden">
           <LabelPill text={afterLabel} align={isRTL ? "start" : "end"} />
-
           <img
             src={afterImage}
             alt={afterLabel}
@@ -145,7 +139,6 @@ export default function BeforeAfter({ beforeImage, afterImage }) {
             className="w-full h-full object-cover"
             sizes="(max-width: 640px) 50vw, 35vw"
           />
-
           <div
             className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/20 via-black/5 to-transparent"
             aria-hidden="true"
@@ -153,18 +146,10 @@ export default function BeforeAfter({ beforeImage, afterImage }) {
         </div>
       </div>
 
-      {/* Center divider (premium, crisp) */}
+      {/* Center divider فقط (بدون نص بالنص) */}
       <div className="pointer-events-none absolute inset-y-0 left-1/2 -translate-x-1/2 z-20">
-        {/* soft edge */}
         <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-10 bg-gradient-to-r from-black/10 via-black/0 to-black/10" />
-        {/* main line */}
         <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-[2px] bg-white/80" />
-        {/* small center badge */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-          <div className="rounded-full bg-white/90 border border-slate-200 shadow-sm px-3 py-1 text-[11px] sm:text-xs font-extrabold text-slate-700">
-            {isRTL ? "قبل | بعد" : "Before | After"}
-          </div>
-        </div>
       </div>
     </div>
   );

@@ -1,3 +1,4 @@
+// src/components/BefAfter/CleaningShowcase.jsx
 import { useMemo, useState, useEffect, useRef } from "react";
 import { useLanguage } from "../../context/LanguageContext";
 import CleaningTabs from "./CleaningTabs";
@@ -45,21 +46,33 @@ export default function CleaningShowcase({
       className="max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-14"
       dir={isRTL ? "rtl" : "ltr"}
     >
-      {/* Premium header */}
+      {/* Premium header (same hierarchy as Services) */}
       <header className="text-center mb-6 sm:mb-8">
+        {/* نفس badge تبع الخدمات */}
         <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm">
           <span className="inline-block h-1.5 w-1.5 rounded-full bg-blue-600" />
-          <span>{isRTL ? "نتائج قبل / بعد" : "Before / After results"}</span>
+          <span>{isRTL ? "قبل / بعد" : "Before / After"}</span>
         </div>
 
+        {/* نفس مقاس العنوان تبع الخدمات (لا تكبير) */}
         <h2 className="mt-4 text-[clamp(22px,4.6vw,36px)] font-extrabold tracking-tight text-slate-900">
-          {isRTL ? "معرض نتائج التنظيف" : "Cleaning Results Gallery"}
+          {isRTL ? (
+            <>
+              شاهد نتائجنا <span className="text-blue-600">بالصور</span>
+            </>
+          ) : (
+            <>
+              See our results <span className="text-blue-600">in photos</span>
+            </>
+          )}
         </h2>
 
-        <p className="mt-2 text-sm sm:text-base text-slate-600 max-w-2xl mx-auto leading-relaxed">
-          {isRTL
-            ? "مقارنة واضحة جنبًا إلى جنب — قبل / بعد."
-            : "Clear side-by-side comparison — before & after."}
+        {/* نفس underline تبع الخدمات (قصير وأنيق) */}
+        <div className="mx-auto mt-3 h-[3px] w-10 rounded-full bg-blue-600" />
+
+        {/* ساب تايتل بدون تعقيد */}
+        <p className="mt-3 text-sm sm:text-base text-slate-600 max-w-2xl mx-auto leading-relaxed">
+          {isRTL ? "صور حقيقية. فرق واضح." : "Real photos. Clear difference."}
         </p>
       </header>
 

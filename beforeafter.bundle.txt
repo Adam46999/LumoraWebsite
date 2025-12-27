@@ -1,0 +1,1427 @@
+This file is a merged representation of a subset of the codebase, containing files not matching ignore patterns, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of a subset of the repository's contents that is considered the most important context.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching these patterns are excluded: node_modules, dist, build, .expo, .next, coverage
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+after1.jpg
+after2.jpg
+after3.jpg
+after4.jpg
+ar.js
+before1.jpg
+before2.jpg
+before3.jpg
+before4.jpg
+BeforeAfter.jsx
+BeforeAfterCarousel.jsx
+car1.jpg
+car10.jpg
+car2.jpg
+car3.jpg
+car4.jpg
+car5.jpg
+car6.jpg
+car7.jpg
+car8.jpg
+car9.jpg
+CarSlider.jsx
+CleaningShowcase.jsx
+CleaningTabs.jsx
+en.js
+he.js
+hero1.jpg
+hero2.jpg
+hero3.jpg
+hero4.jpg
+hero5.jpg
+hero6.jpg
+LanguageContext.jsx
+SimpleSlider.jsx
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="BeforeAfter.jsx">
+import React, { useMemo, useRef, useEffect, useState } from "react";
+import { useLanguage } from "../../context/LanguageContext";
+
+const ExpandIcon = ({ className = "" }) => (
+  <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
+    <path
+      d="M4 9V4h5M20 15v5h-5M15 4h5v5M4 15v5h5"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+function LabelPill({ text, align = "start" }) {
+  return (
+    <div
+      className={[
+        "absolute top-3 z-20 select-none pointer-events-none",
+        align === "start" ? "start-3" : "end-3",
+        "rounded-full px-3 py-1.5 text-xs sm:text-sm font-extrabold",
+        "bg-white/85 text-slate-900 border border-slate-200",
+        "shadow-sm backdrop-blur-md",
+      ].join(" ")}
+    >
+      {text}
+    </div>
+  );
+}
+
+export default function BeforeAfter({ beforeImage, afterImage }) {
+  const { t, lang } = useLanguage();
+  const isRTL = useMemo(() => lang === "ar" || lang === "he", [lang]);
+
+  const beforeLabel =
+    t?.beforeAlt || (lang === "he" ? "לפני" : lang === "en" ? "Before" : "قبل");
+  const afterLabel =
+    t?.afterAlt || (lang === "he" ? "אחרי" : lang === "en" ? "After" : "بعد");
+
+  const containerRef = useRef(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  const toggleFullscreen = async () => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    try {
+      if (!document.fullscreenElement) {
+        await el.requestFullscreen?.();
+        setIsFullscreen(true);
+        document.body.style.overflow = "hidden";
+      } else {
+        await document.exitFullscreen?.();
+        setIsFullscreen(false);
+        document.body.style.overflow = "";
+      }
+    } catch {
+      setIsFullscreen((v) => !v);
+      document.body.style.overflow = !isFullscreen ? "hidden" : "";
+    }
+  };
+
+  useEffect(() => {
+    const exitHandler = () => {
+      if (!document.fullscreenElement) {
+        setIsFullscreen(false);
+        document.body.style.overflow = "";
+      }
+    };
+    document.addEventListener("fullscreenchange", exitHandler);
+    return () => {
+      document.removeEventListener("fullscreenchange", exitHandler);
+      document.body.style.overflow = "";
+    };
+  }, []);
+
+  return (
+    <div
+      ref={containerRef}
+      className={[
+        "relative w-full overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm",
+        "aspect-[4/3] sm:aspect-[16/10] lg:aspect-[16/9]",
+        isFullscreen ? "fixed inset-0 z-[9999] rounded-none border-0" : "",
+      ].join(" ")}
+      dir={isRTL ? "rtl" : "ltr"}
+      aria-label={
+        t?.beforeAfterAria || (isRTL ? "قبل / بعد" : "Before / After")
+      }
+      style={{ WebkitTapHighlightColor: "transparent" }}
+    >
+      {/* Fullscreen button */}
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          toggleFullscreen();
+        }}
+        className="absolute top-2 end-2 z-30 h-10 w-10 rounded-full bg-black/45 text-white backdrop-blur-md flex items-center justify-center hover:bg-black/55 transition"
+        aria-label={
+          isFullscreen
+            ? t?.exitFullscreen || (isRTL ? "خروج" : "Exit fullscreen")
+            : t?.enterFullscreen || (isRTL ? "ملء الشاشة" : "Enter fullscreen")
+        }
+      >
+        <ExpandIcon className="w-5 h-5" />
+      </button>
+
+      {/* Two images side-by-side */}
+      <div className="absolute inset-0 grid grid-cols-2">
+        {/* BEFORE */}
+        <div className="relative overflow-hidden">
+          <LabelPill text={beforeLabel} align={isRTL ? "end" : "start"} />
+          <img
+            src={beforeImage}
+            alt={beforeLabel}
+            draggable={false}
+            loading="lazy"
+            decoding="async"
+            className="w-full h-full object-cover"
+            sizes="(max-width: 640px) 50vw, 35vw"
+          />
+          <div
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/20 via-black/5 to-transparent"
+            aria-hidden="true"
+          />
+        </div>
+
+        {/* AFTER */}
+        <div className="relative overflow-hidden">
+          <LabelPill text={afterLabel} align={isRTL ? "start" : "end"} />
+          <img
+            src={afterImage}
+            alt={afterLabel}
+            draggable={false}
+            loading="lazy"
+            decoding="async"
+            className="w-full h-full object-cover"
+            sizes="(max-width: 640px) 50vw, 35vw"
+          />
+          <div
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/20 via-black/5 to-transparent"
+            aria-hidden="true"
+          />
+        </div>
+      </div>
+
+      {/* Center divider فقط (بدون نص بالنص) */}
+      <div className="pointer-events-none absolute inset-y-0 left-1/2 -translate-x-1/2 z-20">
+        <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-10 bg-gradient-to-r from-black/10 via-black/0 to-black/10" />
+        <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-[2px] bg-white/80" />
+      </div>
+    </div>
+  );
+}
+</file>
+
+<file path="BeforeAfterCarousel.jsx">
+import React, { useMemo } from "react";
+import { Swiper, SwiperSlide } from "swiper/react";
+import "swiper/css";
+import "swiper/css/pagination";
+import { Pagination, A11y } from "swiper/modules";
+import BeforeAfter from "./BeforeAfter";
+import { useLanguage } from "../../context/LanguageContext";
+
+export default function BeforeAfterCarousel({
+  items,
+  pairs,
+  hideDescription = false,
+}) {
+  const { t, lang } = useLanguage();
+  const isRTL = lang === "ar" || lang === "he";
+
+  const list = useMemo(() => {
+    if (Array.isArray(items)) return items;
+    if (Array.isArray(pairs)) return pairs;
+    return [];
+  }, [items, pairs]);
+
+  if (!list.length) return null;
+
+  const title =
+    t?.beforeAfterTitle ||
+    (lang === "he"
+      ? "לפני / אחרי"
+      : lang === "en"
+      ? "Before / After"
+      : "قبل / بعد");
+
+  const subtitle =
+    t?.beforeAfterSubtitle ||
+    (lang === "he"
+      ? "השוואה ברורה בלי חצים."
+      : lang === "en"
+      ? "Clean comparison — no arrows."
+      : "مقارنة واضحة — بدون أسهم.");
+
+  return (
+    <section className="mt-2" dir={isRTL ? "rtl" : "ltr"}>
+      {!hideDescription ? (
+        <div className="text-center">
+          <h3 className="text-lg sm:text-xl font-extrabold text-slate-900">
+            {title}
+            <span className="text-blue-600 ms-2">{subtitle}</span>
+          </h3>
+        </div>
+      ) : null}
+
+      <Swiper
+        modules={[Pagination, A11y]}
+        spaceBetween={22}
+        slidesPerView={1}
+        loop={list.length > 1}
+        allowTouchMove
+        pagination={{
+          clickable: true,
+          dynamicBullets: true,
+        }}
+        className="mt-4"
+        style={{
+          // شكل dots أرقى شوي (بدون ما نحتاج CSS خارجي)
+          ["--swiper-pagination-bullet-size"]: "9px",
+          ["--swiper-pagination-bullet-horizontal-gap"]: "6px",
+        }}
+      >
+        {list.map((item, index) => (
+          <SwiperSlide key={index}>
+            <BeforeAfter beforeImage={item?.before} afterImage={item?.after} />
+          </SwiperSlide>
+        ))}
+      </Swiper>
+
+      {/* تحسين بسيط لمكان الـ dots */}
+      <style>{`
+        .swiper-pagination {
+          position: relative !important;
+          margin-top: 12px !important;
+        }
+        .swiper-pagination-bullet {
+          opacity: .55;
+          transform: translateZ(0);
+        }
+        .swiper-pagination-bullet-active {
+          opacity: 1;
+        }
+      `}</style>
+    </section>
+  );
+}
+</file>
+
+<file path="CleaningShowcase.jsx">
+import { useMemo, useState, useEffect, useRef } from "react";
+import { useLanguage } from "../../context/LanguageContext";
+import CleaningTabs from "./CleaningTabs";
+import CarSlider from "../slider/CarSlider";
+import BeforeAfterCarousel from "./BeforeAfterCarousel";
+
+export default function CleaningShowcase({
+  carsImages = [],
+  rugsImages = [], // موجود بس حالياً مش مستخدم
+  sofaPairs = [],
+  defaultTab = "sofa",
+}) {
+  const { lang } = useLanguage();
+  const isRTL = lang === "ar" || lang === "he";
+  const [active, setActive] = useState(defaultTab);
+
+  const bootedRef = useRef(false);
+
+  const counts = useMemo(
+    () => ({
+      cars: carsImages.length,
+      sofa: sofaPairs.length,
+    }),
+    [carsImages.length, sofaPairs.length]
+  );
+
+  useEffect(() => {
+    if (bootedRef.current) return;
+    bootedRef.current = true;
+
+    const urls = [
+      ...carsImages.map((i) => i?.src).filter(Boolean),
+      ...sofaPairs.flatMap((p) => [p?.before, p?.after]).filter(Boolean),
+    ];
+
+    urls.slice(0, 10).forEach((u) => {
+      const img = new Image();
+      img.src = u;
+    });
+  }, [carsImages, sofaPairs]);
+
+  return (
+    <section
+      id="cleaning-showcase"
+      className="max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-14"
+      dir={isRTL ? "rtl" : "ltr"}
+    >
+      {/* Premium header */}
+      <header className="text-center mb-6 sm:mb-8">
+        <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm">
+          <span className="inline-block h-1.5 w-1.5 rounded-full bg-blue-600" />
+          <span>{isRTL ? "نتائج قبل / بعد" : "Before / After results"}</span>
+        </div>
+
+        <h2 className="mt-4 text-[clamp(22px,4.6vw,36px)] font-extrabold tracking-tight text-slate-900">
+          {isRTL ? "معرض نتائج التنظيف" : "Cleaning Results Gallery"}
+        </h2>
+
+        <p className="mt-2 text-sm sm:text-base text-slate-600 max-w-2xl mx-auto leading-relaxed">
+          {isRTL
+            ? "مقارنة واضحة جنبًا إلى جنب — قبل / بعد."
+            : "Clear side-by-side comparison — before & after."}
+        </p>
+      </header>
+
+      {/* Tabs */}
+      <CleaningTabs
+        lang={lang}
+        active={active}
+        onChange={setActive}
+        counts={counts}
+        labels={{
+          sofa: isRTL ? "كنب" : lang === "he" ? "ספה" : "Sofa",
+          cars: isRTL ? "سيارة" : lang === "he" ? "רכב" : "Car",
+        }}
+        disableEmpty={true}
+        sticky={false}
+        compactOnMobile={true}
+        className="mb-5 sm:mb-7"
+      />
+
+      {/* Content card */}
+      <div className="mx-auto max-w-5xl rounded-3xl bg-white border border-slate-200 shadow-sm p-4 sm:p-6">
+        <Panel id="sofa" active={active}>
+          {sofaPairs.length ? (
+            <BeforeAfterCarousel pairs={sofaPairs} hideDescription />
+          ) : (
+            <EmptyState
+              text={isRTL ? "لا يوجد صور كنب حالياً." : "No sofa results yet."}
+            />
+          )}
+        </Panel>
+
+        <Panel id="cars" active={active}>
+          {carsImages.length ? (
+            <CarSlider items={carsImages} />
+          ) : (
+            <EmptyState
+              text={
+                isRTL ? "لا يوجد صور سيارات حالياً." : "No car results yet."
+              }
+            />
+          )}
+        </Panel>
+      </div>
+    </section>
+  );
+}
+
+function Panel({ id, active, children }) {
+  const isActive = active === id;
+  return (
+    <div
+      role="tabpanel"
+      id={`panel-${id}`}
+      aria-hidden={isActive ? "false" : "true"}
+      className={isActive ? "block" : "hidden"}
+    >
+      {children}
+    </div>
+  );
+}
+
+function EmptyState({ text }) {
+  return (
+    <div className="w-full py-10 sm:py-14 flex flex-col items-center justify-center text-slate-500">
+      <div className="w-full max-w-3xl grid grid-cols-3 gap-3 mb-4 px-2">
+        {[...Array(6)].map((_, i) => (
+          <div
+            key={i}
+            className="h-24 rounded-xl bg-slate-200/70 animate-pulse"
+          />
+        ))}
+      </div>
+      <p className="text-sm">{text}</p>
+    </div>
+  );
+}
+</file>
+
+<file path="CleaningTabs.jsx">
+import React, { useMemo } from "react";
+
+export default function CleaningTabs({
+  lang = "ar",
+  active,
+  onChange,
+  counts = {},
+  labels = {},
+  disableEmpty = true,
+  sticky = false,
+  compactOnMobile = true, // kept (not critical here)
+  className = "",
+}) {
+  const isRTL = lang === "ar" || lang === "he";
+
+  const tabs = useMemo(() => {
+    const keys = Object.keys(labels);
+    return keys.map((key) => ({
+      key,
+      label: labels[key],
+      count: counts?.[key] ?? 0,
+    }));
+  }, [labels, counts]);
+
+  if (!tabs.length) return null;
+
+  return (
+    <div
+      className={[sticky ? "sticky top-3 z-10" : "", "w-full", className].join(
+        " "
+      )}
+      dir={isRTL ? "rtl" : "ltr"}
+    >
+      <div className="mx-auto max-w-5xl flex flex-col items-center">
+        {/* Segmented container */}
+        <div className="inline-flex items-center rounded-2xl bg-slate-100 p-1 shadow-sm border border-slate-200">
+          {tabs.map((tab) => {
+            const isActive = tab.key === active;
+            const disabled = disableEmpty && tab.count === 0;
+
+            return (
+              <button
+                key={tab.key}
+                type="button"
+                onClick={() => !disabled && onChange?.(tab.key)}
+                disabled={disabled}
+                className={[
+                  "relative flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-extrabold transition",
+                  isActive
+                    ? "bg-white text-slate-900 shadow-sm"
+                    : "text-slate-600 hover:text-slate-900",
+                  disabled ? "opacity-40 cursor-not-allowed" : "",
+                ].join(" ")}
+                aria-pressed={isActive ? "true" : "false"}
+              >
+                <span>{tab.label}</span>
+
+                <span
+                  className={[
+                    "min-w-[22px] h-5 px-1.5 rounded-full text-[11px] font-black inline-flex items-center justify-center",
+                    isActive
+                      ? "bg-blue-600 text-white"
+                      : "bg-slate-200 text-slate-700",
+                  ].join(" ")}
+                >
+                  {tab.count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        <p className="mt-3 text-center text-[12px] text-slate-500">
+          {isRTL
+            ? "اختر قسم وشاهد الفرق قبل / بعد."
+            : "Pick a category and see before/after."}
+        </p>
+      </div>
+    </div>
+  );
+}
+</file>
+
+<file path="CarSlider.jsx">
+import React, { useMemo, useRef, useEffect, useState } from "react";
+import { useLanguage } from "../../context/LanguageContext";
+
+const ExpandIcon = ({ className = "" }) => (
+  <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
+    <path
+      d="M4 9V4h5M20 15v5h-5M15 4h5v5M4 15v5h5"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+function LabelPill({ text, align = "start" }) {
+  return (
+    <div
+      className={[
+        "absolute top-3 z-20 select-none pointer-events-none",
+        align === "start" ? "start-3" : "end-3",
+        "rounded-full px-3 py-1.5 text-xs sm:text-sm font-extrabold",
+        "bg-white/85 text-slate-900 border border-slate-200",
+        "shadow-sm backdrop-blur-md",
+      ].join(" ")}
+    >
+      {text}
+    </div>
+  );
+}
+
+export default function BeforeAfter({ beforeImage, afterImage }) {
+  const { t, lang } = useLanguage();
+  const isRTL = useMemo(() => lang === "ar" || lang === "he", [lang]);
+
+  const beforeLabel =
+    t?.beforeAlt || (lang === "he" ? "לפני" : lang === "en" ? "Before" : "قبل");
+  const afterLabel =
+    t?.afterAlt || (lang === "he" ? "אחרי" : lang === "en" ? "After" : "بعد");
+
+  const containerRef = useRef(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  const toggleFullscreen = async () => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    try {
+      if (!document.fullscreenElement) {
+        await el.requestFullscreen?.();
+        setIsFullscreen(true);
+        document.body.style.overflow = "hidden";
+      } else {
+        await document.exitFullscreen?.();
+        setIsFullscreen(false);
+        document.body.style.overflow = "";
+      }
+    } catch {
+      setIsFullscreen((v) => !v);
+      document.body.style.overflow = !isFullscreen ? "hidden" : "";
+    }
+  };
+
+  useEffect(() => {
+    const exitHandler = () => {
+      if (!document.fullscreenElement) {
+        setIsFullscreen(false);
+        document.body.style.overflow = "";
+      }
+    };
+    document.addEventListener("fullscreenchange", exitHandler);
+    return () => {
+      document.removeEventListener("fullscreenchange", exitHandler);
+      document.body.style.overflow = "";
+    };
+  }, []);
+
+  return (
+    <div
+      ref={containerRef}
+      className={[
+        "relative w-full overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm",
+        "aspect-[4/3] sm:aspect-[16/10] lg:aspect-[16/9]",
+        isFullscreen ? "fixed inset-0 z-[9999] rounded-none border-0" : "",
+      ].join(" ")}
+      dir={isRTL ? "rtl" : "ltr"}
+      aria-label={
+        t?.beforeAfterAria || (isRTL ? "قبل / بعد" : "Before / After")
+      }
+      style={{ WebkitTapHighlightColor: "transparent" }}
+    >
+      {/* Fullscreen button */}
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          toggleFullscreen();
+        }}
+        className="absolute top-2 end-2 z-30 h-10 w-10 rounded-full bg-black/45 text-white backdrop-blur-md flex items-center justify-center hover:bg-black/55 transition"
+        aria-label={
+          isFullscreen
+            ? t?.exitFullscreen || (isRTL ? "خروج" : "Exit fullscreen")
+            : t?.enterFullscreen || (isRTL ? "ملء الشاشة" : "Enter fullscreen")
+        }
+      >
+        <ExpandIcon className="w-5 h-5" />
+      </button>
+
+      {/* Two images side-by-side */}
+      <div className="absolute inset-0 grid grid-cols-2">
+        {/* BEFORE */}
+        <div className="relative overflow-hidden">
+          <LabelPill text={beforeLabel} align={isRTL ? "end" : "start"} />
+          <img
+            src={beforeImage}
+            alt={beforeLabel}
+            draggable={false}
+            loading="lazy"
+            decoding="async"
+            className="w-full h-full object-cover"
+            sizes="(max-width: 640px) 50vw, 35vw"
+          />
+          <div
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/20 via-black/5 to-transparent"
+            aria-hidden="true"
+          />
+        </div>
+
+        {/* AFTER */}
+        <div className="relative overflow-hidden">
+          <LabelPill text={afterLabel} align={isRTL ? "start" : "end"} />
+          <img
+            src={afterImage}
+            alt={afterLabel}
+            draggable={false}
+            loading="lazy"
+            decoding="async"
+            className="w-full h-full object-cover"
+            sizes="(max-width: 640px) 50vw, 35vw"
+          />
+          <div
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/20 via-black/5 to-transparent"
+            aria-hidden="true"
+          />
+        </div>
+      </div>
+
+      {/* Center divider فقط (بدون نص بالنص) */}
+      <div className="pointer-events-none absolute inset-y-0 left-1/2 -translate-x-1/2 z-20">
+        <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-10 bg-gradient-to-r from-black/10 via-black/0 to-black/10" />
+        <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-[2px] bg-white/80" />
+      </div>
+    </div>
+  );
+}
+</file>
+
+<file path="SimpleSlider.jsx">
+// src/components/slider/SimpleSlider.jsx
+import { useMemo, useRef, useState, useCallback, useEffect } from "react";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { A11y, Autoplay, Keyboard, EffectFade } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/effect-fade";
+import { useLanguage } from "../../context/LanguageContext";
+import { X } from "lucide-react";
+
+const PRESETS = {
+  fast: { threshold: 3, resistanceRatio: 0.5, speed: 360, touchRatio: 1.1 },
+  balanced: {
+    threshold: 4,
+    resistanceRatio: 0.65,
+    speed: 420,
+    touchRatio: 1.05,
+  },
+  heavy: { threshold: 6, resistanceRatio: 0.8, speed: 520, touchRatio: 0.95 },
+};
+
+export default function SimpleSlider({
+  items = [],
+  autoplayDelay = 3200,
+  loop = true,
+  effect = "slide",
+  showEmpty = true,
+  heightClasses = "",
+  touchPreset = "balanced",
+}) {
+  const { lang } = useLanguage();
+  const isRTL = useMemo(() => ["ar", "he"].includes(lang), [lang]);
+
+  const [current, setCurrent] = useState(1); // 1-based للعرض
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [paused, setPaused] = useState(false);
+  const swiperRef = useRef(null);
+  const resumeTimerRef = useRef(null);
+  const gestureRef = useRef({ downX: 0, downY: 0, moved: false });
+
+  const prefersReduced =
+    typeof window !== "undefined" &&
+    window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+
+  if (!items.length) {
+    if (!showEmpty) return null;
+    return (
+      <div
+        className={[
+          "max-w-7xl mx-auto relative rounded-3xl overflow-hidden",
+          "aspect-[4/3] sm:aspect-[16/10] lg:aspect-[16/9]",
+          "bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-800 dark:to-gray-700",
+          "flex items-center justify-center",
+        ].join(" ")}
+        dir={isRTL ? "rtl" : "ltr"}
+        aria-roledescription="carousel"
+        aria-label={isRTL ? "معرض صور السجاد (فارغ)" : "Rug gallery (empty)"}
+      >
+        <div className="text-center px-4">
+          <div className="mx-auto mb-4 w-16 h-16 rounded-2xl bg-black/10 dark:bg-white/10" />
+          <h3 className="text-gray-800 dark:text-gray-100 font-extrabold text-lg mb-1">
+            {isRTL ? "لا توجد صور للسجاد حالياً" : "No rug images yet"}
+          </h3>
+          <p className="text-gray-600 dark:text-gray-300 text-sm">
+            {isRTL
+              ? "أضِف صور السجاد لاحقًا ليظهر المعرض هنا."
+              : "Add rug images later and the gallery will appear here."}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const cfg = PRESETS[touchPreset] ?? PRESETS.balanced;
+  const total = items.length;
+  const activeIndex = current - 1; // نحولها لـ 0-based للنقاط
+
+  // ثوابت شريط الدوتس (نفس روح كارسلايدر)
+  const DOT_SIZE = 10;
+  const DOT_GAP = 8;
+  const GLIDER_WIDTH = 16;
+  const DOTS_PADDING_X = 12; // px-3 => 3 * 4px
+
+  const openPreview = useCallback((e, it) => {
+    if (e.defaultPrevented) return;
+    if (gestureRef.current.moved) return;
+    setSelectedImage(it);
+    const sw = swiperRef.current;
+    if (sw?.autoplay?.running) sw.autoplay.stop();
+  }, []);
+
+  const stopAutoplay = useCallback(() => {
+    const sw = swiperRef.current;
+    if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
+    if (sw?.autoplay?.running) sw.autoplay.stop();
+  }, []);
+  const resumeAutoplay = useCallback((delay = 1200) => {
+    const sw = swiperRef.current;
+    if (!sw) return;
+    if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
+    resumeTimerRef.current = setTimeout(() => sw?.autoplay?.start?.(), delay);
+  }, []);
+
+  // التنقل بالنقر على النقاط
+  const slideToIndex = useCallback(
+    (idx) => {
+      const sw = swiperRef.current;
+      if (!sw) return;
+      if (loop && typeof sw.slideToLoop === "function")
+        sw.slideToLoop(idx, cfg.speed);
+      else sw.slideTo(idx, cfg.speed);
+    },
+    [loop, cfg.speed]
+  );
+
+  useEffect(() => {
+    if (!prefersReduced) return;
+    const sw = swiperRef.current;
+    if (sw?.autoplay?.running) sw.autoplay.stop();
+  }, [prefersReduced]);
+
+  return (
+    <div
+      className="max-w-7xl mx-auto relative rounded-3xl overflow-hidden group"
+      dir={isRTL ? "rtl" : "ltr"}
+      aria-roledescription="carousel"
+      aria-label={isRTL ? "معرض صور السجاد" : "Rug images carousel"}
+      onTouchStart={() => {
+        setPaused(true);
+        stopAutoplay();
+      }}
+      onTouchEnd={() => {
+        setPaused(false);
+        resumeAutoplay(1500);
+      }}
+      style={{ WebkitTapHighlightColor: "transparent" }}
+    >
+      <div className="bullets-on-gradient" aria-hidden="true" />
+
+      {items.length > 1 && (
+        <div
+          className="absolute top-3 end-4 z-20 bg-black/65 text-white text-[12px] sm:text-sm px-2.5 py-1 rounded-full backdrop-blur-md select-none"
+          aria-live="polite"
+        >
+          {current} / {items.length}
+        </div>
+      )}
+
+      <div className="absolute top-0 left-0 right-0 h-[3px] z-20 bg-black/15">
+        <div
+          key={current}
+          className={["h-full", paused ? "" : "slide-progress"].join(" ")}
+          style={
+            !paused
+              ? {
+                  animationDuration: `${autoplayDelay}ms`,
+                  background: "rgba(59,130,246,.9)",
+                }
+              : { background: "rgba(59,130,246,.4)" }
+          }
+          aria-hidden="true"
+        />
+      </div>
+
+      <Swiper
+        modules={[A11y, Autoplay, Keyboard, EffectFade]}
+        onSwiper={(sw) => (swiperRef.current = sw)}
+        onSlideChange={(sw) => {
+          setCurrent(sw.realIndex + 1);
+          const next = items[(sw.realIndex + 1) % items.length];
+          if (next?.src) {
+            const img = new Image();
+            img.decoding = "async";
+            img.src = next.src;
+          }
+        }}
+        effect={effect}
+        fadeEffect={effect === "fade" ? { crossFade: true } : undefined}
+        keyboard={{ enabled: !selectedImage }}
+        autoplay={
+          prefersReduced
+            ? false
+            : { delay: autoplayDelay, disableOnInteraction: false }
+        }
+        slidesPerView={1}
+        loop={loop}
+        speed={prefersReduced ? 0 : cfg.speed}
+        simulateTouch
+        allowTouchMove
+        touchStartPreventDefault
+        shortSwipes
+        longSwipes={false}
+        threshold={cfg.threshold}
+        resistanceRatio={cfg.resistanceRatio}
+        followFinger
+        touchRatio={cfg.touchRatio}
+        style={{ touchAction: "pan-y" }}
+        onTouchStart={(sw, e) => {
+          const t = e.touches?.[0];
+          gestureRef.current = {
+            downX: t?.clientX ?? 0,
+            downY: t?.clientY ?? 0,
+            moved: false,
+          };
+        }}
+        onTouchMove={(sw, e) => {
+          const t = e.touches?.[0];
+          const dx = Math.abs((t?.clientX ?? 0) - gestureRef.current.downX);
+          const dy = Math.abs((t?.clientY ?? 0) - gestureRef.current.downY);
+          if (dx > 6 || dy > 6) gestureRef.current.moved = dx >= dy;
+        }}
+        observer
+        observeParents
+        className="rounded-3xl shadow-2xl"
+      >
+        {items.map((it, idx) => (
+          <SwiperSlide key={idx}>
+            <div
+              className="relative w-full overflow-hidden active:scale-[0.99] aspect-[4/3] sm:aspect-[16/10] lg:aspect-[16/9] bg-gray-200"
+              onClick={(e) => openPreview(e, it)}
+              style={{ willChange: "transform" }}
+            >
+              <img
+                src={it.src}
+                alt={it.alt || (isRTL ? "صورة السجاد" : "Rug image")}
+                className="w-full h-full object-cover transition-transform duration-[480ms] ease-[cubic-bezier(0.25,1,0.5,1)] group-hover:scale-[1.02]"
+                style={{ transform: "translateZ(0)", willChange: "transform" }}
+                draggable={false}
+                loading={idx === 0 ? "eager" : "lazy"}
+                decoding="async"
+                sizes="(max-width: 640px) 100vw, 70vw"
+              />
+              <div
+                className="absolute inset-x-0 bottom-0 h-24 sm:h-28 bg-gradient-to-t from-black/60 via-black/20 to-transparent pointer-events-none"
+                aria-hidden="true"
+              />
+              {(it.title || it.caption) && (
+                <div className="absolute bottom-4 inset-x-0 z-10 text-white px-5 select-none pointer-events-none">
+                  <h3 className="text-[clamp(16px,3vw,20px)] font-extrabold drop-shadow line-clamp-1">
+                    {it.title || (isRTL ? "خدمة السجاد" : "Rug service")}
+                  </h3>
+                  {it.caption && (
+                    <p className="text-[clamp(12px,2.5vw,15px)] opacity-90 leading-snug line-clamp-2">
+                      {it.caption}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          </SwiperSlide>
+        ))}
+      </Swiper>
+
+      {/* ===== دوتس + Glider في الأسفل ===== */}
+      {total > 1 && (
+        <div className="absolute inset-x-0 bottom-0 pb-[max(12px,env(safe-area-inset-bottom))] z-30 flex items-center justify-center pointer-events-none">
+          <div className="relative inline-flex items-center justify-start gap-[8px] px-3 py-2 rounded-full bg-black/40 backdrop-blur-md pointer-events-auto">
+            {/* glider خلف النقطة النشطة */}
+            <span
+              className="absolute left-0 top-1/2 -translate-y-1/2 h-6 rounded-full bg-white/20 transition-transform duration-250 ease-out"
+              style={{
+                width: GLIDER_WIDTH,
+                transform: `translateX(${
+                  DOTS_PADDING_X +
+                  DOT_SIZE / 2 -
+                  GLIDER_WIDTH / 2 +
+                  activeIndex * (DOT_SIZE + DOT_GAP)
+                }px) translateY(-50%)`,
+              }}
+              aria-hidden="true"
+            />
+
+            {items.map((_, idx) => {
+              const active = idx === activeIndex;
+              return (
+                <button
+                  key={idx}
+                  type="button"
+                  aria-label={`اذهب إلى الشريحة ${idx + 1}`}
+                  onClick={() => slideToIndex(idx)}
+                  className={[
+                    "relative rounded-full transition-all duration-200 ease-out outline-none border border-white/40",
+                    active
+                      ? "bg-white shadow-[0_0_6px_rgba(0,0,0,0.35)] scale-110"
+                      : "bg-white/70 hover:bg-white",
+                  ].join(" ")}
+                  style={{
+                    width: DOT_SIZE,
+                    height: DOT_SIZE,
+                  }}
+                />
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {selectedImage && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 animate-fade-in"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => {
+            setSelectedImage(null);
+            resumeAutoplay(600);
+          }}
+          style={{ WebkitTapHighlightColor: "transparent" }}
+        >
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedImage(null);
+              resumeAutoplay(600);
+            }}
+            className="absolute top-5 right-5 text-white hover:text-blue-200 transition w-11 h-11 flex items-center justify-center"
+            aria-label={isRTL ? "إغلاق المعاينة" : "Close preview"}
+            type="button"
+            data-no-preview
+          >
+            <X className="w-6 h-6" />
+          </button>
+          <img
+            src={selectedImage.src}
+            alt={selectedImage.alt || (isRTL ? "معاينة الصورة" : "Preview")}
+            className="max-w-[92%] max-h-[84%] rounded-2xl shadow-2xl border border-white/15 object-contain"
+            loading="eager"
+            decoding="async"
+            style={{ transform: "translateZ(0)", willChange: "transform" }}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+</file>
+
+<file path="LanguageContext.jsx">
+import { createContext, useContext, useState } from "react";
+import ar from "../translations/ar";
+import en from "../translations/en";
+import he from "../translations/he";
+
+const LanguageContext = createContext();
+
+export const LanguageProvider = ({ children }) => {
+  const [lang, setLang] = useState("ar");
+
+  const langs = { ar, en, he };
+
+  return (
+    <LanguageContext.Provider value={{ t: langs[lang], lang, setLang }}>
+      {children}
+    </LanguageContext.Provider>
+  );
+};
+
+export const useLanguage = () => useContext(LanguageContext);
+</file>
+
+<file path="ar.js">
+export default {
+  // Navigation / Header
+  home: "الرئيسية",
+  services: "الخدمات",
+  beforeafter: "قبل / بعد",
+  contact: "تواصل معنا",
+
+  // ✅ Hero Section (FINAL)
+  heroStatic: "تنظيف عميق ومرتب لـ",
+  heroHighlight1: "الكنب",
+  heroHighlight2: "السيارات",
+  heroHighlight3: "السجاد",
+  heroSubtitle:
+    "نتائج نظافة بتبين من أول مرة — حجز سريع، التزام بالمواعيد، واهتمام بالتفاصيل حتى آخر زاوية.",
+  heroButtonPrimary: "واتساب الآن",
+  heroButtonSecondary: "اطلب عرض سعر",
+  // روابط (اختياري) — عدّل الرقم لاحقًا
+  whatsappLink: "https://wa.me/0000000000",
+  callLink: "tel:+0000000000",
+  showCallButton: false,
+  callNow: "اتصال",
+  heroAlt: "خدمة تنظيف",
+
+  // Services Section
+  servicesTitle1: "خدمات",
+  servicesTitle2: "التنظيف",
+  servicesDescription: "اختر الخدمة المناسبة لك.",
+
+  sofaTitle: "تنظيف الكنب",
+  sofaDescription: "تنظيف شامل وتعقيم وتجفيف سريع.",
+  sofaDetails: `نقوم بتنظيف الكنب بجميع أنواعه باستخدام أجهزة بخار حديثة، ومواد تنظيف آمنة على القماش.
+يشمل:
+- إزالة البقع الصعبة
+- تعقيم ضد البكتيريا
+- تجفيف سريع بدون رائحة`,
+
+  carTitle: "غسيل السيارات",
+  carDescription: "اختر بين غسيل يومي سريع أو عناية فاخرة.",
+  carDetails: `يشمل تنظيف كامل للمقاعد، الأرضيات، الزجاج، والكونسول.
+نستخدم مواد خاصة لكل نوع جلد أو قماش، مع تعقيم بالبخار للمناطق الحساسة.`,
+
+  carpetTitle: "تنظيف السجاد",
+  carpetDescription: "تنظيف عميق يحافظ على اللون والملمس.",
+  carpetDetails: `غسيل يدوي وآلي للسجاد والموكيت مع تجفيف سريع.
+نسترجع ألوان السجاد الأصلية ونعيد له النعومة.`,
+
+  steamTitle: "تعقيم بالبخار",
+  steamDescription: "تعقيم بالبخار عالي الحرارة.",
+  steamDetails: `بخار حراري بدرجة 160° لتعقيم الأرضيات، المفروشات، والأماكن الرطبة.
+يقضي على 99.9٪ من البكتيريا والجراثيم.`,
+
+  carSeatsTitle: "تنظيف فرش السيارات",
+  carSeatsDescription:
+    "مقاعد، أرضيات، أو الاثنين معًا — مع إمكانية باقة مع غسيل خارجي.",
+
+  // Before After
+  beforeAfterHint: "اسحب لرؤية الفرق",
+  beforeAlt: "قبل",
+  afterAlt: "بعد",
+  beforeAfterTitle1: "قبل",
+  beforeAfterTitle2: " / بعد التنظيف",
+  beforeAfterDescription:
+    "شاهد الفرق الحقيقي قبل وبعد تنظيف الكنب والسجاد من خلال السحب على الصور.",
+
+  // Contact Section
+  contactTitleSpan: "تواصل",
+  contactTitle: " معنا",
+  contactSubtitle: "عندك استفسار أو ملاحظة؟ فقط أرسل لنا رسالة وسنرد عليك!",
+  contactNameLabel: "الاسم الكامل",
+  contactNamePlaceholder: "اكتب اسمك",
+  contactPhoneLabel: "رقم الهاتف",
+  contactPhonePlaceholder: "ادخل رقم الهاتف",
+  contactMessageLabel: "رسالتك",
+  contactMessagePlaceholder: "اكتب رسالتك هنا...",
+  contactSendButton: "إرسال",
+  contactSuccessMessage: "تم إرسال الرسالة بنجاح!",
+  contactPhoneError:
+    "رقم الهاتف غير صالح. تأكد من أنه يبدأ بـ 05 ويتكون من 10 أرقام.",
+  contactFillAllFields: "يرجى تعبئة جميع الحقول.",
+  contactCallNow: "اتصل بنا الآن",
+  contactMapLocation: "موقعنا على الخريطة",
+  contactChooseLanguage: "اختر اللغة",
+
+  // Lang Switch
+  langArabic: "العربية",
+  langEnglish: "English",
+  langHebrew: "עברית",
+
+  // Nav (for Sidebar or others)
+  navHome: "الرئيسية",
+  navServices: "الخدمات",
+  navBeforeAfter: "قبل / بعد",
+  navContact: "تواصل معنا",
+  closeMenu: "إغلاق القائمة",
+  chooseLanguage: "اختر اللغة",
+
+  // Services Short (إذا بتستعملها بمكان ثاني)
+  serviceCarpet: "تنظيف السجاد",
+  serviceSofa: "تنظيف الكنب",
+  serviceCar: "تنظيف السيارات",
+
+  header: {
+    brand: "Lumora",
+    menu_title: "القائمة الرئيسية",
+
+    // الأقسام
+    services: "الخدمات",
+    gallery: "معرض الصور",
+    contact: "تواصل معنا",
+
+    // خدمات فرعية
+    carpet_clean: "تنظيف سجاد",
+    sofa_clean: "تنظيف كنب",
+    car_clean: "تنظيف سيارات",
+
+    // اللغة
+    choose_language: "اختر اللغة",
+    ar: "العربية",
+    en: "الإنجليزية",
+    he: "العبرية",
+  },
+};
+</file>
+
+<file path="en.js">
+export default {
+  home: "Home",
+  services: "Services",
+  beforeafter: "Before / After",
+  contact: "Contact Us",
+
+  heroHighlight1: "We care about",
+  heroHighlight2: "your home's cleanliness",
+  heroSubtitle: "Instant results, deep cleaning, no mess – try the difference.",
+  heroButton: "Contact Us",
+  heroAlt: "Cleaning Service",
+
+  servicesTitle1: "Cleaning",
+  servicesTitle2: "Services",
+  servicesDescription:
+    "We offer complete cleaning solutions for sofas, carpets, cars and more using advanced technology.",
+
+  sofaTitle: "Sofa Cleaning",
+  sofaDescription: "Deep cleaning and stain removal.",
+  sofaDetails: `We clean all types of sofas using modern steam devices and fabric-safe cleaning materials.
+Includes:
+- Tough stain removal
+- Bacteria sanitization
+- Quick drying without odor`,
+
+  carTitle: "Car Cleaning",
+  carDescription: "Interior and exterior with sanitization.",
+  carDetails: `Includes full cleaning of seats, floors, glass, and console.
+We use special materials for each type of leather or fabric, with steam sanitization for sensitive areas.`,
+
+  carpetTitle: "Carpet Cleaning",
+  carpetDescription: "Washing and drying carpets.",
+  carpetDetails: `Manual and machine washing for carpets and rugs with fast drying.
+We restore original carpet colors and softness.`,
+
+  steamTitle: "Steam Sanitization",
+  steamDescription: "High-temperature steam sanitization.",
+  steamDetails: `High temperature steam at 160° for disinfecting floors, upholstery, and damp areas.
+Kills 99.9% of bacteria and germs.`,
+
+  beforeAfterHint: "Slide to see the difference",
+  beforeAlt: "Before",
+  afterAlt: "After",
+  beforeAfterTitle1: "Before",
+  beforeAfterTitle2: " / After Cleaning",
+  beforeAfterDescription:
+    "See the real difference before and after cleaning sofas and carpets by sliding the images.",
+
+  contactTitleSpan: "Contact",
+  contactTitle: " Us",
+  contactSubtitle:
+    "Have a question or note? Just send us a message and we'll reply!",
+  contactNameLabel: "Full Name",
+  contactNamePlaceholder: "Enter your name",
+  contactPhoneLabel: "Phone Number",
+  contactPhonePlaceholder: "Enter phone number",
+  contactMessageLabel: "Your Message",
+  contactMessagePlaceholder: "Write your message here...",
+  contactSendButton: "Send",
+  contactSuccessMessage: "Message sent successfully!",
+  contactPhoneError:
+    "Invalid phone number. Must start with 05 and have 10 digits.",
+  contactFillAllFields: "Please fill in all fields.",
+  contactCallNow: "Call Us Now",
+  contactMapLocation: "Our Location on the Map",
+  contactChooseLanguage: "Choose Language",
+
+  langArabic: "Arabic",
+  langEnglish: "English",
+  langHebrew: "Hebrew",
+
+  navHome: "Home",
+  navServices: "Services",
+  navBeforeAfter: "Before / After",
+  navContact: "Contact Us",
+  closeMenu: "Close menu",
+  chooseLanguage: "Choose Language",
+
+  serviceCarpet: "Carpet Cleaning",
+  serviceSofa: "Sofa Cleaning",
+  serviceCar: "Car Cleaning",
+  heroHighlight1: "Professional Cleaning",
+  heroHighlight2: "for Sofas, Cars & Carpets",
+  heroSubtitle:
+    "We offer deep cleaning services for home sofas, car interiors & exteriors, and carpets – using modern steam devices and safe materials.",
+  servicesTitle1: "Our",
+  servicesTitle2: "Services",
+  servicesDescription: "Pick what suits you.",
+  sofaTitle: "Sofa Cleaning",
+  sofaDescription: "Full cleaning, sanitization and quick dry.",
+  carTitle: "Car Wash",
+  carDescription: "Choose quick daily wash or premium care.",
+  carpetTitle: "Carpet Cleaning",
+  carpetDescription: "Deep clean that preserves color & texture.",
+  carSeatsTitle: "Car Interior Cleaning",
+  carSeatsDescription:
+    "Seats, floor, or both — with optional exterior wash bundle.",
+  header: {
+    brand: "Lumora",
+    menu_title: "Navigation",
+
+    services: "Services",
+    gallery: "Gallery",
+    contact: "Contact Us",
+
+    carpet_clean: "Carpet Cleaning",
+    sofa_clean: "Sofa Cleaning",
+    car_clean: "Car Cleaning",
+
+    choose_language: "Choose Language",
+    ar: "Arabic",
+    en: "English",
+    he: "Hebrew",
+  },
+};
+</file>
+
+<file path="he.js">
+export default {
+  home: "בית",
+  services: "שירותים",
+  beforeafter: "לפני / אחרי",
+  contact: "צור קשר",
+
+  heroHighlight1: "אנחנו דואגים ל",
+  heroHighlight2: "ניקיון הבית שלך",
+  heroSubtitle: "תוצאה מיידית, ניקוי יסודי, בלי בלאגן – נסה אותנו.",
+  heroButton: "צור קשר",
+  heroAlt: "שירות ניקיון",
+
+  servicesTitle1: "שירותי",
+  servicesTitle2: "ניקיון",
+  servicesDescription:
+    "אנו מציעים פתרונות ניקוי מלאים לספות, שטיחים, רכבים ועוד תוך שימוש בטכנולוגיה מתקדמת.",
+
+  sofaTitle: "ניקוי ספות",
+  sofaDescription: "ניקוי עמוק והסרת כתמים.",
+  sofaDetails: `אנו מנקים את כל סוגי הספות באמצעות מכשירי אדים מודרניים וחומרי ניקוי בטוחים לבד.
+כולל:
+- הסרת כתמים קשים
+- חיטוי נגד חיידקים
+- ייבוש מהיר ללא ריח`,
+
+  carTitle: "ניקוי רכבים",
+  carDescription: "פנים וחוץ כולל חיטוי.",
+  carDetails: `כולל ניקוי מלא של המושבים, הרצפה, הזגוגיות והקונסולה.
+אנו משתמשים בחומרים מיוחדים לכל סוג עור או בד, עם חיטוי באדים לאזורים רגישים.`,
+
+  carpetTitle: "ניקוי שטיחים",
+  carpetDescription: "כביסה וייבוש שטיחים.",
+  carpetDetails: `כביסה ידנית ומכאנית לשטיחים ושטיחונים עם ייבוש מהיר.
+משחזרים את צבעי השטיח המקוריים ומחזירים לו את הרכות.`,
+
+  steamTitle: "חיטוי באדים",
+  steamDescription: "חיטוי באדים בטמפרטורה גבוהה.",
+  steamDetails: `אדים בטמפרטורה גבוהה של 160° לחיטוי רצפות, רהיטים ואזורים לחים.
+הורג 99.9% מהחיידקים והנגיפים.`,
+
+  beforeAfterHint: "גרור כדי לראות את ההבדל",
+  beforeAlt: "לפני",
+  afterAlt: "אחרי",
+  beforeAfterTitle1: "לפני",
+  beforeAfterTitle2: " / אחרי ניקיון",
+  beforeAfterDescription:
+    "ראה את ההבדל האמיתי לפני ואחרי ניקוי ספות ושטיחים באמצעות גרירת התמונות.",
+
+  contactTitleSpan: "צור",
+  contactTitle: " קשר",
+  contactSubtitle: "יש לך שאלה או הערה? שלח לנו הודעה ונשיב לך!",
+  contactNameLabel: "שם מלא",
+  contactNamePlaceholder: "הכנס את שמך",
+  contactPhoneLabel: "מספר טלפון",
+  contactPhonePlaceholder: "הכנס מספר טלפון",
+  contactMessageLabel: "ההודעה שלך",
+  contactMessagePlaceholder: "כתוב את ההודעה כאן...",
+  contactSendButton: "שלח",
+  contactSuccessMessage: "ההודעה נשלחה בהצלחה!",
+  contactPhoneError: "מספר טלפון לא חוקי. ודא שהוא מתחיל ב-05 ומכיל 10 ספרות.",
+  contactFillAllFields: "אנא מלא את כל השדות.",
+  contactCallNow: "התקשר עכשיו",
+  contactMapLocation: "המיקום שלנו במפה",
+  contactChooseLanguage: "בחר שפה",
+
+  langArabic: "ערבית",
+  langEnglish: "אנגלית",
+  langHebrew: "עברית",
+
+  navHome: "ראשי",
+  navServices: "שירותים",
+  navBeforeAfter: "לפני / אחרי",
+  navContact: "צור קשר",
+  closeMenu: "סגור תפריט",
+  chooseLanguage: "בחר שפה",
+
+  serviceCarpet: "ניקוי שטיחים",
+  serviceSofa: "ניקוי ספות",
+  serviceCar: "ניקוי רכבים",
+  heroHighlight1: "ניקוי מקצועי",
+  heroHighlight2: "לספות, רכבים ושטיחים",
+  heroSubtitle:
+    "אנו מציעים שירותי ניקוי עמוק לספות ביתיות, פנים וחוץ של רכבים, ושטיחים – באמצעות מכשירי קיטור מודרניים וחומרים בטוחים לשימוש.",
+  header: {
+    brand: "Lumora",
+    menu_title: "תפריט ראשי",
+
+    services: "שירותים",
+    gallery: "גלריית תמונות",
+    contact: "צור קשר",
+
+    carpet_clean: "ניקוי שטיחים",
+    sofa_clean: "ניקוי ספות",
+    car_clean: "ניקוי רכבים",
+
+    choose_language: "בחר שפה",
+    ar: "ערבית",
+    en: "אנגלית",
+    he: "עברית",
+  },
+};
+</file>
+
+</files>

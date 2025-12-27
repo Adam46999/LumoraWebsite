@@ -1,0 +1,22 @@
+export const CONTACTS = [
+  {
+    id: "amir",
+    name: "أمير",
+    phone: "050-272-7724",
+    tel: "0502727724",
+    whatsapp: "972502727724",
+    noteAr: "متاح اليوم",
+    noteEn: "Available today",
+    noteHe: "זמין היום",
+  },
+  {
+    id: "adam",
+    name: "آدم",
+    phone: "054-307-5619",
+    tel: "0543075619",
+    whatsapp: "972543075619",
+    noteAr: "رد سريع",
+    noteEn: "Fast reply",
+    noteHe: "מענה מהיר",
+  },
+];

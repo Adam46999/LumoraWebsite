@@ -128,29 +128,48 @@ export default function CarSlider({
         {items.map((it, idx) => (
           <SwiperSlide key={idx}>
             <div
-              className="relative w-full h-[340px] sm:h-[420px] md:h-[460px] bg-gray-200 overflow-hidden transition-transform duration-200 ease-out active:scale-[0.985]"
+              className="relative w-full h-[340px] sm:h-[420px] md:h-[460px]
+               bg-slate-100 overflow-hidden
+               transition-transform duration-200 ease-out
+               active:scale-[0.985]
+               flex items-center justify-center"
               onClick={(e) => openPreview(e, it)}
             >
+              {/* الصورة نفسها */}
               <img
                 src={it.src}
                 alt={it.alt || "صورة الخدمة"}
-                className="w-full h-full object-cover transition-transform duration-[900ms] ease-[cubic-bezier(0.25,1,0.5,1)] group-hover:scale-105"
+                className="w-full h-full object-contain
+                 transition-transform duration-[900ms]
+                 ease-[cubic-bezier(0.25,1,0.5,1)]"
                 draggable={false}
                 loading="lazy"
                 decoding="async"
               />
-              {/* تدرّج سفلي للنص */}
+
+              {/* ⬅️⬅️⬅️ هون بالزبط تنحط طبقة الـ Texture */}
               <div
-                className="absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-black/80 via-black/30 to-transparent pointer-events-none"
+                className="absolute inset-0 pointer-events-none
+                 bg-gradient-to-b
+                 from-white/40 via-transparent to-black/10"
                 aria-hidden="true"
               />
+
+              {/* التدرّج السفلي للنص (هذا موجود عندك أصلاً) */}
+              <div
+                className="absolute inset-x-0 bottom-0 h-36
+                 bg-gradient-to-t from-black/80 via-black/30 to-transparent
+                 pointer-events-none"
+                aria-hidden="true"
+              />
+
               {(it.title || it.caption) && (
                 <div className="absolute bottom-6 inset-x-0 z-10 text-white px-6 select-none pointer-events-none">
                   <h3 className="text-[clamp(16px,3vw,22px)] font-extrabold text-yellow-400 drop-shadow-lg mb-1">
                     {it.title || "خدمة السيارات"}
                   </h3>
                   {it.caption && (
-                    <p className="text-[clamp(12px,2.5vw,16px)] opacity-90 leading-snug truncate text-ellipsis overflow-hidden whitespace-nowrap">
+                    <p className="text-[clamp(12px,2.5vw,16px)] opacity-90 leading-snug truncate">
                       {it.caption}
                     </p>
                   )}

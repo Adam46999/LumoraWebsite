@@ -2,6 +2,7 @@ import { useLanguage } from "../../context/LanguageContext";
 import HeroTitle from "./HeroTitle";
 import HeroSubtitle from "./HeroSubtitle";
 import HeroButton from "./HeroButton";
+import HeroTrustPills from "./HeroTrustPills";
 import ScrollHint from "./ScrollHint";
 import HeroBackground from "./HeroBackground"; // ✅ جديد
 
@@ -22,6 +23,7 @@ export default function Hero() {
         <HeroTitle />
         <HeroSubtitle />
         <HeroButton t={t} />
+        <HeroTrustPills />
         <ScrollHint />
       </div>
     </section>

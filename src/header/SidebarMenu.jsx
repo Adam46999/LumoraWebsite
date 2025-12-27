@@ -1,5 +1,5 @@
 // src/header/SidebarMenu.jsx
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { X, ChevronLeft, ChevronRight, Globe2, Check } from "lucide-react";
 import { useLanguage } from "../context/LanguageContext";
@@ -9,36 +9,53 @@ export default function SidebarMenu({
   setMenuOpen,
   navItems,
   scrollToSection,
-  activeId, // ✅ (6)
-  hintText, // ✅ (5)
-  labels, // ✅ (12)
+  activeId,
+  hintText,
+  labels,
 }) {
   const { lang, setLang } = useLanguage();
   const isRTL = lang === "ar" || lang === "he";
 
   const [openParentId, setOpenParentId] = useState(null);
+  const panelRef = useRef(null);
 
   const ArrowIcon = useMemo(
     () => (isRTL ? ChevronLeft : ChevronRight),
     [isRTL]
   );
 
-  // reset expanded state when closed
+  const close = useCallback(() => {
+    setMenuOpen(false);
+    setOpenParentId(null);
+  }, [setMenuOpen]);
+
+  const handleGo = useCallback(
+    (id) => {
+      try {
+        scrollToSection?.(id);
+      } finally {
+        close();
+      }
+    },
+    [scrollToSection, close]
+  );
+
+  // Reset expanded state when closed
   useEffect(() => {
     if (!menuOpen) setOpenParentId(null);
   }, [menuOpen]);
 
-  // close on ESC
+  // Close on ESC
   useEffect(() => {
     if (!menuOpen) return;
     const onKeyDown = (e) => {
-      if (e.key === "Escape") setMenuOpen(false);
+      if (e.key === "Escape") close();
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [menuOpen, setMenuOpen]);
+  }, [menuOpen, close]);
 
-  // lock scroll
+  // Lock scroll
   useEffect(() => {
     if (!menuOpen) return;
     const prev = document.body.style.overflow;
@@ -48,32 +65,46 @@ export default function SidebarMenu({
     };
   }, [menuOpen]);
 
-  if (!menuOpen) return null;
-
-  const handleGo = (id) => {
-    try {
-      scrollToSection?.(id);
-    } finally {
-      setMenuOpen(false);
-      setOpenParentId(null);
-    }
-  };
+  // Focus panel when opened
+  useEffect(() => {
+    if (!menuOpen) return;
+    const t = setTimeout(() => {
+      panelRef.current?.focus?.();
+    }, 0);
+    return () => clearTimeout(t);
+  }, [menuOpen]);
 
   const handleLang = (next) => setLang(next);
 
+  if (!menuOpen) return null;
+
+  const baseBtn =
+    "w-full px-4 py-3 rounded-2xl border transition flex items-center justify-between";
+  const activeStyle = "border-blue-200 bg-blue-50 text-blue-800";
+  const normalStyle = "border-gray-100 hover:bg-gray-50 active:bg-gray-100";
+
   const ui = (
     <div
-      className="fixed inset-0 z-[99999] bg-black/80"
-      onClick={() => setMenuOpen(false)}
+      className="fixed inset-0 z-[99999]"
       role="presentation"
+      onMouseDown={(e) => {
+        // click outside closes
+        if (e.target === e.currentTarget) close();
+      }}
     >
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-[2px]" />
+
       <aside
-        className={`fixed top-0 ${
-          isRTL ? "right-0" : "left-0"
-        } h-full w-80 max-w-[82%] bg-white shadow-2xl flex flex-col`}
+        ref={panelRef}
+        tabIndex={-1}
+        className={[
+          "absolute top-0 h-full w-[360px] max-w-[86%] bg-white shadow-2xl flex flex-col",
+          isRTL ? "right-0" : "left-0",
+        ].join(" ")}
         dir={isRTL ? "rtl" : "ltr"}
-        onClick={(e) => e.stopPropagation()}
         aria-label="Mobile menu"
+        onMouseDown={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="p-5 border-b border-gray-100">
@@ -93,18 +124,21 @@ export default function SidebarMenu({
             <button
               type="button"
               className="p-2 rounded-xl hover:bg-gray-100 active:bg-gray-200 transition"
-              onClick={() => setMenuOpen(false)}
-              aria-label="Close menu"
+              onClick={close}
+              aria-label={
+                lang === "en" ? "Close menu" : lang === "he" ? "סגור" : "إغلاق"
+              }
             >
               <X className="w-5 h-5 text-gray-800" />
             </button>
           </div>
 
-          {/* ✅ (5) Hint text موحّد حسب اللغة */}
+          {/* Hint */}
           <p
-            className={`mt-2 text-sm text-gray-500 ${
-              isRTL ? "text-right" : "text-left"
-            }`}
+            className={[
+              "mt-2 text-sm text-gray-500 leading-relaxed",
+              isRTL ? "text-right" : "text-left",
+            ].join(" ")}
           >
             {hintText ||
               (lang === "en"
@@ -122,13 +156,7 @@ export default function SidebarMenu({
               const hasSub =
                 Array.isArray(item.subItems) && item.subItems.length > 0;
               const isOpen = openParentId === item.id;
-              const isActive = activeId === item.id; // ✅ (6)
-
-              const baseBtn =
-                "w-full px-4 py-3 rounded-2xl border transition flex items-center justify-between";
-              const activeStyle = "border-blue-200 bg-blue-50 text-blue-800";
-              const normalStyle =
-                "border-gray-100 hover:bg-gray-50 active:bg-gray-100";
+              const isActive = activeId === item.id;
 
               if (!hasSub) {
                 return (
@@ -136,15 +164,19 @@ export default function SidebarMenu({
                     key={item.id}
                     type="button"
                     onClick={() => handleGo(item.id)}
-                    className={`${baseBtn} ${
-                      isActive ? activeStyle : normalStyle
-                    } ${isRTL ? "flex-row-reverse text-right" : "text-left"}`}
+                    className={[
+                      baseBtn,
+                      isActive ? activeStyle : normalStyle,
+                      isRTL ? "flex-row-reverse text-right" : "text-left",
+                    ].join(" ")}
                   >
-                    <span className="font-semibold">{item.label}</span>
+                    <span className="font-extrabold">{item.label}</span>
                     <ArrowIcon
-                      className={`w-4 h-4 ${
-                        isActive ? "text-blue-600" : "text-gray-400"
-                      }`}
+                      className={[
+                        "w-4 h-4",
+                        isActive ? "text-blue-600" : "text-gray-400",
+                      ].join(" ")}
+                      aria-hidden="true"
                     />
                   </button>
                 );
@@ -162,27 +194,33 @@ export default function SidebarMenu({
                         prev === item.id ? null : item.id
                       )
                     }
-                    className={`w-full px-4 py-3 hover:bg-gray-50 active:bg-gray-100 transition flex items-center justify-between ${
-                      isRTL ? "flex-row-reverse text-right" : "text-left"
-                    }`}
+                    className={[
+                      "w-full px-4 py-3 transition flex items-center justify-between",
+                      "hover:bg-gray-50 active:bg-gray-100",
+                      isRTL ? "flex-row-reverse text-right" : "text-left",
+                    ].join(" ")}
                     aria-expanded={isOpen}
                     aria-haspopup="true"
                   >
                     <span
-                      className={`font-semibold ${
-                        isActive ? "text-blue-700" : "text-gray-800"
-                      }`}
+                      className={[
+                        "font-extrabold",
+                        isActive ? "text-blue-700" : "text-gray-800",
+                      ].join(" ")}
                     >
                       {item.label}
                     </span>
+
                     <span className="flex items-center gap-2">
                       <span className="text-xs text-gray-400">
                         {isOpen ? "−" : "+"}
                       </span>
                       <ArrowIcon
-                        className={`w-4 h-4 text-gray-400 transition-transform ${
-                          isOpen ? "rotate-90" : "rotate-0"
-                        }`}
+                        className={[
+                          "w-4 h-4 text-gray-400 transition-transform",
+                          isOpen ? "rotate-90" : "rotate-0",
+                        ].join(" ")}
+                        aria-hidden="true"
                       />
                     </span>
                   </button>
@@ -192,9 +230,11 @@ export default function SidebarMenu({
                       <button
                         type="button"
                         onClick={() => handleGo(item.id)}
-                        className={`w-full px-3 py-2 rounded-xl hover:bg-gray-50 active:bg-gray-100 transition text-sm font-semibold text-blue-700 ${
-                          isRTL ? "text-right" : "text-left"
-                        }`}
+                        className={[
+                          "w-full px-3 py-2 rounded-xl text-sm font-extrabold text-blue-700",
+                          "hover:bg-gray-50 active:bg-gray-100 transition",
+                          isRTL ? "text-right" : "text-left",
+                        ].join(" ")}
                       >
                         {lang === "en"
                           ? `View ${item.label}`
@@ -208,30 +248,42 @@ export default function SidebarMenu({
                       <div className="flex flex-col gap-1">
                         {item.subItems.map((sub) => {
                           const Icon = sub.icon;
-                          const isSubActive = activeId === sub.id; // ✅ (6)
+                          const isSubActive = activeId === sub.id;
+
                           return (
                             <button
                               key={sub.id}
                               type="button"
                               onClick={() => handleGo(sub.id)}
-                              className={`w-full px-3 py-3 rounded-xl transition flex items-center gap-3 ${
+                              className={[
+                                "w-full px-3 py-3 rounded-xl transition flex items-center gap-3",
                                 isRTL
                                   ? "flex-row-reverse text-right"
-                                  : "text-left"
-                              } ${
+                                  : "text-left",
                                 isSubActive
                                   ? "bg-blue-50 text-blue-800"
-                                  : "hover:bg-gray-50 active:bg-gray-100"
-                              }`}
+                                  : "hover:bg-gray-50 active:bg-gray-100",
+                              ].join(" ")}
                             >
                               {Icon ? (
-                                <Icon className="w-4 h-4 text-blue-600" />
+                                <Icon
+                                  className="w-4 h-4 text-blue-600"
+                                  aria-hidden="true"
+                                />
                               ) : null}
-                              <span className="text-sm font-medium">
+                              <span className="text-sm font-semibold">
                                 {sub.label}
                               </span>
+
                               {isSubActive ? (
-                                <Check className="w-4 h-4 ms-auto text-blue-600" />
+                                <Check
+                                  className={[
+                                    "w-4 h-4",
+                                    isRTL ? "me-auto" : "ms-auto",
+                                    "text-blue-600",
+                                  ].join(" ")}
+                                  aria-hidden="true"
+                                />
                               ) : null}
                             </button>
                           );
@@ -244,6 +296,7 @@ export default function SidebarMenu({
             })}
           </div>
 
+          {/* CTA */}
           <button
             type="button"
             onClick={() => handleGo("contact")}
@@ -257,12 +310,13 @@ export default function SidebarMenu({
         {/* Language */}
         <div className="p-4 border-t border-gray-100">
           <div
-            className={`flex items-center gap-2 mb-3 ${
-              isRTL ? "flex-row-reverse" : ""
-            }`}
+            className={[
+              "flex items-center gap-2 mb-3",
+              isRTL ? "flex-row-reverse" : "",
+            ].join(" ")}
           >
-            <Globe2 className="w-4 h-4 text-gray-500" />
-            <span className="text-sm font-bold text-gray-700">
+            <Globe2 className="w-4 h-4 text-gray-500" aria-hidden="true" />
+            <span className="text-sm font-extrabold text-gray-700">
               {labels?.langLabel ||
                 (lang === "en" ? "Language" : lang === "he" ? "שפה" : "اللغة")}
             </span>
@@ -272,33 +326,36 @@ export default function SidebarMenu({
             <button
               type="button"
               onClick={() => handleLang("ar")}
-              className={`px-3 py-2 rounded-xl border text-sm font-bold transition ${
+              className={[
+                "px-3 py-2 rounded-xl border text-sm font-extrabold transition",
                 lang === "ar"
                   ? "border-blue-600 text-blue-700 bg-blue-50"
-                  : "border-gray-200 hover:bg-gray-50"
-              }`}
+                  : "border-gray-200 hover:bg-gray-50",
+              ].join(" ")}
             >
               AR
             </button>
             <button
               type="button"
               onClick={() => handleLang("en")}
-              className={`px-3 py-2 rounded-xl border text-sm font-bold transition ${
+              className={[
+                "px-3 py-2 rounded-xl border text-sm font-extrabold transition",
                 lang === "en"
                   ? "border-blue-600 text-blue-700 bg-blue-50"
-                  : "border-gray-200 hover:bg-gray-50"
-              }`}
+                  : "border-gray-200 hover:bg-gray-50",
+              ].join(" ")}
             >
               EN
             </button>
             <button
               type="button"
               onClick={() => handleLang("he")}
-              className={`px-3 py-2 rounded-xl border text-sm font-bold transition ${
+              className={[
+                "px-3 py-2 rounded-xl border text-sm font-extrabold transition",
                 lang === "he"
                   ? "border-blue-600 text-blue-700 bg-blue-50"
-                  : "border-gray-200 hover:bg-gray-50"
-              }`}
+                  : "border-gray-200 hover:bg-gray-50",
+              ].join(" ")}
             >
               HE
             </button>

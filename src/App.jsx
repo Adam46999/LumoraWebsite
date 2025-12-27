@@ -30,6 +30,9 @@ import car8 from "./assets/car8.jpg";
 import car9 from "./assets/car9.jpg";
 import car10 from "./assets/car10.jpg";
 
+// ✅ FAQ (مسار صح)
+import FAQSection from "./components/faq/FAQSection";
+
 function App() {
   const [adminMode, setAdminMode] = useState(false);
 
@@ -96,6 +99,11 @@ function App() {
           rugsImages={rugsImages}
           sofaPairs={sofaPairs}
         />
+      </section>
+
+      {/* ✅ FAQ Section */}
+      <section id="faq" className="py-20 px-6">
+        <FAQSection />
       </section>
 
       <section id="contact" className="py-20 px-6">

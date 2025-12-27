@@ -1,14 +1,6 @@
 // src/components/Header.jsx
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
-import {
-  Menu,
-  Phone,
-  MessageCircle,
-  ChevronDown,
-  User,
-  Copy,
-  Check,
-} from "lucide-react";
+import { Menu, Phone, ChevronDown } from "lucide-react";
 import {
   Layers as CarpetIcon,
   Sofa as SofaIcon,
@@ -18,12 +10,9 @@ import { useLanguage } from "../context/LanguageContext";
 import SidebarMenu from "../header/SidebarMenu";
 import DesktopNav from "../header/DesktopNav";
 
-// ✅ رقمك الحقيقي
-const PHONE_NUMBER = "0502727724";
-// ✅ مشتق تلقائيًا من رقمك (إسرائيل): 0XXXXXXXXX -> 972XXXXXXXXX
-const WHATSAPP_NUMBER = "972502727724";
-const CONTACT_NAME = "أمير";
-const CONTACT_NUMBER_DISPLAY = "050-272-7724";
+// ✅ Quick contact sheet
+import QuickContactSheet from "./quick-contact/QuickContactSheet";
+import { CONTACTS } from "./quick-contact/contacts";
 
 export default function Header({ scrollToSection }) {
   const { lang, setLang } = useLanguage();
@@ -39,14 +28,9 @@ export default function Header({ scrollToSection }) {
         hint: "טיפ: פתח את התפריט ונווט במהירות.",
         navHint: "ניווט מהיר וברור.",
         langLabel: "שפה",
-        actions: "פעולות",
-        call: "שיחה",
-        whatsapp: "וואטסאפ",
-        copy: "העתק מספר",
-        copied: "הועתק!",
+        actions: "צור קשר",
+        contact: "צור קשר",
         skip: "דלג לתוכן",
-        contactName: CONTACT_NAME,
-        contactNumber: CONTACT_NUMBER_DISPLAY,
       };
     }
     if (lang === "en") {
@@ -57,14 +41,9 @@ export default function Header({ scrollToSection }) {
         hint: "Tip: open the menu to navigate quickly.",
         navHint: "Fast, clear navigation.",
         langLabel: "Language",
-        actions: "Actions",
-        call: "Call",
-        whatsapp: "WhatsApp",
-        copy: "Copy number",
-        copied: "Copied!",
+        actions: "Contact",
+        contact: "Contact",
         skip: "Skip to content",
-        contactName: CONTACT_NAME,
-        contactNumber: CONTACT_NUMBER_DISPLAY,
       };
     }
     return {
@@ -74,14 +53,9 @@ export default function Header({ scrollToSection }) {
       hint: "تلميح: افتح القائمة للتنقّل بسرعة.",
       navHint: "تنقّل بسرعة، وكل شيء واضح.",
       langLabel: "اللغة",
-      actions: "إجراءات",
-      call: "اتصال",
-      whatsapp: "واتساب",
-      copy: "نسخ الرقم",
-      copied: "تم النسخ!",
+      actions: "تواصل",
+      contact: "تواصل",
       skip: "تجاوز للمحتوى",
-      contactName: CONTACT_NAME,
-      contactNumber: CONTACT_NUMBER_DISPLAY,
     };
   }, [lang]);
 
@@ -150,11 +124,12 @@ export default function Header({ scrollToSection }) {
   const [activeId, setActiveId] = useState(navItems[0]?.id || "home");
   const [compact, setCompact] = useState(false);
 
-  const [copied, setCopied] = useState(false);
-
   const headerRef = useRef(null);
   const langRef = useRef(null);
-  const actionsRef = useRef(null);
+
+  // ✅ مهم: ref للديسكتوب غير ref للموبايل (عشان ما “يطلع لبرا”)
+  const actionsRefDesktop = useRef(null);
+  const actionsRefMobile = useRef(null);
 
   // ===== helper: smooth scroll + robust for sub-items =====
   const scrollToIdLocal = useCallback((id) => {
@@ -246,44 +221,6 @@ export default function Header({ scrollToSection }) {
 
   const handleCTA = () => handleNavClick("contact");
 
-  // ===== Quick actions =====
-  const callNow = useCallback(() => {
-    window.location.href = `tel:${PHONE_NUMBER}`;
-  }, []);
-
-  const whatsappNow = useCallback(() => {
-    window.open(
-      `https://wa.me/${WHATSAPP_NUMBER}`,
-      "_blank",
-      "noopener,noreferrer"
-    );
-  }, []);
-
-  const copyNumber = useCallback(async () => {
-    const text = CONTACT_NUMBER_DISPLAY;
-    try {
-      if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(text);
-      } else {
-        // fallback
-        const ta = document.createElement("textarea");
-        ta.value = text;
-        ta.style.position = "fixed";
-        ta.style.opacity = "0";
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand("copy");
-        document.body.removeChild(ta);
-      }
-
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 1400);
-    } catch {
-      // إذا فشل النسخ، نعمل fallback بسيط: فتح dialer
-      callNow();
-    }
-  }, [callNow]);
-
   // ===== Skip to content =====
   const onSkip = (e) => {
     e.preventDefault();
@@ -345,12 +282,14 @@ export default function Header({ scrollToSection }) {
       if (langOpen && langRef.current && !langRef.current.contains(e.target)) {
         setLangOpen(false);
       }
-      if (
-        actionsOpen &&
-        actionsRef.current &&
-        !actionsRef.current.contains(e.target)
-      ) {
-        setActionsOpen(false);
+
+      // ✅ Actions: افحص الديسكتوب والموبايل
+      if (actionsOpen) {
+        const inDesktop =
+          actionsRefDesktop.current?.contains(e.target) ?? false;
+        const inMobile = actionsRefMobile.current?.contains(e.target) ?? false;
+
+        if (!inDesktop && !inMobile) setActionsOpen(false);
       }
     };
 
@@ -397,366 +336,226 @@ export default function Header({ scrollToSection }) {
     setActionsOpen(false);
     setMenuOpen(true);
   };
+
   const toggleLang = () => {
     setMenuOpen(false);
     setActionsOpen(false);
     setLangOpen((v) => !v);
   };
+
   const toggleActions = () => {
     setMenuOpen(false);
     setLangOpen(false);
     setActionsOpen((v) => !v);
   };
 
-  // ===== Menu item renderer (no nested buttons) =====
-  const ActionItem = ({ icon: Icon, title, subtitle, onClick }) => (
-    <button
-      type="button"
-      role="menuitem"
-      onClick={onClick}
-      className={[
-        "w-full px-4 py-3 text-sm hover:bg-gray-50 transition",
-        "flex items-center gap-3",
-        isRTL ? "flex-row-reverse text-right" : "text-left",
-      ].join(" ")}
-    >
-      <Icon className="w-4 h-4 text-blue-600 shrink-0" />
-      <div className="flex flex-col leading-tight">
-        <span className="font-semibold text-gray-800">{title}</span>
-        {subtitle ? (
-          <span className="text-xs text-gray-500">{subtitle}</span>
-        ) : null}
-      </div>
-    </button>
-  );
-
   return (
-    <header
-      ref={headerRef}
-      className="fixed top-0 left-0 w-full z-50 bg-white border-b border-gray-200 transition-shadow"
-      dir={isRTL ? "rtl" : "ltr"}
-    >
-      {/* Skip link */}
-      <a
-        href="#services"
-        onClick={onSkip}
-        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[999999] bg-blue-600 text-white px-4 py-2 rounded-xl font-bold shadow-lg"
+    <>
+      <header
+        ref={headerRef}
+        className="fixed top-0 left-0 w-full z-50 bg-white border-b border-gray-200 transition-shadow"
+        dir={isRTL ? "rtl" : "ltr"}
       >
-        {t.skip}
-      </a>
-
-      <div className="sr-only" aria-live="polite">
-        {t.hint}
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4">
-        <div
-          className={[
-            "flex items-center gap-3 transition-all duration-200",
-            compact ? "min-h-[58px]" : "min-h-[72px]",
-          ].join(" ")}
+        {/* Skip link */}
+        <a
+          href="#services"
+          onClick={onSkip}
+          className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[999999] bg-blue-600 text-white px-4 py-2 rounded-xl font-bold shadow-lg"
         >
-          {/* Mobile menu */}
-          <button
-            className="md:hidden p-2 rounded-lg hover:bg-gray-100 active:bg-gray-200 transition"
-            onClick={openMenu}
-            aria-label="Open menu"
-            type="button"
-          >
-            <Menu className="w-6 h-6 text-gray-800" />
-          </button>
+          {t.skip}
+        </a>
 
-          {/* Logo */}
-          <button
-            type="button"
-            onClick={() => handleNavClick("home")}
+        <div className="sr-only" aria-live="polite">
+          {t.hint}
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4">
+          <div
             className={[
-              "font-extrabold tracking-tight text-blue-600 select-none transition-all",
-              compact ? "text-lg" : "text-xl",
+              "flex items-center gap-3 transition-all duration-200",
+              compact ? "min-h-[58px]" : "min-h-[72px]",
             ].join(" ")}
-            aria-label="Go to home"
           >
-            {t.brand}
-          </button>
+            {/* Mobile menu */}
+            <button
+              className="md:hidden p-2 rounded-lg hover:bg-gray-100 active:bg-gray-200 transition"
+              onClick={openMenu}
+              aria-label="Open menu"
+              type="button"
+            >
+              <Menu className="w-6 h-6 text-gray-800" />
+            </button>
 
-          {/* Desktop nav */}
-          <div className="hidden md:flex flex-1 justify-center">
-            <DesktopNav
-              navItems={navItems}
-              activeId={activeId}
-              scrollToSection={handleNavClick}
-            />
-          </div>
-
-          {/* Right actions (Desktop) */}
-          <div className="hidden md:flex items-center gap-2">
-            {/* Quick actions dropdown */}
-            <div className="relative" ref={actionsRef}>
-              <button
-                type="button"
-                onClick={toggleActions}
-                className="px-3 py-2 rounded-xl border border-gray-200 hover:bg-gray-50 active:bg-gray-100 transition text-sm font-semibold flex items-center gap-2"
-                aria-haspopup="menu"
-                aria-expanded={actionsOpen}
-              >
-                <Phone className="w-4 h-4 text-gray-700" />
-                <span>{t.actions}</span>
-                <ChevronDown className="w-4 h-4 text-gray-400" />
-              </button>
-
-              {actionsOpen && (
-                <div
-                  role="menu"
-                  className={[
-                    "absolute mt-2 w-64 bg-white border border-gray-200 rounded-2xl shadow-lg overflow-hidden",
-                    isRTL ? "left-0" : "right-0",
-                  ].join(" ")}
-                >
-                  <ActionItem
-                    icon={User}
-                    title={t.contactName}
-                    subtitle={t.contactNumber}
-                    onClick={() => {
-                      setActionsOpen(false);
-                      callNow();
-                    }}
-                  />
-                  <div className="h-px bg-gray-100" />
-
-                  <ActionItem
-                    icon={Phone}
-                    title={t.call}
-                    subtitle={t.contactNumber}
-                    onClick={() => {
-                      setActionsOpen(false);
-                      callNow();
-                    }}
-                  />
-                  <ActionItem
-                    icon={MessageCircle}
-                    title={t.whatsapp}
-                    subtitle={
-                      isRTL ? "رد سريع عبر واتساب" : "Fast WhatsApp reply"
-                    }
-                    onClick={() => {
-                      setActionsOpen(false);
-                      whatsappNow();
-                    }}
-                  />
-
-                  <div className="h-px bg-gray-100" />
-
-                  <button
-                    type="button"
-                    role="menuitem"
-                    onClick={() => {
-                      copyNumber();
-                      setActionsOpen(false);
-                    }}
-                    className={[
-                      "w-full px-4 py-3 text-sm hover:bg-gray-50 transition",
-                      "flex items-center gap-3",
-                      isRTL ? "flex-row-reverse text-right" : "text-left",
-                    ].join(" ")}
-                  >
-                    {copied ? (
-                      <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                    ) : (
-                      <Copy className="w-4 h-4 text-blue-600 shrink-0" />
-                    )}
-                    <div className="flex flex-col leading-tight">
-                      <span className="font-semibold text-gray-800">
-                        {t.copy}
-                      </span>
-                      <span className="text-xs text-gray-500">
-                        {copied ? t.copied : t.contactNumber}
-                      </span>
-                    </div>
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* CTA */}
+            {/* Logo */}
             <button
               type="button"
-              onClick={handleCTA}
+              onClick={() => handleNavClick("home")}
               className={[
-                "rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 active:bg-blue-800 transition",
-                compact ? "px-3 py-2 text-sm" : "px-4 py-2",
+                "font-extrabold tracking-tight text-blue-600 select-none transition-all",
+                compact ? "text-lg" : "text-xl",
               ].join(" ")}
+              aria-label="Go to home"
             >
-              {t.cta}
+              {t.brand}
             </button>
 
-            {/* Language dropdown */}
-            <div className="relative" ref={langRef}>
-              <button
-                type="button"
-                onClick={toggleLang}
-                className="px-3 py-2 rounded-xl border border-gray-200 hover:bg-gray-50 active:bg-gray-100 transition text-sm font-semibold"
-                aria-haspopup="menu"
-                aria-expanded={langOpen}
-                aria-label={t.langLabel}
-              >
-                {lang.toUpperCase()}
-              </button>
-
-              {langOpen && (
-                <div
-                  role="menu"
-                  className={[
-                    "absolute mt-2 w-44 bg-white border border-gray-200 rounded-2xl shadow-lg overflow-hidden",
-                    isRTL ? "left-0" : "right-0",
-                  ].join(" ")}
-                >
-                  <button
-                    type="button"
-                    role="menuitem"
-                    onClick={() => {
-                      setLang("ar");
-                      setLangOpen(false);
-                    }}
-                    className="w-full px-3 py-2 text-right hover:bg-gray-100"
-                  >
-                    AR العربية
-                  </button>
-                  <button
-                    type="button"
-                    role="menuitem"
-                    onClick={() => {
-                      setLang("en");
-                      setLangOpen(false);
-                    }}
-                    className="w-full px-3 py-2 text-right hover:bg-gray-100"
-                  >
-                    EN English
-                  </button>
-                  <button
-                    type="button"
-                    role="menuitem"
-                    onClick={() => {
-                      setLang("he");
-                      setLangOpen(false);
-                    }}
-                    className="w-full px-3 py-2 text-right hover:bg-gray-100"
-                  >
-                    HE עברית
-                  </button>
-                </div>
-              )}
+            {/* Desktop nav */}
+            <div className="hidden md:flex flex-1 justify-center">
+              <DesktopNav
+                navItems={navItems}
+                activeId={activeId}
+                scrollToSection={handleNavClick}
+              />
             </div>
-          </div>
 
-          {/* Mobile right area: أقل زحمة */}
-          <div className="md:hidden ms-auto flex items-center gap-2">
-            <div className="relative" ref={actionsRef}>
+            {/* Right actions (Desktop) */}
+            <div className="hidden md:flex items-center gap-2">
+              {/* Contact trigger (desktop) */}
+              <div className="relative" ref={actionsRefDesktop}>
+                <button
+                  type="button"
+                  onClick={toggleActions}
+                  className="px-3 py-2 rounded-xl border border-gray-200 hover:bg-gray-50 active:bg-gray-100 transition text-sm font-semibold flex items-center gap-2"
+                  aria-haspopup="dialog"
+                  aria-expanded={actionsOpen}
+                >
+                  <Phone className="w-4 h-4 text-gray-700" />
+                  <span>{t.actions}</span>
+                  <ChevronDown className="w-4 h-4 text-gray-400" />
+                </button>
+
+                {/* ✅ فقط لما يكون مفتوح */}
+                {actionsOpen && (
+                  <QuickContactSheet
+                    open
+                    onClose={() => setActionsOpen(false)}
+                    contacts={CONTACTS}
+                    anchor={isRTL ? "start" : "end"}
+                    lang={lang}
+                  />
+                )}
+              </div>
+
+              {/* CTA */}
               <button
                 type="button"
-                onClick={toggleActions}
-                className="p-2 rounded-xl border border-gray-200 hover:bg-gray-50 active:bg-gray-100 transition"
-                aria-label={t.actions}
+                onClick={handleCTA}
+                className={[
+                  "rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 active:bg-blue-800 transition",
+                  compact ? "px-3 py-2 text-sm" : "px-4 py-2",
+                ].join(" ")}
               >
-                <Phone className="w-4 h-4 text-gray-700" />
+                {t.cta}
               </button>
 
-              {actionsOpen && (
-                <div
-                  role="menu"
-                  className={[
-                    "absolute mt-2 w-64 bg-white border border-gray-200 rounded-2xl shadow-lg overflow-hidden",
-                    isRTL ? "left-0" : "right-0",
-                  ].join(" ")}
+              {/* Language dropdown */}
+              <div className="relative" ref={langRef}>
+                <button
+                  type="button"
+                  onClick={toggleLang}
+                  className="px-3 py-2 rounded-xl border border-gray-200 hover:bg-gray-50 active:bg-gray-100 transition text-sm font-semibold"
+                  aria-haspopup="menu"
+                  aria-expanded={langOpen}
+                  aria-label={t.langLabel}
                 >
-                  <ActionItem
-                    icon={User}
-                    title={t.contactName}
-                    subtitle={t.contactNumber}
-                    onClick={() => {
-                      setActionsOpen(false);
-                      callNow();
-                    }}
-                  />
-                  <div className="h-px bg-gray-100" />
+                  {lang.toUpperCase()}
+                </button>
 
-                  <ActionItem
-                    icon={Phone}
-                    title={t.call}
-                    subtitle={t.contactNumber}
-                    onClick={() => {
-                      setActionsOpen(false);
-                      callNow();
-                    }}
-                  />
-                  <ActionItem
-                    icon={MessageCircle}
-                    title={t.whatsapp}
-                    subtitle={
-                      isRTL ? "رد سريع عبر واتساب" : "Fast WhatsApp reply"
-                    }
-                    onClick={() => {
-                      setActionsOpen(false);
-                      whatsappNow();
-                    }}
-                  />
-
-                  <div className="h-px bg-gray-100" />
-
-                  <button
-                    type="button"
-                    role="menuitem"
-                    onClick={() => {
-                      copyNumber();
-                      setActionsOpen(false);
-                    }}
+                {langOpen && (
+                  <div
+                    role="menu"
                     className={[
-                      "w-full px-4 py-3 text-sm hover:bg-gray-50 transition",
-                      "flex items-center gap-3",
-                      isRTL ? "flex-row-reverse text-right" : "text-left",
+                      "absolute mt-2 w-44 bg-white border border-gray-200 rounded-2xl shadow-lg overflow-hidden",
+                      isRTL ? "left-0" : "right-0",
                     ].join(" ")}
                   >
-                    {copied ? (
-                      <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                    ) : (
-                      <Copy className="w-4 h-4 text-blue-600 shrink-0" />
-                    )}
-                    <div className="flex flex-col leading-tight">
-                      <span className="font-semibold text-gray-800">
-                        {t.copy}
-                      </span>
-                      <span className="text-xs text-gray-500">
-                        {copied ? t.copied : t.contactNumber}
-                      </span>
-                    </div>
-                  </button>
-                </div>
-              )}
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        setLang("ar");
+                        setLangOpen(false);
+                      }}
+                      className="w-full px-3 py-2 text-right hover:bg-gray-100"
+                    >
+                      AR العربية
+                    </button>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        setLang("en");
+                        setLangOpen(false);
+                      }}
+                      className="w-full px-3 py-2 text-right hover:bg-gray-100"
+                    >
+                      EN English
+                    </button>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        setLang("he");
+                        setLangOpen(false);
+                      }}
+                      className="w-full px-3 py-2 text-right hover:bg-gray-100"
+                    >
+                      HE עברית
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
 
-            <button
-              type="button"
-              onClick={handleCTA}
-              className="px-3 py-2 rounded-xl bg-blue-600 text-white font-bold text-sm hover:bg-blue-700 active:bg-blue-800 transition"
-            >
-              {t.ctaShort}
-            </button>
+            {/* Mobile right area */}
+            <div className="md:hidden ms-auto flex items-center gap-2">
+              <div className="relative" ref={actionsRefMobile}>
+                <button
+                  type="button"
+                  onClick={toggleActions}
+                  className="p-2 rounded-xl border border-gray-200 hover:bg-gray-50 active:bg-gray-100 transition"
+                  aria-label={t.actions}
+                >
+                  <Phone className="w-4 h-4 text-gray-700" />
+                </button>
+
+                {/* ✅ فقط لما يكون مفتوح */}
+                {actionsOpen && (
+                  <QuickContactSheet
+                    open
+                    onClose={() => setActionsOpen(false)}
+                    contacts={CONTACTS}
+                    anchor={isRTL ? "start" : "end"}
+                    lang={lang}
+                  />
+                )}
+              </div>
+
+              <button
+                type="button"
+                onClick={handleCTA}
+                className="px-3 py-2 rounded-xl bg-blue-600 text-white font-bold text-sm hover:bg-blue-700 active:bg-blue-800 transition"
+              >
+                {t.ctaShort}
+              </button>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Mobile sidebar */}
-      <SidebarMenu
-        menuOpen={menuOpen}
-        setMenuOpen={setMenuOpen}
-        navItems={navItems}
-        scrollToSection={handleNavClick}
-        activeId={activeId}
-        hintText={t.navHint}
-        labels={{
-          langLabel: t.langLabel,
-          ctaShort: t.ctaShort,
-        }}
-      />
-    </header>
+        {/* Mobile sidebar */}
+        <SidebarMenu
+          menuOpen={menuOpen}
+          setMenuOpen={setMenuOpen}
+          navItems={navItems}
+          scrollToSection={handleNavClick}
+          activeId={activeId}
+          hintText={t.navHint}
+          labels={{
+            langLabel: t.langLabel,
+            ctaShort: t.ctaShort,
+          }}
+        />
+      </header>
+    </>
   );
 }

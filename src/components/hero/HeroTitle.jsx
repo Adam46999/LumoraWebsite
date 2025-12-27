@@ -60,7 +60,9 @@ export default function HeroTitle() {
 "
       style={{ textShadow: "0 3px 6px rgba(0,0,0,0.7)" }}
     >
-      <span className="text-white">{t.heroStatic || "نقدم خدمات تنظيف"}</span>{" "}
+      <span className="text-white">
+        {t.heroStatic || "تنظيف عميق ومرتب لـ"}
+      </span>{" "}
       <span className="text-blue-500">{displayText}|</span>
     </h1>
   );
