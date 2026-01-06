@@ -5,6 +5,7 @@ import Hero from "./components/hero/Hero";
 import Services from "./components/services/Services";
 import CleaningShowcase from "./components/BefAfter/CleaningShowcase";
 import ContactSection from "./components/contact/ContactSection";
+import FAQSection from "./components/faq/FAQSection";
 
 // ✅ لوحة الأدمن الكاملة
 import AdminPanel from "./components/admin/AdminPanel";
@@ -95,6 +96,9 @@ function App() {
           rugsImages={rugsImages}
           sofaPairs={sofaPairs}
         />
+      </section>
+      <section id="faq" className="py-14 sm:py-16 px-4 sm:px-6 bg-slate-50/60">
+        <FAQSection />
       </section>
 
       <section id="contact" className="py-20 px-6">

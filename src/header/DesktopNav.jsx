@@ -10,8 +10,6 @@ export default function DesktopNav({ navItems, activeId, scrollToSection }) {
   const [openId, setOpenId] = useState(null);
   const rootRef = useRef(null);
 
-  const hasOpen = Boolean(openId);
-
   const underlineClass = useCallback(
     (isActive) =>
       [
@@ -66,14 +64,19 @@ export default function DesktopNav({ navItems, activeId, scrollToSection }) {
   const baseBtn = useMemo(
     () =>
       [
-        "relative text-sm md:text-[15px] font-semibold tracking-tight",
-        "text-gray-800 hover:text-blue-600 transition-colors",
-        "focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 focus-visible:rounded-lg",
+        "relative text-sm md:text-[15px] font-extrabold tracking-tight",
+        "px-3 py-2 rounded-xl",
+        "text-gray-800",
+        "hover:bg-gray-100 hover:text-blue-700 transition",
+        "focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40",
       ].join(" "),
     []
   );
 
-  const activeBtn = useMemo(() => "text-blue-600", []);
+  const activeBtn = useMemo(
+    () => "bg-blue-50 text-blue-700 ring-1 ring-blue-200",
+    []
+  );
 
   return (
     <nav
@@ -133,66 +136,78 @@ export default function DesktopNav({ navItems, activeId, scrollToSection }) {
               <span className={underlineClass(isActive)} />
             </button>
 
-            {/* Dropdown */}
+            {/* ✅ Dropdown: ملتصقة بالزر (no hover gap) + شكل Cards */}
             {isOpen && (
               <div
                 role="menu"
                 className={[
-                  "absolute mt-3 min-w-[240px] overflow-hidden",
-                  "bg-white border border-gray-200 rounded-2xl shadow-[0_18px_50px_rgba(0,0,0,0.12)]",
+                  "absolute top-full mt-0 min-w-[260px] overflow-hidden",
+                  "bg-white border border-gray-200 rounded-2xl",
+                  "shadow-[0_18px_50px_rgba(0,0,0,0.12)]",
                   "backdrop-blur-sm",
                   isRTL ? "right-0" : "left-0",
                 ].join(" ")}
               >
-                {/* Parent shortcut */}
-                <button
-                  type="button"
-                  role="menuitem"
-                  onClick={() => go(item.id)}
-                  className={[
-                    "w-full px-4 py-3 text-sm font-extrabold",
-                    "hover:bg-gray-50 active:bg-gray-100 transition",
-                    isRTL ? "text-right" : "text-left",
-                  ].join(" ")}
-                >
-                  {item.label}
-                </button>
+                {/* ✅ padding داخلي بدل مسافة خارجية */}
+                <div className="pt-2">
+                  {/* Parent shortcut */}
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => go(item.id)}
+                    className={[
+                      "w-full px-4 py-3 text-sm font-extrabold",
+                      "hover:bg-gray-50 active:bg-gray-100 transition",
+                      isRTL ? "text-right" : "text-left",
+                    ].join(" ")}
+                  >
+                    {item.label}
+                  </button>
 
-                <div className="h-px bg-gray-100" />
+                  <div className="h-px bg-gray-100 my-1" />
 
-                <div className="py-1">
-                  {item.subItems.map((sub) => {
-                    const Icon = sub.icon;
-                    const isSubActive = activeId === sub.id;
+                  {/* Sub items as cards */}
+                  <div className="p-2">
+                    <div className="flex flex-col gap-1">
+                      {item.subItems.map((sub) => {
+                        const Icon = sub.icon;
+                        const isSubActive = activeId === sub.id;
 
-                    return (
-                      <button
-                        key={sub.id}
-                        type="button"
-                        role="menuitem"
-                        onClick={() => go(sub.id)}
-                        className={[
-                          "w-full px-4 py-3 text-sm transition flex items-center gap-3",
-                          "hover:bg-gray-50 active:bg-gray-100",
-                          isRTL ? "flex-row-reverse text-right" : "text-left",
-                          isSubActive
-                            ? "bg-blue-50 text-blue-800"
-                            : "text-gray-800",
-                        ].join(" ")}
-                      >
-                        {Icon ? (
-                          <Icon
+                        return (
+                          <button
+                            key={sub.id}
+                            type="button"
+                            role="menuitem"
+                            onClick={() => go(sub.id)}
                             className={[
-                              "w-4 h-4 shrink-0",
-                              isSubActive ? "text-blue-700" : "text-blue-600",
+                              "w-full px-3 py-3 text-sm transition flex items-center gap-3",
+                              "rounded-xl border",
+                              isRTL
+                                ? "flex-row-reverse text-right"
+                                : "text-left",
+                              isSubActive
+                                ? "bg-blue-50 text-blue-800 border-blue-200"
+                                : "border-transparent hover:border-gray-200 hover:bg-gray-50 active:bg-gray-100",
                             ].join(" ")}
-                            aria-hidden="true"
-                          />
-                        ) : null}
-                        <span className="font-semibold">{sub.label}</span>
-                      </button>
-                    );
-                  })}
+                          >
+                            {Icon ? (
+                              <Icon
+                                className={[
+                                  "w-4 h-4 shrink-0",
+                                  isSubActive
+                                    ? "text-blue-700"
+                                    : "text-blue-600",
+                                ].join(" ")}
+                                aria-hidden="true"
+                              />
+                            ) : null}
+
+                            <span className="font-semibold">{sub.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
                 </div>
               </div>
             )}

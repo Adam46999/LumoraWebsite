@@ -63,10 +63,6 @@ export default function Header({ scrollToSection }) {
   const navItems = useMemo(
     () => [
       {
-        id: "home",
-        label: lang === "en" ? "Home" : lang === "he" ? "בית" : "الرئيسية",
-      },
-      {
         id: "services",
         label:
           lang === "en" ? "Services" : lang === "he" ? "שירותים" : "خدماتنا",
@@ -108,8 +104,6 @@ export default function Header({ scrollToSection }) {
         label:
           lang === "en" ? "Gallery" : lang === "he" ? "גלריה" : "معرض الصور",
       },
-
-      // ✅ NEW: FAQ in header
       {
         id: "faq",
         label:
@@ -119,7 +113,6 @@ export default function Header({ scrollToSection }) {
             ? "שאלות נפוצות"
             : "الأسئلة الشائعة",
       },
-
       {
         id: "contact",
         label:
@@ -133,11 +126,12 @@ export default function Header({ scrollToSection }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
   const [actionsOpen, setActionsOpen] = useState(false);
-  const [activeId, setActiveId] = useState(navItems[0]?.id || "home");
+  const [activeId, setActiveId] = useState(navItems[0]?.id || "services");
   const [compact, setCompact] = useState(false);
 
   const headerRef = useRef(null);
-  const langRef = useRef(null);
+  const langRefDesktop = useRef(null);
+  const langRefMobile = useRef(null);
 
   // ✅ مهم: ref للديسكتوب غير ref للموبايل (عشان ما “يطلع لبرا”)
   const actionsRefDesktop = useRef(null);
@@ -303,8 +297,11 @@ export default function Header({ scrollToSection }) {
   // close popups (outside click + ESC)
   useEffect(() => {
     const onDocClick = (e) => {
-      if (langOpen && langRef.current && !langRef.current.contains(e.target)) {
-        setLangOpen(false);
+      // ✅ Language: افحص الديسكتوب والموبايل
+      if (langOpen) {
+        const inDesktop = langRefDesktop.current?.contains(e.target) ?? false;
+        const inMobile = langRefMobile.current?.contains(e.target) ?? false;
+        if (!inDesktop && !inMobile) setLangOpen(false);
       }
 
       // ✅ Actions: افحص الديسكتوب والموبايل
@@ -312,7 +309,6 @@ export default function Header({ scrollToSection }) {
         const inDesktop =
           actionsRefDesktop.current?.contains(e.target) ?? false;
         const inMobile = actionsRefMobile.current?.contains(e.target) ?? false;
-
         if (!inDesktop && !inMobile) setActionsOpen(false);
       }
     };
@@ -472,7 +468,7 @@ export default function Header({ scrollToSection }) {
               </button>
 
               {/* Language dropdown */}
-              <div className="relative" ref={langRef}>
+              <div className="relative" ref={langRefDesktop}>
                 <button
                   type="button"
                   onClick={toggleLang}
@@ -532,6 +528,65 @@ export default function Header({ scrollToSection }) {
 
             {/* Mobile right area */}
             <div className="md:hidden ms-auto flex items-center gap-2">
+              <div className="relative" ref={langRefMobile}>
+                <button
+                  type="button"
+                  onClick={toggleLang}
+                  className="px-3 py-2 rounded-xl border border-gray-200 hover:bg-gray-50 active:bg-gray-100 transition text-sm font-extrabold"
+                  aria-haspopup="menu"
+                  aria-expanded={langOpen}
+                  aria-label={t.langLabel}
+                >
+                  {lang.toUpperCase()}
+                </button>
+
+                {langOpen && (
+                  <div
+                    role="menu"
+                    className={[
+                      "absolute mt-2 w-44 bg-white border border-gray-200 rounded-2xl shadow-lg overflow-hidden",
+                      isRTL ? "left-0" : "right-0",
+                    ].join(" ")}
+                  >
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        setLang("ar");
+                        setLangOpen(false);
+                      }}
+                      className="w-full px-3 py-2 text-right hover:bg-gray-100"
+                    >
+                      AR العربية
+                    </button>
+
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        setLang("en");
+                        setLangOpen(false);
+                      }}
+                      className="w-full px-3 py-2 text-right hover:bg-gray-100"
+                    >
+                      EN English
+                    </button>
+
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        setLang("he");
+                        setLangOpen(false);
+                      }}
+                      className="w-full px-3 py-2 text-right hover:bg-gray-100"
+                    >
+                      HE עברית
+                    </button>
+                  </div>
+                )}
+              </div>
+
               <div className="relative" ref={actionsRefMobile}>
                 <button
                   type="button"
