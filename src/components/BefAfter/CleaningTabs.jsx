@@ -1,4 +1,3 @@
-// src/components/BefAfter/CleaningTabs.jsx
 import React, { useMemo } from "react";
 
 export default function CleaningTabs({
@@ -9,7 +8,7 @@ export default function CleaningTabs({
   labels = {},
   disableEmpty = true,
   sticky = false,
-  compactOnMobile = true, // kept (not critical here)
+  compactOnMobile = true,
   className = "",
 }) {
   const isRTL = lang === "ar" || lang === "he";
@@ -33,7 +32,6 @@ export default function CleaningTabs({
       dir={isRTL ? "rtl" : "ltr"}
     >
       <div className="mx-auto max-w-5xl flex flex-col items-center">
-        {/* Segmented container */}
         <div className="inline-flex items-center rounded-2xl bg-slate-100 p-1 shadow-sm border border-slate-200">
           {tabs.map((tab) => {
             const isActive = tab.key === active;

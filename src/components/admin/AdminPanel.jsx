@@ -4,7 +4,7 @@ import AdminAuthGate from "./AdminAuthGate";
 import AdminHeader from "./AdminHeader";
 import SaveBar from "./SaveBar";
 
-import DailyTab from "./tabs/DailyTab";
+import DailyTab from "./tabs/daily/DailyTab";
 import CarpetsTab from "./tabs/CarpetsTab";
 import MessagesTab from "./tabs/MessagesTab";
 

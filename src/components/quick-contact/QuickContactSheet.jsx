@@ -1,5 +1,7 @@
+// src/components/quick-contact/QuickContactSheet.jsx
 import React, { useEffect, useMemo } from "react";
 import { Phone, MessageCircle, X } from "lucide-react";
+import { useLanguage } from "../../context/LanguageContext";
 
 /**
  * QuickContactSheet (Professional)
@@ -11,36 +13,49 @@ import { Phone, MessageCircle, X } from "lucide-react";
  * onClose: () => void
  * contacts: [{ id, name, phoneDisplay, phoneRaw, whatsappRaw, note? }]
  * anchor: "start" | "end"
- * lang: "ar" | "en" | "he"
  */
 export default function QuickContactSheet({
   open,
   onClose,
   contacts = [],
   anchor = "end",
-  lang = "ar",
 }) {
+  const { lang, tFn, isRTL, dir } = useLanguage();
+
   if (!open) return null;
 
-  const isRTL = lang === "ar" || lang === "he";
+  // Safe translate with fallback (no UI breaks)
+  const tx = (key, fallback) => {
+    const v = tFn?.(key);
+    return v && v !== key ? v : fallback;
+  };
 
-  const t = useMemo(
-    () => ({
-      title: lang === "en" ? "Contact" : lang === "he" ? "יצירת קשר" : "تواصل",
-      sub:
-        lang === "en"
-          ? "Choose the fastest way to reach us"
-          : lang === "he"
-          ? "בחר את הדרך המהירה ביותר ליצור קשר"
-          : "اختر أسرع طريقة للتواصل",
-      call: lang === "en" ? "Call" : lang === "he" ? "שיחה" : "اتصال",
-      wa: lang === "en" ? "WhatsApp" : lang === "he" ? "וואטסאפ" : "واتساب",
-      close: lang === "en" ? "Close" : lang === "he" ? "סגור" : "إغلاق",
-      fast:
-        lang === "en" ? "Fast reply" : lang === "he" ? "מענה מהיר" : "رد سريع",
-    }),
-    [lang]
-  );
+  const t = useMemo(() => {
+    const title =
+      lang === "en" ? "Contact" : lang === "he" ? "יצירת קשר" : "تواصل";
+    const sub =
+      lang === "en"
+        ? "Choose the fastest way to reach us"
+        : lang === "he"
+        ? "בחר את הדרך המהירה ביותר ליצור קשר"
+        : "اختر أسرع طريقة للتواصل";
+    const call = lang === "en" ? "Call" : lang === "he" ? "שיחה" : "اتصال";
+    const wa =
+      lang === "en" ? "WhatsApp" : lang === "he" ? "וואטסאפ" : "واتساب";
+    const close = lang === "en" ? "Close" : lang === "he" ? "סגור" : "إغلاق";
+    const fast =
+      lang === "en" ? "Fast reply" : lang === "he" ? "מענה מהיר" : "رد سريع";
+
+    return {
+      title: tx("quickContact.title", title),
+      sub: tx("quickContact.sub", sub),
+      call: tx("quickContact.call", call),
+      wa: tx("quickContact.wa", wa),
+      close: tx("common.close", close),
+      fast: tx("quickContact.fast", fast),
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lang, tFn]);
 
   // Close on ESC
   useEffect(() => {
@@ -79,7 +94,7 @@ export default function QuickContactSheet({
 
   const Card = ({ dense = false } = {}) => (
     <div
-      dir={isRTL ? "rtl" : "ltr"}
+      dir={dir}
       className={[
         "bg-white rounded-3xl border border-gray-200/80",
         "shadow-[0_18px_60px_rgba(0,0,0,0.18)]",
@@ -119,8 +134,8 @@ export default function QuickContactSheet({
       {/* Body */}
       <div className={dense ? "p-3" : "p-4"}>
         <div className="flex flex-col gap-3">
-          {contacts.map((c) => {
-            const badge = c.note || t.fast;
+          {(contacts || []).map((c) => {
+            const badge = c?.note || t.fast;
 
             return (
               <div
@@ -141,15 +156,20 @@ export default function QuickContactSheet({
                 >
                   <div className={isRTL ? "text-right" : "text-left"}>
                     <div className="text-sm font-extrabold text-gray-900 leading-tight">
-                      {c.name}
+                      {c?.name}
                     </div>
 
-                    {/* Phone number should be LTR for readability */}
-                    <div className="mt-1 text-sm text-gray-600" dir="ltr">
-                      {c.phoneDisplay}
+                    {/* Phone number: force LTR + stable bidi */}
+                    <div
+                      className="mt-1 text-sm text-gray-600"
+                      dir="ltr"
+                      style={{ unicodeBidi: "plaintext" }}
+                    >
+                      {c?.phoneDisplay}
                     </div>
                   </div>
 
+                  {/* badge: keep stable for RTL+numbers */}
                   <div
                     className={[
                       "shrink-0",
@@ -157,6 +177,7 @@ export default function QuickContactSheet({
                       "px-2.5 py-1 rounded-full",
                       "bg-gray-50 text-gray-700 border border-gray-100",
                     ].join(" ")}
+                    style={{ unicodeBidi: "plaintext" }}
                   >
                     {badge}
                   </div>
@@ -169,7 +190,7 @@ export default function QuickContactSheet({
                     type="button"
                     onClick={() => {
                       onClose?.();
-                      waNow(c.whatsappRaw);
+                      waNow(c?.whatsappRaw);
                     }}
                     className={[
                       "h-11 rounded-2xl",
@@ -188,7 +209,7 @@ export default function QuickContactSheet({
                     type="button"
                     onClick={() => {
                       onClose?.();
-                      callNow(c.phoneRaw);
+                      callNow(c?.phoneRaw);
                     }}
                     className={[
                       "h-11 rounded-2xl",
@@ -215,12 +236,12 @@ export default function QuickContactSheet({
 
   return (
     <>
-      {/* ✅ Mobile overlay (premium centered) */}
+      {/* Mobile overlay */}
       <div
         className="fixed inset-0 z-[99999] md:hidden"
         role="dialog"
         aria-modal="true"
-        dir={isRTL ? "rtl" : "ltr"}
+        dir={dir}
       >
         {/* backdrop closes */}
         <div
@@ -241,7 +262,7 @@ export default function QuickContactSheet({
         </div>
       </div>
 
-      {/* ✅ Desktop popover */}
+      {/* Desktop popover */}
       <div
         className={[
           "hidden md:block",
@@ -251,7 +272,7 @@ export default function QuickContactSheet({
         ].join(" ")}
         role="dialog"
         aria-modal="false"
-        dir={isRTL ? "rtl" : "ltr"}
+        dir={dir}
       >
         <Card dense />
       </div>

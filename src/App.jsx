@@ -64,7 +64,6 @@ function App() {
   const carSrcs = [car6, car3, car4, car5, car1, car7, car8, car9, car10];
   const carsImages = carSrcs.map((src, i) => ({
     src,
-    caption: `سيارة ${i + 1}`,
   }));
 
   const rugsImages = [

@@ -6,20 +6,20 @@ import ContactForm from "./ContactForm";
 import { saveContactMessage } from "../../services/contactMessages";
 
 export default function ContactSection() {
-  const { lang, t } = useLanguage();
+  const { lang, t } = useLanguage(); // ✅ لازم تكون موجودة
   const [toast, setToast] = useState({ type: "", message: "" });
 
-  // 🔗 هذه هي الدالة التي يستدعيها ContactForm عند الإرسال
   const handleSend = async (data) => {
-    // data = { subject, name, phone, message, channel }
     try {
-      await saveContactMessage(data); // حفظ في Firestore
+      await saveContactMessage(data);
 
       setToast({
         type: "success",
         message:
           lang === "ar"
             ? "تم إرسال رسالتك بنجاح ✅"
+            : lang === "he"
+            ? "ההודעה נשלחה בהצלחה ✅"
             : "Your message was sent successfully ✅",
       });
     } catch (err) {
@@ -29,18 +29,21 @@ export default function ContactSection() {
         message:
           lang === "ar"
             ? "حدث خطأ أثناء الإرسال ❌"
+            : lang === "he"
+            ? "אירעה שגיאה בשליחה ❌"
             : "Something went wrong while sending ❌",
       });
     } finally {
-      // إخفاء التوست بعد ثانيتين ونص تقريبًا
       setTimeout(() => setToast({ type: "", message: "" }), 2400);
     }
   };
 
+  const isRTL = lang === "ar" || lang === "he";
+
   return (
     <section
       id="contact"
-      dir={lang === "ar" ? "rtl" : "ltr"}
+      dir={isRTL ? "rtl" : "ltr"}
       className="relative overflow-hidden py-10 sm:py-16 px-4 sm:px-6 bg-[#F6F8FC] text-gray-900"
     >
       {/* Toast */}
@@ -62,12 +65,13 @@ export default function ContactSection() {
 
       <ContactHeader />
 
-      {/* الكارد */}
       <div className="max-w-3xl mx-auto mt-8 sm:mt-12 rounded-[2rem] border border-gray-100 bg-white shadow-[0_8px_30px_rgba(6,24,44,.06)]">
-        <ContactForm onSend={handleSend} t={t} isRTL={lang === "ar"} />
+        <ContactForm
+          onSend={handleSend}
+          t={{ ...(t || {}), __lang: lang }} // ✅ هي السطر المهم
+          isRTL={isRTL}
+        />
       </div>
-
-      {/* <ContactLinks /> */}
     </section>
   );
 }

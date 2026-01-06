@@ -147,10 +147,10 @@ export default function Header({ scrollToSection }) {
   const contactItems = useMemo(() => {
     return (CONTACTS || []).map((c) => ({
       id: c.id,
-      name: c.name,
-      phoneDisplay: c.phone, // display
-      phoneRaw: c.tel, // tel:
-      whatsappRaw: c.whatsapp, // wa.me
+      name: lang === "en" ? c.nameEn : lang === "he" ? c.nameHe : c.nameAr,
+      phoneDisplay: c.phone,
+      phoneRaw: c.tel,
+      whatsappRaw: c.whatsapp,
       note: lang === "en" ? c.noteEn : lang === "he" ? c.noteHe : c.noteAr,
     }));
   }, [lang]);

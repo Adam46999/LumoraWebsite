@@ -5,24 +5,77 @@ import {
   AlertTriangle,
   MoreHorizontal,
 } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef, useCallback } from "react";
+import { useLanguage } from "../../context/LanguageContext";
 
 export default function SubjectChips({
   id = "subject",
   label = "موضوع",
   value,
   onChange,
-  options = [
-    { value: "inquiry", label: "استفسار", icon: Info },
-    { value: "booking", label: "حجز", icon: CalendarCheck },
-    { value: "complaint", label: "شكوى", icon: AlertTriangle },
-    { value: "other", label: "أخرى", icon: MoreHorizontal },
-  ],
+  options,
   error,
   required = false,
   isRTL = true,
 }) {
+  const { t, lang } = useLanguage();
   const rootRef = useRef(null);
+
+  // ✅ helper ترجمة خفيف + fallback
+  const tr = useCallback(
+    (key, ar, en, he) => {
+      const v = t?.[key];
+      if (typeof v === "string" && v.trim()) return v;
+      if (lang === "he") return he ?? en ?? ar;
+      if (lang === "en") return en ?? ar ?? he;
+      return ar ?? en ?? he;
+    },
+    [t, lang]
+  );
+
+  const computedLabel = useMemo(() => {
+    // ✅ لا نكسر prop label
+    if (typeof label === "string" && label.trim()) return label;
+    return tr("contactSubjectLabel", "موضوع", "Subject", "נושא");
+  }, [label, tr]);
+
+  const aria = useMemo(() => {
+    return tr(
+      "contactSubjectA11y",
+      "اختر موضوع رسالتك",
+      "Choose your message topic",
+      "בחר נושא להודעה"
+    );
+  }, [tr]);
+
+  const computedOptions = useMemo(() => {
+    // ✅ إذا جاي options من فوق: استخدمه زي ما هو (ما نكسر)
+    if (Array.isArray(options) && options.length) return options;
+
+    return [
+      {
+        value: "inquiry",
+        label: tr("contactSubjectInquiry", "استفسار", "Inquiry", "שאלה"),
+        icon: Info,
+      },
+      {
+        value: "booking",
+        label: tr("contactSubjectBooking", "حجز", "Booking", "הזמנה"),
+        icon: CalendarCheck,
+      },
+      {
+        value: "complaint",
+        label: tr("contactSubjectComplaint", "شكوى", "Complaint", "תלונה"),
+        icon: AlertTriangle,
+      },
+      {
+        value: "other",
+        label: tr("contactSubjectOther", "أخرى", "Other", "אחר"),
+        icon: MoreHorizontal,
+      },
+    ];
+  }, [options, tr]);
+
   const sidePad = isRTL ? "pr-11 text-right" : "pl-11 text-left";
   const iconPos = isRTL ? "right-2.5" : "left-2.5";
 
@@ -30,25 +83,32 @@ export default function SubjectChips({
   useEffect(() => {
     const el = rootRef.current;
     if (!el) return;
+
     const onKey = (e) => {
       const chips = Array.from(el.querySelectorAll('[role="radio"]'));
       if (!chips.length) return;
+
       const i = Math.max(
         0,
         chips.findIndex((c) => c.getAttribute("aria-checked") === "true")
       );
+
       const dir =
         e.key === "ArrowRight" || e.key === "ArrowDown"
           ? 1
           : e.key === "ArrowLeft" || e.key === "ArrowUp"
           ? -1
           : 0;
+
       if (!dir) return;
+
       e.preventDefault();
       const next = (i + dir + chips.length) % chips.length;
+
       onChange({ target: { id, value: chips[next].dataset.value } });
       chips[next].focus();
     };
+
     el.addEventListener("keydown", onKey);
     return () => el.removeEventListener("keydown", onKey);
   }, [id, onChange]);
@@ -56,7 +116,7 @@ export default function SubjectChips({
   return (
     <div className="md:col-span-2 flex flex-col gap-1.5">
       <label className="text-sm font-semibold text-gray-800">
-        {label} {required && <span className="text-rose-500">*</span>}
+        {computedLabel} {required && <span className="text-rose-500">*</span>}
       </label>
 
       <div
@@ -73,10 +133,10 @@ export default function SubjectChips({
         <div
           ref={rootRef}
           role="radiogroup"
-          aria-label="اختر موضوع رسالتك"
+          aria-label={aria}
           className="w-full px-2.5 sm:px-3 py-2.5 grid grid-cols-2 gap-2 sm:grid-cols-4"
         >
-          {options.map(({ value: val, label: text, icon: Icon }) => {
+          {computedOptions.map(({ value: val, label: text, icon: Icon }) => {
             const active = value === val;
             return (
               <button
