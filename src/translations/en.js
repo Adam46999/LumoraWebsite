@@ -201,4 +201,5 @@ Kills 99.9% of bacteria and germs.`,
     subtitle:
       "Have a question or a note? Just send us a message and we’ll reply!",
   },
+  scrollExplore: "explore",
 };

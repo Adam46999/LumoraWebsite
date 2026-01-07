@@ -193,4 +193,5 @@ export default {
     title: "איתנו",
     subtitle: "יש לך שאלה או הערה? שלח/י לנו הודעה ונחזור אליך!",
   },
+  scrollExplore: "דפדף",
 };

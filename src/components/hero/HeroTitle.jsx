@@ -1,15 +1,18 @@
 // src/components/hero/HeroTitle.jsx
 import { useLanguage } from "../../context/LanguageContext";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 
 export default function HeroTitle() {
   const { t } = useLanguage();
 
-  const words = [
-    t.heroHighlight1 || "الكنب",
-    t.heroHighlight2 || "السيارات",
-    t.heroHighlight3 || "السجاد",
-  ];
+  const words = useMemo(
+    () => [
+      t.heroHighlight1 || "الكنب",
+      t.heroHighlight2 || "السيارات",
+      t.heroHighlight3 || "السجاد",
+    ],
+    [t.heroHighlight1, t.heroHighlight2, t.heroHighlight3]
+  );
 
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [displayText, setDisplayText] = useState("");
@@ -19,9 +22,16 @@ export default function HeroTitle() {
   const deletingSpeed = 80;
   const delayBetweenWords = 1500;
 
+  // ✅ Reset animation when language changes
+  useEffect(() => {
+    setDisplayText("");
+    setIsDeleting(false);
+    setCurrentWordIndex(0);
+  }, [words]);
+
   useEffect(() => {
     let timeout;
-    const currentWord = words[currentWordIndex];
+    const currentWord = words[currentWordIndex] || "";
 
     if (!isDeleting && displayText.length < currentWord.length) {
       timeout = setTimeout(() => {
@@ -49,7 +59,10 @@ export default function HeroTitle() {
       <span className="text-white">
         {t.heroStatic || "تنظيف عميق ومرتب لـ"}
       </span>{" "}
-      <span className="text-blue-500">{displayText}|</span>
+      <span className="text-blue-500">
+        {displayText}
+        <span className="animate-pulse">|</span>
+      </span>
     </h1>
   );
 }
