@@ -19,6 +19,18 @@ import before3 from "./assets/before3.jpg";
 import after3 from "./assets/after3.jpg";
 import before4 from "./assets/before4.jpg";
 import after4 from "./assets/after4.jpg";
+import before5 from "./assets/before5.jpg";
+import before6 from "./assets/before6.jpg";
+import after5 from "./assets/after5.jpg";
+import after6 from "./assets/after6.jpg";
+import before7 from "./assets/before7.jpg";
+import before8 from "./assets/before8.jpg";
+import before9 from "./assets/before9.jpg";
+import before10 from "./assets/before10.jpg";
+import after7 from "./assets/after7.jpg";
+import after8 from "./assets/after8.jpg";
+import after9 from "./assets/after9.jpg";
+import after10 from "./assets/after10.jpg";
 
 // سيارات
 import car1 from "./assets/car1.jpg";
@@ -59,6 +71,12 @@ function App() {
     { before: before2, after: after2 },
     { before: before3, after: after3 },
     { before: before4, after: after4 },
+    { before: before5, after: after5 },
+    { before: before6, after: after6 },
+    { before: before7, after: after7 },
+    { before: before8, after: after8 },
+    { before: before9, after: after9 },
+    { before: before10, after: after10 },
   ];
 
   // صور السيارات
