@@ -54,15 +54,10 @@ export default function ServiceCard({
     if (!first) return meta || null;
 
     const duration = first?.[`duration_${lang}`] ?? first?.duration ?? null;
-    const price = first?.[`price_${lang}`] ?? first?.price ?? null;
 
-    if (!duration && !price) return meta || null;
+    if (!duration) return null;
 
-    const parts = [];
-    if (duration) parts.push(duration);
-    if (price) parts.push(price);
-
-    return parts.join(" · ");
+    return duration;
   }, [id, lang, meta]);
 
   const bidiBoxProps = { dir: "ltr", style: { unicodeBidi: "plaintext" } };

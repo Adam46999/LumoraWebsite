@@ -21,28 +21,21 @@ function getByPath(obj, path) {
 function interpolate(str, vars) {
   if (!vars) return str;
   return String(str).replace(/\{(\w+)\}/g, (_, k) =>
-    vars[k] === undefined || vars[k] === null ? "" : String(vars[k])
+    vars[k] === undefined || vars[k] === null ? "" : String(vars[k]),
   );
 }
 
 export const LanguageProvider = ({ children }) => {
-  const [lang, setLang] = useState("ar");
+  const [lang, setLang] = useState("he");
 
   const value = useMemo(() => {
-    const dict = DICTS[lang] || DICTS.ar;
+    const dict = DICTS[lang] || DICTS.he;
     const fallback = DICTS.ar;
 
-    /**
-     * t("hero.title") -> string
-     * t("common.hello", {name:"x"}) -> interpolation
-     */
     const tFn = (key, vars) => {
       const raw = getByPath(dict, key) ?? getByPath(fallback, key) ?? undefined;
 
-      // لو ما لقينا المفتاح: رجّع نفس الـ key (مفيد للتشخيص بدون كسر UI)
       if (raw === undefined) return key;
-
-      // لو القيمة object بالغلط (مش نص) رجّع key لتفادي كسر render
       if (typeof raw === "object") return key;
 
       return interpolate(raw, vars);
@@ -51,12 +44,8 @@ export const LanguageProvider = ({ children }) => {
     return {
       lang,
       setLang,
-
-      // ✅ تظل موجودة للتوافق مع كودك الحالي (t.someKey)
-      // وبتضيف كمان t("a.b.c")
       t: dict,
       tFn,
-
       isRTL: RTL.has(lang),
       dir: RTL.has(lang) ? "rtl" : "ltr",
     };
