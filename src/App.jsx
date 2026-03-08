@@ -32,28 +32,15 @@ import after8 from "./assets/after8.jpg";
 import after9 from "./assets/after9.jpg";
 import after10 from "./assets/after10.jpg";
 
-// سيارات
-import car1 from "./assets/car1.jpg";
-import car3 from "./assets/car3.jpg";
-import car4 from "./assets/car4.jpg";
-import car5 from "./assets/car5.jpg";
-import car6 from "./assets/car6.jpg";
-import car7 from "./assets/car7.jpg";
-import car8 from "./assets/car8.jpg";
-import car9 from "./assets/car9.jpg";
-import car10 from "./assets/car10.jpg";
-
 function App() {
   const [adminMode, setAdminMode] = useState(false);
 
-  // ✅ Scroll بسيط بدون هوك (اقل ملفات / اقل خربطة)
   const scrollToSection = (id) => {
     const el = document.getElementById(id);
     if (!el) return;
     el.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  // احسب ارتفاع الهيدر وخزّنه
   useEffect(() => {
     const setHeaderVar = () => {
       const el = document.getElementById("site-header");
@@ -65,7 +52,6 @@ function App() {
     return () => window.removeEventListener("resize", setHeaderVar);
   }, []);
 
-  // صور الكنب
   const sofaPairs = [
     { before: before1, after: after1 },
     { before: before2, after: after2 },
@@ -79,18 +65,6 @@ function App() {
     { before: before10, after: after10 },
   ];
 
-  // صور السيارات
-  const carSrcs = [car6, car3, car4, car5, car1, car7, car8, car9, car10];
-  const carsImages = carSrcs.map((src, i) => ({
-    src,
-  }));
-
-  const rugsImages = [
-    { src: after3, caption: "تنظيف سجاد عميق" },
-    { src: before3, caption: "إزالة بقع صعبة" },
-  ];
-
-  // ✅ إذا الأدمن مفتوح نعرض لوحة الأدمن فقط
   if (adminMode) {
     return <AdminPanel onExit={() => setAdminMode(false)} />;
   }
@@ -108,13 +82,9 @@ function App() {
       </section>
 
       <section id="beforeafter" className="py-24 px-6">
-        <CleaningShowcase
-          defaultTab="sofa"
-          carsImages={carsImages}
-          rugsImages={rugsImages}
-          sofaPairs={sofaPairs}
-        />
+        <CleaningShowcase sofaPairs={sofaPairs} />
       </section>
+
       <section id="faq" className="py-14 sm:py-16 px-4 sm:px-6 bg-slate-50/60">
         <FAQSection />
       </section>
@@ -123,7 +93,6 @@ function App() {
         <ContactSection />
       </section>
 
-      {/* 🌙 زر أدمن مخفي */}
       <button
         type="button"
         onClick={() => setAdminMode(true)}

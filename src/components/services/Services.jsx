@@ -5,7 +5,7 @@ import ServiceModal from "./ServiceModal";
 import { serviceDetails } from "./serviceDetailsData";
 import { useLanguage } from "../../context/LanguageContext";
 
-const WA_PHONE = "972543075619";
+const WA_PHONE = "972502727724";
 
 function formatMeta({ duration, price }) {
   const parts = [];
@@ -25,7 +25,7 @@ export default function Services() {
     if (!el) return;
     const obs = new IntersectionObserver(
       ([entry]) => entry.isIntersecting && setTitleVisible(true),
-      { threshold: 0.35 }
+      { threshold: 0.35 },
     );
     obs.observe(el);
     return () => obs.disconnect();
@@ -34,14 +34,13 @@ export default function Services() {
   const preferredTimeLabel = (key) => tFn(`services.modal.pref.${key}`);
 
   const readLangValue = (card, baseKey) => {
-    // baseKey: "duration" | "price"
     return card?.[`${baseKey}_${lang}`] ?? card?.[baseKey] ?? null;
   };
 
   const openWhatsApp = (service, opts = {}) => {
     if (!service) return;
 
-    const mode = opts.mode || "book"; // "book" | "question"
+    const mode = opts.mode || "book";
     const preferred = opts.preferredTime || null;
     const note = (opts.note || "").trim();
 
@@ -138,12 +137,7 @@ export default function Services() {
 
           const meta = formatMeta({ duration, price });
 
-          const badge =
-            s.id === "sofa"
-              ? tFn("services.badges.popular")
-              : s.id === "car"
-              ? tFn("services.badges.fast")
-              : null;
+          const badge = s.id === "sofa" ? tFn("services.badges.popular") : null;
 
           return (
             <div

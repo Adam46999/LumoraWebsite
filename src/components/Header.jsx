@@ -10,7 +10,6 @@ import { useLanguage } from "../context/LanguageContext";
 import SidebarMenu from "../header/SidebarMenu";
 import DesktopNav from "../header/DesktopNav";
 
-// ✅ Quick contact sheet
 import QuickContactSheet from "./quick-contact/QuickContactSheet";
 import { CONTACTS } from "./quick-contact/contacts";
 
@@ -18,7 +17,6 @@ export default function Header({ scrollToSection }) {
   const { lang, setLang } = useLanguage();
   const isRTL = lang === "ar" || lang === "he";
 
-  // ===== texts (موحّد ويُمرَّر للسايدبار أيضاً) =====
   const t = useMemo(() => {
     if (lang === "he") {
       return {
@@ -59,7 +57,6 @@ export default function Header({ scrollToSection }) {
     };
   }, [lang]);
 
-  // ===== NAV ITEMS =====
   const navItems = useMemo(
     () => [
       {
@@ -68,33 +65,33 @@ export default function Header({ scrollToSection }) {
           lang === "en" ? "Services" : lang === "he" ? "שירותים" : "خدماتنا",
         subItems: [
           {
-            id: "carpet",
-            label:
-              lang === "en"
-                ? "Carpet cleaning"
-                : lang === "he"
-                ? "ניקוי שטיחים"
-                : "تنظيف سجاد",
-            icon: CarpetIcon,
-          },
-          {
             id: "sofa",
             label:
               lang === "en"
                 ? "Sofa cleaning"
                 : lang === "he"
-                ? "ניקוי ספות"
-                : "تنظيف كنب",
+                  ? "ניקוי ספות"
+                  : "تنظيف الكنب",
             icon: SofaIcon,
           },
           {
-            id: "car",
+            id: "carpet",
             label:
               lang === "en"
-                ? "Car cleaning"
+                ? "Carpet cleaning"
                 : lang === "he"
-                ? "ניקוי רכב"
-                : "تنظيف سيارات",
+                  ? "ניקוי שטיחים"
+                  : "تنظيف السجاد",
+            icon: CarpetIcon,
+          },
+          {
+            id: "carSeats",
+            label:
+              lang === "en"
+                ? "Car interior cleaning"
+                : lang === "he"
+                  ? "ניקוי פנים הרכב"
+                  : "تنظيف فرش السيارات",
             icon: CarIcon,
           },
         ],
@@ -110,8 +107,8 @@ export default function Header({ scrollToSection }) {
           lang === "en"
             ? "FAQ"
             : lang === "he"
-            ? "שאלות נפוצות"
-            : "الأسئلة الشائعة",
+              ? "שאלות נפוצות"
+              : "الأسئلة الشائعة",
       },
       {
         id: "contact",
@@ -119,10 +116,9 @@ export default function Header({ scrollToSection }) {
           lang === "en" ? "Contact" : lang === "he" ? "צור קשר" : "تواصل معنا",
       },
     ],
-    [lang]
+    [lang],
   );
 
-  // ===== UI STATE =====
   const [menuOpen, setMenuOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
   const [actionsOpen, setActionsOpen] = useState(false);
@@ -132,12 +128,9 @@ export default function Header({ scrollToSection }) {
   const headerRef = useRef(null);
   const langRefDesktop = useRef(null);
   const langRefMobile = useRef(null);
-
-  // ✅ مهم: ref للديسكتوب غير ref للموبايل (عشان ما “يطلع لبرا”)
   const actionsRefDesktop = useRef(null);
   const actionsRefMobile = useRef(null);
 
-  // ✅ FIX: Adapt CONTACTS to what QuickContactSheet expects
   const contactItems = useMemo(() => {
     return (CONTACTS || []).map((c) => ({
       id: c.id,
@@ -149,7 +142,6 @@ export default function Header({ scrollToSection }) {
     }));
   }, [lang]);
 
-  // ===== helper: smooth scroll + robust for sub-items =====
   const scrollToIdLocal = useCallback((id) => {
     if (!id) return false;
 
@@ -173,8 +165,7 @@ export default function Header({ scrollToSection }) {
     if (!el) el = document.querySelector(`[data-id="${id}"]`);
     if (!el) el = document.querySelector(`[data-anchor="${id}"]`);
 
-    // service sub-items fallback
-    if (!el && (id === "carpet" || id === "sofa" || id === "car")) {
+    if (!el && (id === "carpet" || id === "sofa" || id === "carSeats")) {
       const parent =
         document.getElementById("services") ||
         document.querySelector(`[data-section="services"]`);
@@ -213,8 +204,6 @@ export default function Header({ scrollToSection }) {
   const handleNavClick = useCallback(
     (id) => {
       setActiveId(id);
-
-      // prevent overlaps
       setMenuOpen(false);
       setLangOpen(false);
       setActionsOpen(false);
@@ -231,395 +220,202 @@ export default function Header({ scrollToSection }) {
 
       const scrolled = scrollToIdLocal(id);
       if (!ok && !scrolled) {
-        // no-op
       }
     },
-    [scrollToSection, scrollToIdLocal]
+    [scrollToSection, scrollToIdLocal],
   );
 
   const handleCTA = () => handleNavClick("contact");
 
-  // ===== Skip to content =====
-  const onSkip = (e) => {
-    e.preventDefault();
-    handleNavClick("services");
-  };
-
-  // ===== Tooltip first time (kept) =====
   useEffect(() => {
-    try {
-      const key = "lumora_nav_hint_seen_v1";
-      const seen = localStorage.getItem(key);
-      if (!seen) localStorage.setItem(key, "1");
-    } catch {}
-  }, []);
-
-  // ===== Scroll spy =====
-  useEffect(() => {
-    let raf = 0;
-
-    const onScroll = () => {
-      if (raf) return;
-      raf = window.requestAnimationFrame(() => {
-        raf = 0;
-
-        const headerOffset = (headerRef.current?.offsetHeight || 72) + 20;
-        let bestId = activeId;
-        let bestDist = Infinity;
-
-        for (const item of navItems) {
-          const el =
-            document.getElementById(item.id) ||
-            document.querySelector(`[data-section="${item.id}"]`);
-          if (!el) continue;
-          const rect = el.getBoundingClientRect();
-          const dist = Math.abs(rect.top - headerOffset);
-
-          if (rect.top <= headerOffset + 140 && dist < bestDist) {
-            bestDist = dist;
-            bestId = item.id;
-          }
-        }
-
-        if (bestId && bestId !== activeId) setActiveId(bestId);
-      });
-    };
-
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => {
-      if (raf) window.cancelAnimationFrame(raf);
-      window.removeEventListener("scroll", onScroll);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [navItems, activeId]);
-
-  // close popups (outside click + ESC)
-  useEffect(() => {
-    const onDocClick = (e) => {
-      // ✅ Language: افحص الديسكتوب والموبايل
-      if (langOpen) {
-        const inDesktop = langRefDesktop.current?.contains(e.target) ?? false;
-        const inMobile = langRefMobile.current?.contains(e.target) ?? false;
-        if (!inDesktop && !inMobile) setLangOpen(false);
-      }
-
-      // ✅ Actions: افحص الديسكتوب والموبايل
-      if (actionsOpen) {
-        const inDesktop =
-          actionsRefDesktop.current?.contains(e.target) ?? false;
-        const inMobile = actionsRefMobile.current?.contains(e.target) ?? false;
-        if (!inDesktop && !inMobile) setActionsOpen(false);
-      }
-    };
-
-    const onKeyDown = (e) => {
-      if (e.key === "Escape") {
-        setLangOpen(false);
-        setMenuOpen(false);
-        setActionsOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", onDocClick);
-    window.addEventListener("keydown", onKeyDown);
-    return () => {
-      document.removeEventListener("mousedown", onDocClick);
-      window.removeEventListener("keydown", onKeyDown);
-    };
-  }, [langOpen, actionsOpen]);
-
-  // header shadow + compact mode
-  useEffect(() => {
-    const el = headerRef.current;
-    if (!el) return;
-
-    const onScroll = () => {
-      const y = window.scrollY;
-      const scrolled = y > 6;
-      const isCompact = y > 70;
-
-      if (scrolled) el.classList.add("shadow-sm");
-      else el.classList.remove("shadow-sm");
-
-      setCompact(isCompact);
-    };
-
+    const onScroll = () => setCompact(window.scrollY > 12);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // helpers to open one thing only
-  const openMenu = () => {
-    setLangOpen(false);
-    setActionsOpen(false);
-    setMenuOpen(true);
-  };
+  useEffect(() => {
+    const onDocClick = (e) => {
+      const inLang =
+        langRefDesktop.current?.contains(e.target) ||
+        langRefMobile.current?.contains(e.target);
 
-  const toggleLang = () => {
-    setMenuOpen(false);
-    setActionsOpen(false);
-    setLangOpen((v) => !v);
-  };
+      const inActions =
+        actionsRefDesktop.current?.contains(e.target) ||
+        actionsRefMobile.current?.contains(e.target);
 
-  const toggleActions = () => {
-    setMenuOpen(false);
-    setLangOpen(false);
-    setActionsOpen((v) => !v);
-  };
+      if (!inLang) setLangOpen(false);
+      if (!inActions) setActionsOpen(false);
+    };
+
+    document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, []);
 
   return (
     <>
+      <a
+        href="#services"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:start-3 focus:z-[99999] focus:bg-white focus:text-slate-900 focus:px-4 focus:py-2 focus:rounded-xl focus:shadow"
+      >
+        {t.skip}
+      </a>
+
       <header
         ref={headerRef}
-        className="fixed top-0 left-0 w-full z-50 bg-white border-b border-gray-200 transition-shadow"
+        className={[
+          "sticky top-0 z-[9998] w-full transition-all duration-300",
+          compact
+            ? "bg-white/92 backdrop-blur border-b border-slate-200 shadow-sm"
+            : "bg-white/88 backdrop-blur-sm",
+        ].join(" ")}
         dir={isRTL ? "rtl" : "ltr"}
       >
-        {/* Skip link */}
-        <a
-          href="#services"
-          onClick={onSkip}
-          className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[999999] bg-blue-600 text-white px-4 py-2 rounded-xl font-bold shadow-lg"
-        >
-          {t.skip}
-        </a>
-
-        <div className="sr-only" aria-live="polite">
-          {t.hint}
-        </div>
-
-        <div className="max-w-7xl mx-auto px-4">
-          <div
-            className={[
-              "flex items-center gap-3 transition-all duration-200",
-              compact ? "min-h-[58px]" : "min-h-[72px]",
-            ].join(" ")}
-          >
-            {/* Mobile menu */}
-            <button
-              className="md:hidden p-2 rounded-lg hover:bg-gray-100 active:bg-gray-200 transition"
-              onClick={openMenu}
-              aria-label="Open menu"
-              type="button"
-            >
-              <Menu className="w-6 h-6 text-gray-800" />
-            </button>
-
-            {/* Logo */}
+        <div className="mx-auto max-w-7xl px-4 sm:px-6">
+          <div className="h-16 sm:h-[74px] flex items-center justify-between gap-3">
             <button
               type="button"
               onClick={() => handleNavClick("home")}
               className={[
-                "font-extrabold tracking-tight text-blue-600 select-none transition-all",
-                compact ? "text-lg" : "text-xl",
+                "flex items-center gap-3 select-none shrink-0",
+                isRTL ? "flex-row-reverse" : "",
               ].join(" ")}
               aria-label="Go to home"
             >
-              {t.brand}
+              <span className="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-xl">
+                🧼
+              </span>
+
+              <span className="text-start">
+                <span className="block font-extrabold text-lg tracking-tight text-blue-600 leading-none">
+                  {t.brand}
+                </span>
+              </span>
             </button>
 
-            {/* Desktop nav */}
-            <div className="hidden md:flex flex-1 justify-center">
-              <DesktopNav
-                navItems={navItems}
-                activeId={activeId}
-                scrollToSection={handleNavClick}
-              />
-            </div>
+            <DesktopNav
+              navItems={navItems}
+              activeId={activeId}
+              scrollToSection={handleNavClick}
+            />
 
-            {/* Right actions (Desktop) */}
-            <div className="hidden md:flex items-center gap-2">
-              {/* Contact trigger (desktop) */}
-              <div className="relative" ref={actionsRefDesktop}>
+            <div className="hidden md:flex items-center gap-2 shrink-0">
+              <div ref={langRefDesktop} className="relative">
                 <button
                   type="button"
-                  onClick={toggleActions}
-                  className="px-3 py-2 rounded-xl border border-gray-200 hover:bg-gray-50 active:bg-gray-100 transition text-sm font-semibold flex items-center gap-2"
-                  aria-haspopup="dialog"
-                  aria-expanded={actionsOpen}
+                  onClick={() => setLangOpen((v) => !v)}
+                  className="h-11 px-4 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 text-sm font-bold text-slate-800 inline-flex items-center gap-2"
                 >
-                  <Phone className="w-4 h-4 text-gray-700" />
-                  <span>{t.actions}</span>
-                  <ChevronDown className="w-4 h-4 text-gray-400" />
+                  <span>{t.langLabel}</span>
+                  <ChevronDown
+                    className={`w-4 h-4 transition-transform ${
+                      langOpen ? "rotate-180" : ""
+                    }`}
+                  />
                 </button>
 
-                {actionsOpen && (
-                  <QuickContactSheet
-                    open
-                    onClose={() => setActionsOpen(false)}
-                    contacts={contactItems} // ✅ fixed
-                    anchor={isRTL ? "start" : "end"}
-                    lang={lang}
-                  />
+                {langOpen && (
+                  <div
+                    className={[
+                      "absolute top-full mt-2 min-w-[180px] bg-white border border-slate-200 rounded-2xl shadow-lg p-2",
+                      isRTL ? "left-0" : "right-0",
+                    ].join(" ")}
+                  >
+                    {[
+                      { code: "ar", label: "العربية" },
+                      { code: "en", label: "English" },
+                      { code: "he", label: "עברית" },
+                    ].map((item) => (
+                      <button
+                        key={item.code}
+                        type="button"
+                        onClick={() => {
+                          setLang(item.code);
+                          setLangOpen(false);
+                        }}
+                        className={[
+                          "w-full h-11 px-3 rounded-xl text-sm font-semibold text-start hover:bg-slate-50 transition",
+                          lang === item.code
+                            ? "bg-blue-50 text-blue-700"
+                            : "text-slate-700",
+                        ].join(" ")}
+                      >
+                        {item.label}
+                      </button>
+                    ))}
+                  </div>
                 )}
               </div>
 
-              {/* CTA */}
               <button
                 type="button"
                 onClick={handleCTA}
-                className={[
-                  "rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 active:bg-blue-800 transition",
-                  compact ? "px-3 py-2 text-sm" : "px-4 py-2",
-                ].join(" ")}
+                className="h-11 px-5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm transition"
               >
                 {t.cta}
               </button>
-
-              {/* Language dropdown */}
-              <div className="relative" ref={langRefDesktop}>
-                <button
-                  type="button"
-                  onClick={toggleLang}
-                  className="px-3 py-2 rounded-xl border border-gray-200 hover:bg-gray-50 active:bg-gray-100 transition text-sm font-semibold"
-                  aria-haspopup="menu"
-                  aria-expanded={langOpen}
-                  aria-label={t.langLabel}
-                >
-                  {lang.toUpperCase()}
-                </button>
-
-                {langOpen && (
-                  <div
-                    role="menu"
-                    className={[
-                      "absolute mt-2 w-44 bg-white border border-gray-200 rounded-2xl shadow-lg overflow-hidden",
-                      isRTL ? "left-0" : "right-0",
-                    ].join(" ")}
-                  >
-                    <button
-                      type="button"
-                      role="menuitem"
-                      onClick={() => {
-                        setLang("ar");
-                        setLangOpen(false);
-                      }}
-                      className="w-full px-3 py-2 text-right hover:bg-gray-100"
-                    >
-                      AR العربية
-                    </button>
-                    <button
-                      type="button"
-                      role="menuitem"
-                      onClick={() => {
-                        setLang("en");
-                        setLangOpen(false);
-                      }}
-                      className="w-full px-3 py-2 text-right hover:bg-gray-100"
-                    >
-                      EN English
-                    </button>
-                    <button
-                      type="button"
-                      role="menuitem"
-                      onClick={() => {
-                        setLang("he");
-                        setLangOpen(false);
-                      }}
-                      className="w-full px-3 py-2 text-right hover:bg-gray-100"
-                    >
-                      HE עברית
-                    </button>
-                  </div>
-                )}
-              </div>
             </div>
 
-            {/* Mobile right area */}
-            <div className="md:hidden ms-auto flex items-center gap-2">
-              <div className="relative" ref={langRefMobile}>
+            <div className="md:hidden flex items-center gap-2">
+              <div ref={langRefMobile} className="relative">
                 <button
                   type="button"
-                  onClick={toggleLang}
-                  className="px-3 py-2 rounded-xl border border-gray-200 hover:bg-gray-50 active:bg-gray-100 transition text-sm font-extrabold"
-                  aria-haspopup="menu"
-                  aria-expanded={langOpen}
-                  aria-label={t.langLabel}
+                  onClick={() => setLangOpen((v) => !v)}
+                  className="h-10 px-3 rounded-2xl border border-slate-200 bg-white text-sm font-bold text-slate-800 inline-flex items-center gap-1.5"
                 >
-                  {lang.toUpperCase()}
+                  <span>{t.langLabel}</span>
+                  <ChevronDown
+                    className={`w-4 h-4 transition-transform ${
+                      langOpen ? "rotate-180" : ""
+                    }`}
+                  />
                 </button>
 
                 {langOpen && (
                   <div
-                    role="menu"
                     className={[
-                      "absolute mt-2 w-44 bg-white border border-gray-200 rounded-2xl shadow-lg overflow-hidden",
+                      "absolute top-full mt-2 min-w-[170px] bg-white border border-slate-200 rounded-2xl shadow-lg p-2 z-[9999]",
                       isRTL ? "left-0" : "right-0",
                     ].join(" ")}
                   >
-                    <button
-                      type="button"
-                      role="menuitem"
-                      onClick={() => {
-                        setLang("ar");
-                        setLangOpen(false);
-                      }}
-                      className="w-full px-3 py-2 text-right hover:bg-gray-100"
-                    >
-                      AR العربية
-                    </button>
-
-                    <button
-                      type="button"
-                      role="menuitem"
-                      onClick={() => {
-                        setLang("en");
-                        setLangOpen(false);
-                      }}
-                      className="w-full px-3 py-2 text-right hover:bg-gray-100"
-                    >
-                      EN English
-                    </button>
-
-                    <button
-                      type="button"
-                      role="menuitem"
-                      onClick={() => {
-                        setLang("he");
-                        setLangOpen(false);
-                      }}
-                      className="w-full px-3 py-2 text-right hover:bg-gray-100"
-                    >
-                      HE עברית
-                    </button>
+                    {[
+                      { code: "ar", label: "العربية" },
+                      { code: "en", label: "English" },
+                      { code: "he", label: "עברית" },
+                    ].map((item) => (
+                      <button
+                        key={item.code}
+                        type="button"
+                        onClick={() => {
+                          setLang(item.code);
+                          setLangOpen(false);
+                        }}
+                        className={[
+                          "w-full h-10 px-3 rounded-xl text-sm font-semibold text-start hover:bg-slate-50 transition",
+                          lang === item.code
+                            ? "bg-blue-50 text-blue-700"
+                            : "text-slate-700",
+                        ].join(" ")}
+                      >
+                        {item.label}
+                      </button>
+                    ))}
                   </div>
-                )}
-              </div>
-
-              <div className="relative" ref={actionsRefMobile}>
-                <button
-                  type="button"
-                  onClick={toggleActions}
-                  className="p-2 rounded-xl border border-gray-200 hover:bg-gray-50 active:bg-gray-100 transition"
-                  aria-label={t.actions}
-                >
-                  <Phone className="w-4 h-4 text-gray-700" />
-                </button>
-
-                {actionsOpen && (
-                  <QuickContactSheet
-                    open
-                    onClose={() => setActionsOpen(false)}
-                    contacts={contactItems} // ✅ fixed
-                    anchor={isRTL ? "start" : "end"}
-                    lang={lang}
-                  />
                 )}
               </div>
 
               <button
                 type="button"
-                onClick={handleCTA}
-                className="px-3 py-2 rounded-xl bg-blue-600 text-white font-bold text-sm hover:bg-blue-700 active:bg-blue-800 transition"
+                onClick={() => setMenuOpen(true)}
+                className="h-10 w-10 rounded-2xl border border-slate-200 bg-white flex items-center justify-center text-slate-800"
+                aria-label="Open menu"
               >
-                {t.ctaShort}
+                <Menu className="w-5 h-5" />
               </button>
             </div>
           </div>
         </div>
 
-        {/* Mobile sidebar */}
         <SidebarMenu
           menuOpen={menuOpen}
           setMenuOpen={setMenuOpen}
@@ -627,12 +423,35 @@ export default function Header({ scrollToSection }) {
           scrollToSection={handleNavClick}
           activeId={activeId}
           hintText={t.navHint}
-          labels={{
-            langLabel: t.langLabel,
-            ctaShort: t.ctaShort,
-          }}
+          labels={t}
         />
       </header>
+
+      <QuickContactSheet
+        open={actionsOpen}
+        onClose={() => setActionsOpen(false)}
+        contacts={contactItems}
+        lang={lang}
+      />
+
+      <a
+        href="https://wa.me/972543075619?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%D8%8C%20%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%A7%D9%84%D8%A7%D8%B3%D8%AA%D9%81%D8%B3%D8%A7%D8%B1%20%D8%B9%D9%86%20%D8%AE%D8%AF%D9%85%D8%A7%D8%AA%20%D8%A7%D9%84%D8%AA%D9%86%D8%B8%D9%8A%D9%81."
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={
+          lang === "en" ? "WhatsApp" : lang === "he" ? "וואטסאפ" : "واتساب"
+        }
+        className={[
+          "fixed z-[9997] bottom-4 sm:bottom-5",
+          isRTL ? "left-4 sm:left-5" : "right-4 sm:right-5",
+          "h-14 w-14 rounded-full shadow-lg",
+          "bg-[#25D366] text-white",
+          "flex items-center justify-center",
+          "hover:scale-105 active:scale-95 transition-all",
+        ].join(" ")}
+      >
+        <Phone className="w-5 h-5" />
+      </a>
     </>
   );
 }

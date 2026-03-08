@@ -1,33 +1,298 @@
-import { useEffect, useMemo, useRef, useState, useCallback } from "react";
-import MagicSendButton from "./MagicSendButton";
-import ContactField from "./ContactField";
-import SubjectChips from "./SubjectChips";
-import RememberMeSwitch from "./RememberMeSwitch";
-import PreferredChannelPicker from "./PreferredChannelPicker";
+// src/components/contact/ContactForm.jsx
+import React, {
+  useMemo,
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+} from "react";
 
-const DRAFT_KEY = "CONTACT_FORM_CLEAN_v2";
-const PREF_KEY = "CONTACT_PREF_v2";
-const phoneRegex = /^(?:\+9725\d{8}|0(?:5\d{8}|[2-9]\d{7}))$/;
+const phoneRegex = /^(?:\+972|0)(?:5\d{8}|[23489]\d{7,8})$/;
+const DRAFT_KEY = "CONTACT_DRAFT_V2";
+const PREF_KEY = "CONTACT_PREFS_V2";
 
-const fmtIL = (v) => {
-  const d = v.replace(/\D/g, "");
-  if (d.startsWith("972")) return `+${d.slice(0, 12)}`;
-  const s = d.slice(0, 10);
-  if (s.length <= 3) return s.startsWith("5") ? `0${s}` : s;
-  if (s.length <= 6) return `${s.slice(0, 3)}-${s.slice(3)}`;
-  return `${s.slice(0, 3)}-${s.slice(3, 6)}-${s.slice(6)}`;
-};
-const isPhoneComplete = (v) => v.replace(/\D/g, "").length >= 10;
+function fmtIL(v) {
+  const s = String(v || "").replace(/[^\d+]/g, "");
+  if (s.startsWith("+972")) return s.slice(0, 13);
+  if (s.startsWith("0")) return s.slice(0, 10);
+  return s.slice(0, 13);
+}
 
-/* مكوّن انزلاق/طي مرن وسلس */
-function SlideDown({ open, children, duration = 260 }) {
+function isPhoneComplete(v) {
+  const s = String(v || "").replace(/\D/g, "");
+  return s.length >= 10;
+}
+
+function ContactField({
+  id,
+  label,
+  placeholder,
+  value,
+  onChange,
+  onBlur,
+  onEnterNext,
+  inputProps = {},
+  assistiveText,
+  error,
+  isValid,
+  required,
+  isTextArea = false,
+  autoGrow = false,
+  maxChars,
+  isRTL = true,
+  refEl,
+  shake = false,
+}) {
+  const common =
+    "w-full rounded-2xl border bg-white px-4 text-sm text-gray-900 outline-none transition";
+  const stateCls = error
+    ? "border-rose-300 focus:border-rose-400"
+    : isValid
+      ? "border-emerald-300 focus:border-emerald-400"
+      : "border-gray-200 focus:border-blue-400";
+
+  const cls = `${common} ${stateCls} ${
+    isTextArea ? "min-h-[130px] py-3 resize-none" : "h-12"
+  } ${shake ? "animate-[shake_.28s_linear]" : ""}`;
+
+  return (
+    <div className={isTextArea ? "md:col-span-2" : ""}>
+      <label
+        htmlFor={id}
+        className="mb-2 block text-sm font-semibold text-gray-800"
+      >
+        {label} {required ? <span className="text-rose-500">*</span> : null}
+      </label>
+
+      {isTextArea ? (
+        <textarea
+          id={id}
+          ref={refEl}
+          value={value}
+          onChange={(e) => {
+            onChange(e);
+            if (autoGrow) {
+              e.target.style.height = "auto";
+              e.target.style.height = `${e.target.scrollHeight}px`;
+            }
+          }}
+          onBlur={onBlur}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) onEnterNext?.();
+          }}
+          placeholder={placeholder}
+          className={cls}
+          dir={isRTL ? "rtl" : "ltr"}
+          maxLength={maxChars}
+          {...inputProps}
+        />
+      ) : (
+        <input
+          id={id}
+          ref={refEl}
+          value={value}
+          onChange={onChange}
+          onBlur={onBlur}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              onEnterNext?.();
+            }
+          }}
+          placeholder={placeholder}
+          className={cls}
+          dir={inputProps.dir || (isRTL ? "rtl" : "ltr")}
+          {...inputProps}
+        />
+      )}
+
+      <div className="mt-2 flex items-start justify-between gap-3">
+        <p className="text-xs text-gray-500">{error || assistiveText || " "}</p>
+        {typeof maxChars === "number" ? (
+          <span className="shrink-0 text-[11px] text-gray-400">
+            {String(value || "").length}/{maxChars}
+          </span>
+        ) : null}
+      </div>
+
+      <style>{`
+        @keyframes shake {
+          0%,100% { transform: translateX(0) }
+          25% { transform: translateX(3px) }
+          75% { transform: translateX(-3px) }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+function SubjectChips({
+  id,
+  label,
+  value,
+  onChange,
+  required,
+  error,
+  isRTL = true,
+}) {
+  const items = [
+    {
+      value: "inquiry",
+      labelAr: "استفسار",
+      labelEn: "Inquiry",
+      labelHe: "שאלה",
+    },
+    { value: "booking", labelAr: "حجز", labelEn: "Booking", labelHe: "הזמנה" },
+    { value: "complaint", labelAr: "ملاحظة", labelEn: "Note", labelHe: "הערה" },
+    { value: "other", labelAr: "أخرى", labelEn: "Other", labelHe: "אחר" },
+  ];
+
+  return (
+    <div className="md:col-span-2">
+      <label className="mb-2 block text-sm font-semibold text-gray-800">
+        {label} {required ? <span className="text-rose-500">*</span> : null}
+      </label>
+
+      <div id={id} className="flex flex-wrap gap-2" dir={isRTL ? "rtl" : "ltr"}>
+        {items.map((item) => {
+          const active = value === item.value;
+          return (
+            <button
+              key={item.value}
+              type="button"
+              onClick={() => onChange({ target: { value: item.value } })}
+              className={[
+                "h-10 px-4 rounded-full border text-sm font-semibold transition",
+                active
+                  ? "bg-blue-50 text-blue-700 border-blue-200"
+                  : "bg-white text-gray-700 border-gray-200 hover:border-blue-200 hover:bg-blue-50/60",
+              ].join(" ")}
+            >
+              {item.labelAr}
+            </button>
+          );
+        })}
+      </div>
+
+      <p className="mt-2 text-xs text-rose-500">{error || " "}</p>
+    </div>
+  );
+}
+
+function PreferredChannelPicker({ value, onChange, isRTL = true, label }) {
+  const items = [
+    { value: "either", label: "لا فرق" },
+    { value: "whatsapp", label: "واتساب" },
+    { value: "phone", label: "اتصال" },
+  ];
+
+  return (
+    <div dir={isRTL ? "rtl" : "ltr"}>
+      <p className="mb-2 text-sm font-semibold text-gray-800">{label}</p>
+      <div className="flex flex-wrap gap-2">
+        {items.map((item) => {
+          const active = value === item.value;
+          return (
+            <button
+              key={item.value}
+              type="button"
+              onClick={() => onChange(item.value)}
+              className={[
+                "h-10 px-4 rounded-full border text-sm font-semibold transition",
+                active
+                  ? "bg-blue-50 text-blue-700 border-blue-200"
+                  : "bg-white text-gray-700 border-gray-200 hover:border-blue-200 hover:bg-blue-50/60",
+              ].join(" ")}
+            >
+              {item.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function RememberMeSwitch({ checked, onChange, isRTL = true }) {
+  return (
+    <button
+      type="button"
+      onClick={() => onChange(!checked)}
+      className={[
+        "inline-flex items-center gap-2 text-sm font-medium text-gray-700",
+        isRTL ? "flex-row-reverse" : "",
+      ].join(" ")}
+    >
+      <span
+        className={[
+          "relative h-6 w-11 rounded-full transition",
+          checked ? "bg-emerald-500" : "bg-gray-300",
+        ].join(" ")}
+      >
+        <span
+          className={[
+            "absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition",
+            checked
+              ? isRTL
+                ? "left-0.5"
+                : "right-0.5"
+              : isRTL
+                ? "right-0.5"
+                : "left-0.5",
+          ].join(" ")}
+        />
+      </span>
+      <span>تذكّرني</span>
+    </button>
+  );
+}
+
+function MagicSendButton({
+  state,
+  disabled,
+  labelIdle,
+  labelLoading,
+  labelSuccess,
+  buttonId,
+  buttonRef,
+}) {
+  const label =
+    state === "loading"
+      ? labelLoading
+      : state === "success"
+        ? labelSuccess
+        : labelIdle;
+
+  return (
+    <button
+      id={buttonId}
+      ref={buttonRef}
+      type="submit"
+      disabled={disabled || state === "loading"}
+      className={[
+        "w-full h-12 rounded-2xl text-sm font-bold transition",
+        disabled
+          ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+          : state === "success"
+            ? "bg-emerald-600 text-white"
+            : "bg-slate-900 hover:bg-slate-800 text-white",
+      ].join(" ")}
+    >
+      {label}
+    </button>
+  );
+}
+
+function SlideDown({ open, children, duration = 220 }) {
   const ref = useRef(null);
   const [maxH, setMaxH] = useState(0);
+
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
     setMaxH(open ? el.scrollHeight : 0);
   }, [open, children]);
+
   return (
     <div
       style={{
@@ -43,7 +308,6 @@ function SlideDown({ open, children, duration = 260 }) {
   );
 }
 
-/* حوار/Bottom Sheet لمعاينة واتساب */
 function WaPreview({
   open,
   onClose,
@@ -98,6 +362,7 @@ function WaPreview({
           >
             {openNowText}
           </a>
+
           <button
             type="button"
             onClick={async () => {
@@ -121,10 +386,8 @@ function WaPreview({
 }
 
 export default function ContactForm({ onSend, t = {}, isRTL = true }) {
-  // ✅ لغة آمنة: لو hebrew لازم نعرفها فعلاً (عن طريق __lang من ContactSection)
   const lang = t?.__lang || (isRTL ? "ar" : "en");
 
-  // ✅ helper ترجمة: أقل كود + fallback مضبوط
   const tr = useCallback(
     (key, ar, en, he) => {
       const v = t?.[key];
@@ -133,7 +396,7 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
       if (lang === "en") return en ?? ar ?? he;
       return ar ?? en ?? he;
     },
-    [t, lang]
+    [t, lang],
   );
 
   const [form, setForm] = useState({
@@ -152,27 +415,24 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
   const [shake, setShake] = useState({});
   const [remember, setRemember] = useState(true);
   const [savedHint, setSavedHint] = useState("");
-
   const [showPrefs, setShowPrefs] = useState(false);
   const [waOpen, setWaOpen] = useState(false);
 
-  // ✅ FIX: refs منفصلة (هاي أهم نقطة)
   const nameRef = useRef(null);
   const phoneRef = useRef(null);
   const msgRef = useRef(null);
   const sendBtnRef = useRef(null);
 
-  // draft + subject + channel
   useEffect(() => {
     try {
       const raw = localStorage.getItem(DRAFT_KEY);
       const draft = raw ? JSON.parse(raw) : {};
       const pref = JSON.parse(localStorage.getItem(PREF_KEY) || "{}");
       const urlSubject = new URLSearchParams(window.location.search).get(
-        "subject"
+        "subject",
       );
       const normalized = ["inquiry", "booking", "complaint", "other"].includes(
-        urlSubject || ""
+        urlSubject || "",
       )
         ? urlSubject
         : undefined;
@@ -190,11 +450,10 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
     const { subject, name, phone, message } = form;
     localStorage.setItem(
       DRAFT_KEY,
-      JSON.stringify({ subject, name, phone, message })
+      JSON.stringify({ subject, name, phone, message }),
     );
   }, [form.subject, form.name, form.phone, form.message]);
 
-  // كشف لوحة المفاتيح للموبايل
   useEffect(() => {
     const vv = window.visualViewport;
     if (!vv) return;
@@ -204,7 +463,6 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
     return () => vv.removeEventListener("resize", onResize);
   }, []);
 
-  // تحذير قبل الخروج إذا في مسودة
   useEffect(() => {
     const hasDraft =
       (form.name && form.name.trim().length) ||
@@ -222,7 +480,6 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
     return () => window.removeEventListener("beforeunload", onBeforeUnload);
   }, [form.name, form.phone, form.message, state]);
 
-  // حفظ “تذكّرني”
   useEffect(() => {
     if (!remember) return;
     const { name, phone } = form;
@@ -233,8 +490,8 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
           "contactSavedHint",
           "تم حفظ بياناتك محليًا.",
           "Your details were saved locally.",
-          "הפרטים נשמרו מקומית."
-        )
+          "הפרטים נשמרו מקומית.",
+        ),
       );
       const to = setTimeout(() => setSavedHint(""), 3000);
       return () => clearTimeout(to);
@@ -244,12 +501,13 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
   useEffect(() => {
     try {
       const saved = JSON.parse(localStorage.getItem("CONTACT_ME_v1") || "{}");
-      if (saved.name || saved.phone)
+      if (saved.name || saved.phone) {
         setForm((p) => ({
           ...p,
           name: saved.name || p.name,
           phone: saved.phone || p.phone,
         }));
+      }
 
       const pref = JSON.parse(localStorage.getItem(PREF_KEY) || "{}");
       if (pref.channel) setForm((p) => ({ ...p, channel: pref.channel }));
@@ -267,28 +525,28 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
             "contactPhMessageBooking",
             "الخدمة + اليوم/الساعة…",
             "Service + day/time…",
-            "שירות + יום/שעה…"
+            "שירות + יום/שעה…",
           )
         : form.subject === "complaint"
-        ? tr(
-            "contactPhMessageComplaint",
-            "اكتب الشكوى ...",
-            "Write your complaint...",
-            "כתוב/י את התלונה…"
-          )
-        : form.subject === "other"
-        ? tr(
-            "contactPhMessageOther",
-            "اكتب رسالتك…",
-            "Write your message…",
-            "כתוב/י הודעה…"
-          )
-        : tr(
-            "contactPhMessageInquiry",
-            "سؤالك أو طلب المعلومات…",
-            "Your question or request…",
-            "השאלה/הבקשה שלך…"
-          );
+          ? tr(
+              "contactPhMessageComplaint",
+              "اكتب الشكوى ...",
+              "Write your complaint...",
+              "כתוב/י את התלונה…",
+            )
+          : form.subject === "other"
+            ? tr(
+                "contactPhMessageOther",
+                "اكتب رسالتك…",
+                "Write your message…",
+                "כתוב/י הודעה…",
+              )
+            : tr(
+                "contactPhMessageInquiry",
+                "سؤالك أو طلب المعلومات…",
+                "Your question or request…",
+                "השאלה/הבקשה שלך…",
+              );
 
     return {
       subject: tr("contactSubjectLabel", "موضوع", "Subject", "נושא"),
@@ -307,46 +565,46 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
         "contactNeedMore",
         "أكمل الحقول",
         "Complete fields",
-        "השלם שדות"
+        "השלם שדות",
       ),
 
       assistName: tr(
         "contactAssistName",
         "اكتب اسمك الكامل كما سيظهر بالتواصل.",
         "Enter your full name as it should appear.",
-        "כתוב/י שם מלא כפי שיופיע."
+        "כתוב/י שם מלא כפי שיופיע.",
       ),
       assistPhone: tr(
         "contactAssistPhone",
         "يفضّل رقم متاح على واتساب لسهولة الرد.",
         "Prefer a WhatsApp number for faster replies.",
-        "עדיף מספר זמין בוואטסאפ לתגובה מהירה."
+        "עדיף מספר זמין בוואטסאפ לתגובה מהירה.",
       ),
       assistMsg: tr(
         "contactAssistMsg",
         "اختصر الفكرة بجملة واضحة.",
         "Summarize in a clear sentence.",
-        "סכם/י במשפט ברור."
+        "סכם/י במשפט ברור.",
       ),
 
       moreOpts: tr(
         "contactMoreOpts",
         "خيارات إضافية",
         "More options",
-        "אפשרויות נוספות"
+        "אפשרויות נוספות",
       ),
       moreOptsHide: tr(
         "contactMoreOptsHide",
         "إخفاء الخيارات",
         "Hide options",
-        "הסתר אפשרויות"
+        "הסתר אפשרויות",
       ),
 
       prefTitle: tr(
         "contactPrefTitle",
         "طريقة التواصل المفضّلة",
         "Preferred contact method",
-        "דרך יצירת קשר מועדפת"
+        "דרך יצירת קשר מועדפת",
       ),
       prefPhone: tr("contactPrefPhone", "اتصال", "Call", "שיחה"),
       prefWA: tr("contactPrefWA", "واتساب", "WhatsApp", "וואטסאפ"),
@@ -359,77 +617,83 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
         "contactWAPreviewTitle",
         "معاينة واتساب",
         "WhatsApp preview",
-        "תצוגה מקדימה - וואטסאפ"
+        "תצוגה מקדימה - וואטסאפ",
       ),
       close: tr("commonClose", "إغلاق", "Close", "סגור"),
       openNow: tr(
         "contactWAOpenNow",
         "فتح واتساب الآن",
         "Open WhatsApp now",
-        "פתח וואטסאפ עכשיו"
+        "פתח וואטסאפ עכשיו",
       ),
       copyText: tr("contactWACopy", "نسخ النص", "Copy text", "העתק טקסט"),
       overlayCloseLabel: tr(
         "contactWAPreviewClose",
         "إغلاق المعاينة",
         "Close preview",
-        "סגור תצוגה מקדימה"
+        "סגור תצוגה מקדימה",
       ),
       clearPrefA11y: tr(
         "contactClearPrefA11y",
         "إزالة التفضيل",
         "Clear preference",
-        "נקה העדפה"
+        "נקה העדפה",
       ),
     };
   }, [form.subject, savedHint, tr]);
 
   const validate = (draft = form) => {
     const e = {};
-    if (!draft.subject)
+
+    if (!draft.subject) {
       e.subject = tr(
         "contactErrSubject",
         "اختر الموضوع",
         "Choose a subject",
-        "בחר נושא"
+        "בחר נושא",
       );
-    if (!draft.name.trim())
+    }
+
+    if (!draft.name.trim()) {
       e.name = tr(
         "contactErrName",
         "اكتب اسمك",
         "Enter your name",
-        "הכנס/י שם"
+        "הכנס/י שם",
       );
+    }
 
     const clean = draft.phone.replace(/\D/g, "");
     const normalized = clean.startsWith("972")
       ? `+${clean}`
       : clean.startsWith("0")
-      ? `0${clean.slice(1)}`
-      : draft.phone.trim();
+        ? `0${clean.slice(1)}`
+        : draft.phone.trim();
 
-    if (!draft.phone.trim())
+    if (!draft.phone.trim()) {
       e.phone = tr(
         "contactErrPhoneEmpty",
         "أدخل رقمك",
         "Enter your phone",
-        "הכנס/י טלפון"
+        "הכנס/י טלפון",
       );
-    else if (!phoneRegex.test(normalized))
+    } else if (!phoneRegex.test(normalized)) {
       e.phone = tr(
         "contactErrPhoneInvalid",
         "رقم غير صالح",
         "Invalid phone number",
-        "מספר לא תקין"
+        "מספר לא תקין",
       );
+    }
 
-    if (!draft.message.trim())
+    if (!draft.message.trim()) {
       e.message = tr(
         "contactErrMessage",
         "اكتب الرسالة",
         "Enter a message",
-        "כתוב/י הודעה"
+        "כתוב/י הודעה",
       );
+    }
 
     if (draft.honey) e.honey = "Spam";
     return e;
@@ -446,8 +710,9 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
       setErrors((prev) => ({ ...prev, [id]: now[id] }));
     }
 
-    if (id === "phone" && isPhoneComplete(next))
+    if (id === "phone" && isPhoneComplete(next)) {
       setTimeout(() => msgRef.current?.focus(), 0);
+    }
   };
 
   const handleBlur = (e) => {
@@ -456,6 +721,28 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
     const eOne = validate();
     setErrors((prev) => ({ ...prev, [id]: eOne[id] }));
   };
+
+  const channelLabel =
+    form.channel === "whatsapp"
+      ? labels.prefWA
+      : form.channel === "phone"
+        ? labels.prefPhone
+        : labels.prefEither;
+
+  const waText = encodeURIComponent(
+    `${tr("waLabelSubject", "موضوع", "Subject", "נושא")}: ${form.subject}\n` +
+      `${tr("waLabelName", "الاسم", "Name", "שם")}: ${form.name}\n` +
+      `${tr("waLabelPhone", "الهاتف", "Phone", "טלפון")}: ${form.phone}\n` +
+      `${tr(
+        "waLabelChannel",
+        "القناة المفضلة",
+        "Preferred channel",
+        "ערוץ מועדף",
+      )}: ${channelLabel}\n` +
+      `${tr("waLabelMessage", "الرسالة", "Message", "הודעה")}:\n${form.message}`,
+  );
+
+  const waHref = `https://wa.me/972543075619?text=${waText}`;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -473,15 +760,20 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
 
     if (Object.keys(eNow).length) {
       const firstKey = ["subject", "name", "phone", "message"].find(
-        (k) => eNow[k]
+        (k) => eNow[k],
       );
       document.getElementById(firstKey)?.focus();
       setTimeout(() => setShake({}), 350);
       return;
     }
 
+    let waWindow = null;
+
     try {
+      waWindow = window.open("", "_blank", "noopener,noreferrer");
+
       setState("loading");
+
       await onSend({
         subject: form.subject,
         name: form.name.trim(),
@@ -490,12 +782,23 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
         channel: form.channel,
       });
 
+      if (waWindow) {
+        waWindow.location.href = waHref;
+      } else {
+        window.open(waHref, "_blank", "noopener,noreferrer");
+      }
+
       setState("success");
       setForm((p) => ({ ...p, name: "", phone: "", message: "" }));
       setTouched({});
       setErrors({});
       setTimeout(() => setState("idle"), 1100);
     } catch {
+      if (waWindow) {
+        try {
+          waWindow.close();
+        } catch {}
+      }
       setState("idle");
     }
   };
@@ -505,36 +808,14 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
     const normalized = clean.startsWith("972")
       ? `+${clean}`
       : clean.startsWith("0")
-      ? `0${clean.slice(1)}`
-      : form.phone.trim();
+        ? `0${clean.slice(1)}`
+        : form.phone.trim();
     return phoneRegex.test(normalized);
   })();
 
   const ready =
     !!(form.subject && form.name.trim() && validPhone && form.message.trim()) &&
     state !== "loading";
-
-  const channelLabel =
-    form.channel === "whatsapp"
-      ? labels.prefWA
-      : form.channel === "phone"
-      ? labels.prefPhone
-      : labels.prefEither;
-
-  const waText = encodeURIComponent(
-    `${tr("waLabelSubject", "موضوع", "Subject", "נושא")}: ${form.subject}\n` +
-      `${tr("waLabelName", "الاسم", "Name", "שם")}: ${form.name}\n` +
-      `${tr("waLabelPhone", "الهاتف", "Phone", "טלפון")}: ${form.phone}\n` +
-      `${tr(
-        "waLabelChannel",
-        "القناة المفضلة",
-        "Preferred channel",
-        "ערוץ מועדף"
-      )}: ${channelLabel}\n` +
-      `${tr("waLabelMessage", "الرسالة", "Message", "הודעה")}:\n${form.message}`
-  );
-
-  const waHref = `https://wa.me/972543075619?text=${waText}`;
 
   const isNonDefaultChannel = form.channel !== "either";
   const canShowRemember = form.name.trim() && isPhoneComplete(form.phone);
@@ -545,7 +826,6 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
       onSubmit={handleSubmit}
       className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 p-4 sm:p-6"
     >
-      {/* honeypot */}
       <input
         id="honey"
         name="honey"
@@ -557,7 +837,6 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
         aria-hidden="true"
       />
 
-      {/* الموضوع */}
       <SubjectChips
         id="subject"
         label={labels.subject}
@@ -572,7 +851,6 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
         isRTL={isRTL}
       />
 
-      {/* الاسم */}
       <ContactField
         id="name"
         label={labels.name}
@@ -591,7 +869,6 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
         shake={shake.name}
       />
 
-      {/* الهاتف */}
       <ContactField
         id="phone"
         label={labels.phone}
@@ -610,7 +887,6 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
         shake={shake.phone}
       />
 
-      {/* الرسالة */}
       <ContactField
         id="message"
         label={labels.message}
@@ -632,7 +908,6 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
         shake={shake.message}
       />
 
-      {/* --- زر/لوحة "خيارات إضافية" --- */}
       <div className="md:col-span-2 -mt-1">
         <div className="flex items-center justify-between gap-3">
           <button
@@ -702,9 +977,7 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
         </SlideDown>
       </div>
 
-      {/* أزرار الإرسال */}
       <div className="md:col-span-2">
-        {/* Desktop */}
         <div className="hidden md:flex items-center justify-center gap-3 mt-1">
           <button
             type="button"
@@ -730,7 +1003,6 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
           />
         </div>
 
-        {/* Mobile sticky bar */}
         <div
           className={`md:hidden sticky bottom-0 z-40 px-4 ${
             kbOpen ? "pb-2" : "pb-[max(10px,env(safe-area-inset-bottom))]"

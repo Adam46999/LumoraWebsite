@@ -1,3 +1,4 @@
+// src/components/BefAfter/BeforeAfter.jsx
 import React, {
   useMemo,
   useRef,
@@ -57,7 +58,6 @@ export default function BeforeAfter({
   const { t, lang } = useLanguage();
   const isRTL = useMemo(() => lang === "ar" || lang === "he", [lang]);
 
-  // ✅ helper: minimal + easy future translation
   const tr = useCallback(
     (key, ar, en, he) => {
       const v = t?.[key];
@@ -66,7 +66,7 @@ export default function BeforeAfter({
       if (lang === "en") return en ?? ar ?? he;
       return ar ?? en ?? he;
     },
-    [t, lang]
+    [t, lang],
   );
 
   const beforeLabel = tr("ba_before", "قبل", "Before", "לפני");
@@ -137,6 +137,11 @@ export default function BeforeAfter({
     return tr("ba_close", "إغلاق", "Close", "סגור");
   }, [tr]);
 
+  const openPreview = (e) => {
+    e.stopPropagation();
+    toggleFullscreenOrFallback();
+  };
+
   return (
     <>
       <div
@@ -152,10 +157,7 @@ export default function BeforeAfter({
       >
         <button
           type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            toggleFullscreenOrFallback();
-          }}
+          onClick={openPreview}
           className="absolute top-2 end-2 z-30 h-10 w-10 rounded-full bg-black/45 text-white backdrop-blur-md flex items-center justify-center hover:bg-black/55 transition"
           aria-label={isFullscreen || fallbackOpen ? closeLabel : zoomLabel}
         >
@@ -163,7 +165,12 @@ export default function BeforeAfter({
         </button>
 
         <div className="absolute inset-0 grid grid-cols-2">
-          <div className="relative overflow-hidden">
+          <button
+            type="button"
+            onClick={openPreview}
+            className="relative overflow-hidden text-start cursor-zoom-in"
+            aria-label={`${beforeLabel} - ${zoomLabel}`}
+          >
             <LabelPill text={beforeLabel} align={isRTL ? "end" : "start"} />
             <img
               src={beforeImage}
@@ -178,9 +185,14 @@ export default function BeforeAfter({
               className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/20 via-black/5 to-transparent"
               aria-hidden="true"
             />
-          </div>
+          </button>
 
-          <div className="relative overflow-hidden">
+          <button
+            type="button"
+            onClick={openPreview}
+            className="relative overflow-hidden text-start cursor-zoom-in"
+            aria-label={`${afterLabel} - ${zoomLabel}`}
+          >
             <LabelPill text={afterLabel} align={isRTL ? "start" : "end"} />
             <img
               src={afterImage}
@@ -195,7 +207,7 @@ export default function BeforeAfter({
               className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/20 via-black/5 to-transparent"
               aria-hidden="true"
             />
-          </div>
+          </button>
         </div>
 
         <div className="pointer-events-none absolute inset-y-0 left-1/2 -translate-x-1/2 z-20">
@@ -214,12 +226,11 @@ export default function BeforeAfter({
             "ba_previewAria",
             "معاينة قبل وبعد",
             "Before/After preview",
-            "תצוגה לפני/אחרי"
+            "תצוגה לפני/אחרי",
           )}
         >
           <button
             type="button"
-            data-no-preview
             onClick={(e) => {
               e.stopPropagation();
               closeFallback();
@@ -246,6 +257,7 @@ export default function BeforeAfter({
                   decoding="async"
                 />
               </div>
+
               <div className="relative overflow-hidden">
                 <LabelPill text={afterLabel} align={isRTL ? "start" : "end"} />
                 <img

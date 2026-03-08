@@ -20,18 +20,14 @@ export const serviceDetails = {
         name_en: "Full Sofa Cleaning",
         name_he: "ניקוי ספות מלא",
 
-        // ✅ per-language duration
         duration_ar: "45 دقيقة",
         duration_en: "45 min",
         duration_he: "45 דקות",
-        // ✅ keep old fallback
         duration: "45 دقيقة",
 
-        // ✅ per-language price
         price_ar: "150 ₪",
         price_en: "₪150",
         price_he: "150 ₪",
-        // ✅ keep old fallback
         price: "150 ₪",
 
         features_ar: [
@@ -104,12 +100,9 @@ export const serviceDetails = {
     title_ar: "تنظيف فرش السيارات",
     title_en: "Car Interior Cleaning",
     title_he: "ניקוי פנים רכב",
-    subtitle_ar:
-      "نظافة داخلية متكاملة: المقاعد، الأرضية، أو الاثنين معًا — مع خيار باقة مع غسيل خارجي.",
-    subtitle_en:
-      "Complete interior cleaning: seats, floor, or both — with an optional exterior wash bundle.",
-    subtitle_he:
-      "ניקוי פנים מלא: מושבים, רצפה או שניהם — עם אפשרות לחבילה הכוללת שטיפה חיצונית.",
+    subtitle_ar: "نظافة داخلية متكاملة: المقاعد، الأرضية، أو الاثنين معًا.",
+    subtitle_en: "Complete interior cleaning: seats, floor, or both.",
+    subtitle_he: "ניקוי פנים מלא: מושבים, רצפה או שניהם.",
     image: seatsImg,
     color: "teal",
     cards: [
@@ -170,41 +163,19 @@ export const serviceDetails = {
         price: "500 ₪",
 
         features_ar: [
-          "تنظيف المقاعد والأرضية بشكل كامل",
-          "تعطير ولمسة نهائية منعشة",
+          "تنظيف شامل للمقاعد والأرضية",
+          "إزالة البقع والروائح",
+          "نتيجة داخلية أنظف وأكثر انتعاشًا",
         ],
         features_en: [
-          "Complete seats & floor cleaning",
-          "Fresh finish & deodorizing",
-        ],
-        features_he: ["ניקוי מלא למושבים ולרצפה", "גימור רענן והסרת ריחות"],
-      },
-      {
-        name_ar: "داخلي شامل + غسيل سيارة خارجي",
-        name_en: "Full Interior + Exterior Wash",
-        name_he: "פנים מלא + שטיפה חיצונית",
-
-        duration_ar: "4 ساعات",
-        duration_en: "4 hours",
-        duration_he: "4 שעות",
-        duration: "4 ساعات",
-
-        price_ar: "550 ₪",
-        price_en: "₪550",
-        price_he: "550 ₪",
-        price: "550 ₪",
-
-        features_ar: [
-          "تنظيف المقاعد + الأرضية بالكامل",
-          "غسيل خارجي شامل وتجفيف يدوي",
-        ],
-        features_en: [
-          "Full interior (seats + floor)",
-          "Exterior wash & hand dry",
+          "Complete seat and floor cleaning",
+          "Stain & odor removal",
+          "Cleaner, fresher interior result",
         ],
         features_he: [
-          "ניקוי פנים מלא (מושבים + רצפה)",
-          "שטיפה חיצונית וייבוש ידני",
+          "ניקוי מלא של המושבים והרצפה",
+          "הסרת כתמים וריחות",
+          "תוצאה פנימית נקייה ורעננה יותר",
         ],
       },
     ],
@@ -225,11 +196,6 @@ export const serviceDetails = {
         name_ar: "غسيل لومورا",
         name_en: "LUMORA Wash",
         name_he: "שטיפת Lumora",
-
-        // (لو ما في مدة خلّيها varies بالـ UI)
-        // duration_ar: "...",
-        // duration_en: "...",
-        // duration_he: "...",
 
         price_ar: "80 سيارة / 100 جيب ₪",
         price_en: "₪80 car / ₪100 SUV",
