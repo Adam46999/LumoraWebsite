@@ -1,59 +1,220 @@
 // src/components/Header.jsx
-import { useEffect, useMemo, useRef, useState, useCallback } from "react";
-import { Menu, Phone, ChevronDown } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  CarFront,
+  ChevronDown,
   Layers as CarpetIcon,
+  Menu,
   Sofa as SofaIcon,
-  CarFront as CarIcon,
 } from "lucide-react";
-import { useLanguage } from "../context/LanguageContext";
-import SidebarMenu from "../header/SidebarMenu";
-import DesktopNav from "../header/DesktopNav";
 
-import QuickContactSheet from "./quick-contact/QuickContactSheet";
-import { CONTACTS } from "./quick-contact/contacts";
+import { useLanguage } from "../context/LanguageContext";
+import DesktopNav from "../header/DesktopNav";
+import SidebarMenu from "../header/SidebarMenu";
+
+const LANGUAGES = [
+  {
+    code: "ar",
+    label: "العربية",
+    shortLabel: "AR",
+  },
+  {
+    code: "he",
+    label: "עברית",
+    shortLabel: "HE",
+  },
+  {
+    code: "en",
+    label: "English",
+    shortLabel: "EN",
+  },
+];
+
+const MAIN_SECTION_IDS = ["home", "services", "beforeafter", "faq", "contact"];
+
+function getServiceElement(id) {
+  if (!id) return null;
+
+  return (
+    document.querySelector(`[data-service-id="${id}"]`) ||
+    document.getElementById(`service-${id}`) ||
+    document.getElementById(id)
+  );
+}
+
+function LanguageMenu({
+  lang,
+  setLang,
+  isRTL,
+  open,
+  setOpen,
+  containerRef,
+  label,
+  mobile = false,
+}) {
+  const activeLanguage =
+    LANGUAGES.find((item) => item.code === lang) || LANGUAGES[0];
+
+  return (
+    <div ref={containerRef} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((current) => !current)}
+        className={[
+          "inline-flex items-center justify-center gap-1.5",
+          "border border-slate-200 bg-white text-slate-800",
+          "font-bold transition",
+          "hover:border-slate-300 hover:bg-slate-50",
+          "focus-visible:outline-none focus-visible:ring-2",
+          "focus-visible:ring-blue-500/30",
+          mobile
+            ? "h-10 min-w-16 rounded-xl px-2.5 text-xs"
+            : "h-11 rounded-2xl px-4 text-sm",
+        ].join(" ")}
+        aria-label={label}
+        aria-haspopup="menu"
+        aria-expanded={open}
+      >
+        <span className={mobile ? "uppercase" : ""}>
+          {mobile ? activeLanguage.shortLabel : label}
+        </span>
+
+        <ChevronDown
+          className={[
+            "h-4 w-4 transition-transform duration-200",
+            open ? "rotate-180" : "",
+          ].join(" ")}
+          aria-hidden="true"
+        />
+      </button>
+
+      {open ? (
+        <div
+          role="menu"
+          className={[
+            "absolute top-full z-[10020] mt-2 min-w-[170px]",
+            "rounded-2xl border border-slate-200 bg-white p-2",
+            "shadow-[0_18px_50px_rgba(15,23,42,0.16)]",
+            isRTL ? "left-0" : "right-0",
+          ].join(" ")}
+        >
+          {LANGUAGES.map((item) => {
+            const selected = lang === item.code;
+
+            return (
+              <button
+                key={item.code}
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  setLang(item.code);
+                  setOpen(false);
+                }}
+                className={[
+                  "flex h-11 w-full items-center justify-between",
+                  "rounded-xl px-3 text-sm font-bold transition",
+                  isRTL ? "text-right" : "text-left",
+                  selected
+                    ? "bg-blue-50 text-blue-700"
+                    : "text-slate-700 hover:bg-slate-50",
+                ].join(" ")}
+              >
+                <span>{item.label}</span>
+
+                {selected ? (
+                  <span
+                    className="h-2 w-2 rounded-full bg-blue-600"
+                    aria-hidden="true"
+                  />
+                ) : null}
+              </button>
+            );
+          })}
+        </div>
+      ) : null}
+    </div>
+  );
+}
 
 export default function Header({ scrollToSection }) {
   const { lang, setLang } = useLanguage();
+
   const isRTL = lang === "ar" || lang === "he";
 
-  const t = useMemo(() => {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [langOpen, setLangOpen] = useState(false);
+  const [activeId, setActiveId] = useState("home");
+  const [compact, setCompact] = useState(false);
+
+  const fixedHeaderRef = useRef(null);
+  const desktopLanguageRef = useRef(null);
+  const mobileLanguageRef = useRef(null);
+  const scrollFrameRef = useRef(null);
+
+  const labels = useMemo(() => {
     if (lang === "he") {
       return {
         brand: "Lumora",
-        cta: "הזמן עכשיו — מענה מהיר",
-        ctaShort: "הזמן",
-        hint: "טיפ: פתח את התפריט ונווט במהירות.",
-        navHint: "ניווט מהיר וברור.",
-        langLabel: "שפה",
-        actions: "צור קשר",
+        home: "ראשי",
+        services: "שירותים",
+        sofa: "ניקוי ספות",
+        carpet: "ניקוי שטיחים",
+        carSeats: "ניקוי פנים הרכב",
+        gallery: "גלריה",
+        faq: "שאלות נפוצות",
         contact: "צור קשר",
-        skip: "דלג לתוכן",
+        cta: "הזמנת שירות",
+        ctaShort: "הזמנה",
+        language: "שפה",
+        navigationHint: "בחר שירות או עבור ישירות לחלק הרצוי.",
+        skip: "דלג לשירותים",
+        homeAria: "חזרה לראש העמוד",
+        menuAria: "פתיחת התפריט",
+        primaryNavigation: "ניווט ראשי",
       };
     }
+
     if (lang === "en") {
       return {
         brand: "Lumora",
-        cta: "Book now — fast response",
-        ctaShort: "Book",
-        hint: "Tip: open the menu to navigate quickly.",
-        navHint: "Fast, clear navigation.",
-        langLabel: "Language",
-        actions: "Contact",
-        contact: "Contact",
-        skip: "Skip to content",
+        home: "Home",
+        services: "Services",
+        sofa: "Sofa cleaning",
+        carpet: "Carpet cleaning",
+        carSeats: "Car interior cleaning",
+        gallery: "Gallery",
+        faq: "FAQ",
+        contact: "Contact us",
+        cta: "Request service",
+        ctaShort: "Request",
+        language: "Language",
+        navigationHint:
+          "Choose a service or go directly to the section you need.",
+        skip: "Skip to services",
+        homeAria: "Return to the top",
+        menuAria: "Open navigation menu",
+        primaryNavigation: "Primary navigation",
       };
     }
+
     return {
       brand: "Lumora",
-      cta: "احجز الآن — رد سريع",
-      ctaShort: "احجز",
-      hint: "تلميح: افتح القائمة للتنقّل بسرعة.",
-      navHint: "تنقّل بسرعة، وكل شيء واضح.",
-      langLabel: "اللغة",
-      actions: "تواصل",
-      contact: "تواصل",
-      skip: "تجاوز للمحتوى",
+      home: "الرئيسية",
+      services: "خدماتنا",
+      sofa: "تنظيف الكنب",
+      carpet: "تنظيف السجاد",
+      carSeats: "تنظيف فرش السيارات",
+      gallery: "معرض النتائج",
+      faq: "الأسئلة الشائعة",
+      contact: "تواصل معنا",
+      cta: "اطلب الخدمة",
+      ctaShort: "اطلب",
+      language: "اللغة",
+      navigationHint: "اختر الخدمة أو انتقل مباشرة للقسم الذي تحتاجه.",
+      skip: "تجاوز إلى الخدمات",
+      homeAria: "العودة إلى أعلى الصفحة",
+      menuAria: "فتح قائمة التنقل",
+      primaryNavigation: "التنقل الرئيسي",
     };
   }, [lang]);
 
@@ -61,356 +222,300 @@ export default function Header({ scrollToSection }) {
     () => [
       {
         id: "services",
-        label:
-          lang === "en" ? "Services" : lang === "he" ? "שירותים" : "خدماتنا",
+        label: labels.services,
         subItems: [
           {
             id: "sofa",
-            label:
-              lang === "en"
-                ? "Sofa cleaning"
-                : lang === "he"
-                  ? "ניקוי ספות"
-                  : "تنظيف الكنب",
+            label: labels.sofa,
             icon: SofaIcon,
           },
           {
             id: "carpet",
-            label:
-              lang === "en"
-                ? "Carpet cleaning"
-                : lang === "he"
-                  ? "ניקוי שטיחים"
-                  : "تنظيف السجاد",
+            label: labels.carpet,
             icon: CarpetIcon,
           },
           {
             id: "carSeats",
-            label:
-              lang === "en"
-                ? "Car interior cleaning"
-                : lang === "he"
-                  ? "ניקוי פנים הרכב"
-                  : "تنظيف فرش السيارات",
-            icon: CarIcon,
+            label: labels.carSeats,
+            icon: CarFront,
           },
         ],
       },
       {
         id: "beforeafter",
-        label:
-          lang === "en" ? "Gallery" : lang === "he" ? "גלריה" : "معرض الصور",
+        label: labels.gallery,
       },
       {
         id: "faq",
-        label:
-          lang === "en"
-            ? "FAQ"
-            : lang === "he"
-              ? "שאלות נפוצות"
-              : "الأسئلة الشائعة",
+        label: labels.faq,
       },
       {
         id: "contact",
-        label:
-          lang === "en" ? "Contact" : lang === "he" ? "צור קשר" : "تواصل معنا",
+        label: labels.contact,
       },
     ],
-    [lang],
+    [labels],
   );
 
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [langOpen, setLangOpen] = useState(false);
-  const [actionsOpen, setActionsOpen] = useState(false);
-  const [activeId, setActiveId] = useState(navItems[0]?.id || "services");
-  const [compact, setCompact] = useState(false);
-
-  const headerRef = useRef(null);
-  const langRefDesktop = useRef(null);
-  const langRefMobile = useRef(null);
-  const actionsRefDesktop = useRef(null);
-  const actionsRefMobile = useRef(null);
-
-  const contactItems = useMemo(() => {
-    return (CONTACTS || []).map((c) => ({
-      id: c.id,
-      name: lang === "en" ? c.nameEn : lang === "he" ? c.nameHe : c.nameAr,
-      phoneDisplay: c.phone,
-      phoneRaw: c.tel,
-      whatsappRaw: c.whatsapp,
-      note: lang === "en" ? c.noteEn : lang === "he" ? c.noteHe : c.noteAr,
-    }));
-  }, [lang]);
-
-  const scrollToIdLocal = useCallback((id) => {
+  const fallbackScroll = useCallback((id) => {
     if (!id) return false;
 
-    const candidates = [
-      id,
-      `section-${id}`,
-      `sec-${id}`,
-      `#${id}`,
-      `item-${id}`,
-      `svc-${id}`,
-    ];
+    let element = null;
 
-    let el = null;
-    for (const c of candidates) {
-      const clean = c.startsWith("#") ? c.slice(1) : c;
-      el = document.getElementById(clean);
-      if (el) break;
+    if (["sofa", "carpet", "carSeats", "glass"].includes(id)) {
+      element = getServiceElement(id);
+    } else {
+      element = document.getElementById(id);
     }
 
-    if (!el) el = document.querySelector(`[data-section="${id}"]`);
-    if (!el) el = document.querySelector(`[data-id="${id}"]`);
-    if (!el) el = document.querySelector(`[data-anchor="${id}"]`);
+    if (!element) return false;
 
-    if (!el && (id === "carpet" || id === "sofa" || id === "carSeats")) {
-      const parent =
-        document.getElementById("services") ||
-        document.querySelector(`[data-section="services"]`);
-      if (parent) {
-        const offset = (headerRef.current?.offsetHeight || 72) + 12;
-        const top =
-          parent.getBoundingClientRect().top + window.scrollY - offset;
-        window.scrollTo({ top, behavior: "smooth" });
+    const headerHeight = fixedHeaderRef.current?.offsetHeight || 64;
 
-        window.setTimeout(() => {
-          const again =
-            document.getElementById(id) ||
-            document.querySelector(`[data-section="${id}"]`) ||
-            document.querySelector(`[data-id="${id}"]`) ||
-            document.querySelector(`[data-anchor="${id}"]`);
-          if (again) {
-            const top2 =
-              again.getBoundingClientRect().top + window.scrollY - offset;
-            window.scrollTo({ top: top2, behavior: "smooth" });
-          }
-        }, 320);
+    const top =
+      element.getBoundingClientRect().top + window.scrollY - headerHeight - 12;
 
-        return true;
-      }
-      return false;
-    }
+    window.scrollTo({
+      top: Math.max(0, top),
+      behavior: "smooth",
+    });
 
-    if (!el) return false;
-
-    const offset = (headerRef.current?.offsetHeight || 72) + 12;
-    const top = el.getBoundingClientRect().top + window.scrollY - offset;
-    window.scrollTo({ top, behavior: "smooth" });
     return true;
   }, []);
 
-  const handleNavClick = useCallback(
+  const handleNavigation = useCallback(
     (id) => {
+      if (!id) return;
+
       setActiveId(id);
       setMenuOpen(false);
       setLangOpen(false);
-      setActionsOpen(false);
 
-      let ok = false;
-      try {
-        if (typeof scrollToSection === "function") {
-          scrollToSection(id);
-          ok = true;
-        }
-      } catch {
-        ok = false;
+      if (typeof scrollToSection === "function") {
+        scrollToSection(id);
+        return;
       }
 
-      const scrolled = scrollToIdLocal(id);
-      if (!ok && !scrolled) {
-      }
+      fallbackScroll(id);
     },
-    [scrollToSection, scrollToIdLocal],
+    [fallbackScroll, scrollToSection],
   );
 
-  const handleCTA = () => handleNavClick("contact");
+  const updateActiveSection = useCallback(() => {
+    const headerHeight = fixedHeaderRef.current?.offsetHeight || 64;
+    const readingLine = window.scrollY + headerHeight + 120;
 
-  useEffect(() => {
-    const onScroll = () => setCompact(window.scrollY > 12);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    let currentId = "home";
+
+    MAIN_SECTION_IDS.forEach((id) => {
+      const element = document.getElementById(id);
+
+      if (!element) return;
+
+      const top = element.getBoundingClientRect().top + window.scrollY;
+
+      if (top <= readingLine) {
+        currentId = id;
+      }
+    });
+
+    setActiveId((previous) => (previous === currentId ? previous : currentId));
+
+    setCompact(window.scrollY > 10);
   }, []);
 
   useEffect(() => {
-    const onDocClick = (e) => {
-      const inLang =
-        langRefDesktop.current?.contains(e.target) ||
-        langRefMobile.current?.contains(e.target);
+    const handleScrollOrResize = () => {
+      if (scrollFrameRef.current) return;
 
-      const inActions =
-        actionsRefDesktop.current?.contains(e.target) ||
-        actionsRefMobile.current?.contains(e.target);
-
-      if (!inLang) setLangOpen(false);
-      if (!inActions) setActionsOpen(false);
+      scrollFrameRef.current = window.requestAnimationFrame(() => {
+        scrollFrameRef.current = null;
+        updateActiveSection();
+      });
     };
 
-    document.addEventListener("mousedown", onDocClick);
-    return () => document.removeEventListener("mousedown", onDocClick);
+    updateActiveSection();
+
+    window.addEventListener("scroll", handleScrollOrResize, {
+      passive: true,
+    });
+
+    window.addEventListener("resize", handleScrollOrResize);
+
+    return () => {
+      window.removeEventListener("scroll", handleScrollOrResize);
+      window.removeEventListener("resize", handleScrollOrResize);
+
+      if (scrollFrameRef.current) {
+        window.cancelAnimationFrame(scrollFrameRef.current);
+      }
+    };
+  }, [updateActiveSection]);
+
+  useEffect(() => {
+    const handleOutsideClick = (event) => {
+      const clickedInsideDesktop = desktopLanguageRef.current?.contains(
+        event.target,
+      );
+
+      const clickedInsideMobile = mobileLanguageRef.current?.contains(
+        event.target,
+      );
+
+      if (!clickedInsideDesktop && !clickedInsideMobile) {
+        setLangOpen(false);
+      }
+    };
+
+    const handleEscape = (event) => {
+      if (event.key === "Escape") {
+        setLangOpen(false);
+        setMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleOutsideClick);
+    window.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+      window.removeEventListener("keydown", handleEscape);
+    };
   }, []);
 
   return (
     <>
       <a
         href="#services"
-        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:start-3 focus:z-[99999] focus:bg-white focus:text-slate-900 focus:px-4 focus:py-2 focus:rounded-xl focus:shadow"
+        onClick={(event) => {
+          event.preventDefault();
+          handleNavigation("services");
+        }}
+        className="
+          sr-only
+          focus:not-sr-only
+          focus:fixed focus:start-3 focus:top-3 focus:z-[10050]
+          focus:rounded-xl focus:bg-white focus:px-4 focus:py-2
+          focus:font-bold focus:text-slate-900 focus:shadow-lg
+        "
       >
-        {t.skip}
+        {labels.skip}
       </a>
 
-      <header
-        ref={headerRef}
+      <div
+        ref={fixedHeaderRef}
         className={[
-          "sticky top-0 z-[9998] w-full transition-all duration-300",
+          "fixed inset-x-0 top-0 z-[9998] w-full",
+          "transition-[background-color,box-shadow,border-color]",
+          "duration-300",
           compact
-            ? "bg-white/92 backdrop-blur border-b border-slate-200 shadow-sm"
-            : "bg-white/88 backdrop-blur-sm",
+            ? "border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur-xl"
+            : "border-b border-transparent bg-white/90 backdrop-blur-lg",
         ].join(" ")}
         dir={isRTL ? "rtl" : "ltr"}
       >
-        <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <div className="h-16 sm:h-[74px] flex items-center justify-between gap-3">
+        <div className="mx-auto max-w-7xl px-3 sm:px-6">
+          <div className="flex h-16 items-center justify-between gap-2 sm:h-[74px] sm:gap-4">
             <button
               type="button"
-              onClick={() => handleNavClick("home")}
+              onClick={() => handleNavigation("home")}
               className={[
-                "flex items-center gap-3 select-none shrink-0",
+                "flex shrink-0 items-center gap-2.5 rounded-2xl",
+                "select-none py-1 transition",
+                "hover:opacity-80",
+                "focus-visible:outline-none focus-visible:ring-2",
+                "focus-visible:ring-blue-500/30",
                 isRTL ? "flex-row-reverse" : "",
               ].join(" ")}
-              aria-label="Go to home"
+              aria-label={labels.homeAria}
             >
-              <span className="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-xl">
+              <span
+                className="
+                  flex h-10 w-10 items-center justify-center
+                  rounded-2xl border border-blue-100 bg-blue-50
+                  text-xl shadow-sm
+                "
+                aria-hidden="true"
+              >
                 🧼
               </span>
 
-              <span className="text-start">
-                <span className="block font-extrabold text-lg tracking-tight text-blue-600 leading-none">
-                  {t.brand}
+              <span className="hidden text-start min-[370px]:block">
+                <span className="block text-lg font-extrabold leading-none tracking-tight text-blue-600">
+                  {labels.brand}
+                </span>
+
+                <span className="mt-1 hidden text-[10px] font-semibold text-slate-500 sm:block">
+                  {labels.home}
                 </span>
               </span>
             </button>
 
-            <DesktopNav
-              navItems={navItems}
-              activeId={activeId}
-              scrollToSection={handleNavClick}
-            />
+            <div aria-label={labels.primaryNavigation}>
+              <DesktopNav
+                navItems={navItems}
+                activeId={activeId}
+                scrollToSection={handleNavigation}
+              />
+            </div>
 
-            <div className="hidden md:flex items-center gap-2 shrink-0">
-              <div ref={langRefDesktop} className="relative">
-                <button
-                  type="button"
-                  onClick={() => setLangOpen((v) => !v)}
-                  className="h-11 px-4 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 text-sm font-bold text-slate-800 inline-flex items-center gap-2"
-                >
-                  <span>{t.langLabel}</span>
-                  <ChevronDown
-                    className={`w-4 h-4 transition-transform ${
-                      langOpen ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
-
-                {langOpen && (
-                  <div
-                    className={[
-                      "absolute top-full mt-2 min-w-[180px] bg-white border border-slate-200 rounded-2xl shadow-lg p-2",
-                      isRTL ? "left-0" : "right-0",
-                    ].join(" ")}
-                  >
-                    {[
-                      { code: "ar", label: "العربية" },
-                      { code: "en", label: "English" },
-                      { code: "he", label: "עברית" },
-                    ].map((item) => (
-                      <button
-                        key={item.code}
-                        type="button"
-                        onClick={() => {
-                          setLang(item.code);
-                          setLangOpen(false);
-                        }}
-                        className={[
-                          "w-full h-11 px-3 rounded-xl text-sm font-semibold text-start hover:bg-slate-50 transition",
-                          lang === item.code
-                            ? "bg-blue-50 text-blue-700"
-                            : "text-slate-700",
-                        ].join(" ")}
-                      >
-                        {item.label}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+            <div className="hidden shrink-0 items-center gap-2 md:flex">
+              <LanguageMenu
+                lang={lang}
+                setLang={setLang}
+                isRTL={isRTL}
+                open={langOpen}
+                setOpen={setLangOpen}
+                containerRef={desktopLanguageRef}
+                label={labels.language}
+              />
 
               <button
                 type="button"
-                onClick={handleCTA}
-                className="h-11 px-5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm transition"
+                onClick={() => handleNavigation("services")}
+                className="
+                  h-11 rounded-2xl bg-slate-900 px-5
+                  text-sm font-extrabold text-white
+                  shadow-sm transition
+                  hover:bg-slate-800 active:scale-[0.98]
+                  focus-visible:outline-none focus-visible:ring-2
+                  focus-visible:ring-slate-500/40
+                "
               >
-                {t.cta}
+                {labels.cta}
               </button>
             </div>
 
-            <div className="md:hidden flex items-center gap-2">
-              <div ref={langRefMobile} className="relative">
-                <button
-                  type="button"
-                  onClick={() => setLangOpen((v) => !v)}
-                  className="h-10 px-3 rounded-2xl border border-slate-200 bg-white text-sm font-bold text-slate-800 inline-flex items-center gap-1.5"
-                >
-                  <span>{t.langLabel}</span>
-                  <ChevronDown
-                    className={`w-4 h-4 transition-transform ${
-                      langOpen ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
-
-                {langOpen && (
-                  <div
-                    className={[
-                      "absolute top-full mt-2 min-w-[170px] bg-white border border-slate-200 rounded-2xl shadow-lg p-2 z-[9999]",
-                      isRTL ? "left-0" : "right-0",
-                    ].join(" ")}
-                  >
-                    {[
-                      { code: "ar", label: "العربية" },
-                      { code: "en", label: "English" },
-                      { code: "he", label: "עברית" },
-                    ].map((item) => (
-                      <button
-                        key={item.code}
-                        type="button"
-                        onClick={() => {
-                          setLang(item.code);
-                          setLangOpen(false);
-                        }}
-                        className={[
-                          "w-full h-10 px-3 rounded-xl text-sm font-semibold text-start hover:bg-slate-50 transition",
-                          lang === item.code
-                            ? "bg-blue-50 text-blue-700"
-                            : "text-slate-700",
-                        ].join(" ")}
-                      >
-                        {item.label}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+            <div className="flex shrink-0 items-center gap-2 md:hidden">
+              <LanguageMenu
+                lang={lang}
+                setLang={setLang}
+                isRTL={isRTL}
+                open={langOpen}
+                setOpen={setLangOpen}
+                containerRef={mobileLanguageRef}
+                label={labels.language}
+                mobile
+              />
 
               <button
                 type="button"
-                onClick={() => setMenuOpen(true)}
-                className="h-10 w-10 rounded-2xl border border-slate-200 bg-white flex items-center justify-center text-slate-800"
-                aria-label="Open menu"
+                onClick={() => {
+                  setLangOpen(false);
+                  setMenuOpen(true);
+                }}
+                className="
+                  flex h-10 w-10 items-center justify-center
+                  rounded-xl border border-slate-200 bg-white
+                  text-slate-800 transition
+                  hover:bg-slate-50 active:scale-95
+                  focus-visible:outline-none focus-visible:ring-2
+                  focus-visible:ring-blue-500/30
+                "
+                aria-label={labels.menuAria}
+                aria-expanded={menuOpen}
               >
-                <Menu className="w-5 h-5" />
+                <Menu className="h-5 w-5" aria-hidden="true" />
               </button>
             </div>
           </div>
@@ -420,38 +525,18 @@ export default function Header({ scrollToSection }) {
           menuOpen={menuOpen}
           setMenuOpen={setMenuOpen}
           navItems={navItems}
-          scrollToSection={handleNavClick}
+          scrollToSection={handleNavigation}
           activeId={activeId}
-          hintText={t.navHint}
-          labels={t}
+          hintText={labels.navigationHint}
+          labels={labels}
         />
-      </header>
+      </div>
 
-      <QuickContactSheet
-        open={actionsOpen}
-        onClose={() => setActionsOpen(false)}
-        contacts={contactItems}
-        lang={lang}
-      />
-
-      <a
-        href="https://wa.me/972543075619?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%D8%8C%20%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%A7%D9%84%D8%A7%D8%B3%D8%AA%D9%81%D8%B3%D8%A7%D8%B1%20%D8%B9%D9%86%20%D8%AE%D8%AF%D9%85%D8%A7%D8%AA%20%D8%A7%D9%84%D8%AA%D9%86%D8%B8%D9%8A%D9%81."
-        target="_blank"
-        rel="noopener noreferrer"
-        aria-label={
-          lang === "en" ? "WhatsApp" : lang === "he" ? "וואטסאפ" : "واتساب"
-        }
-        className={[
-          "fixed z-[9997] bottom-4 sm:bottom-5",
-          isRTL ? "left-4 sm:left-5" : "right-4 sm:right-5",
-          "h-14 w-14 rounded-full shadow-lg",
-          "bg-[#25D366] text-white",
-          "flex items-center justify-center",
-          "hover:scale-105 active:scale-95 transition-all",
-        ].join(" ")}
-      >
-        <Phone className="w-5 h-5" />
-      </a>
+      {/*
+        الهيدر ثابت، لذلك هذا العنصر يحجز مكانه داخل الصفحة
+        ويمنع الهيرو من الاختباء خلفه.
+      */}
+      <div className="h-16 w-full shrink-0 sm:h-[74px]" aria-hidden="true" />
     </>
   );
 }

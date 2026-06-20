@@ -1,4 +1,3 @@
-// src/components/contact/ContactForm.jsx
 import React, {
   useMemo,
   useState,
@@ -134,18 +133,25 @@ function SubjectChips({
   required,
   error,
   isRTL = true,
+  lang = "ar",
 }) {
   const items = [
     {
       value: "inquiry",
       labelAr: "استفسار",
       labelEn: "Inquiry",
-      labelHe: "שאלה",
+      labelHe: "בירור",
     },
     { value: "booking", labelAr: "حجز", labelEn: "Booking", labelHe: "הזמנה" },
     { value: "complaint", labelAr: "ملاحظة", labelEn: "Note", labelHe: "הערה" },
     { value: "other", labelAr: "أخرى", labelEn: "Other", labelHe: "אחר" },
   ];
+
+  const getLabel = (item) => {
+    if (lang === "he") return item.labelHe;
+    if (lang === "en") return item.labelEn;
+    return item.labelAr;
+  };
 
   return (
     <div className="md:col-span-2">
@@ -168,7 +174,7 @@ function SubjectChips({
                   : "bg-white text-gray-700 border-gray-200 hover:border-blue-200 hover:bg-blue-50/60",
               ].join(" ")}
             >
-              {item.labelAr}
+              {getLabel(item)}
             </button>
           );
         })}
@@ -179,12 +185,39 @@ function SubjectChips({
   );
 }
 
-function PreferredChannelPicker({ value, onChange, isRTL = true, label }) {
+function PreferredChannelPicker({
+  value,
+  onChange,
+  isRTL = true,
+  label,
+  lang = "ar",
+}) {
   const items = [
-    { value: "either", label: "لا فرق" },
-    { value: "whatsapp", label: "واتساب" },
-    { value: "phone", label: "اتصال" },
+    {
+      value: "either",
+      labelAr: "لا فرق",
+      labelEn: "Either",
+      labelHe: "לא משנה",
+    },
+    {
+      value: "whatsapp",
+      labelAr: "واتساب",
+      labelEn: "WhatsApp",
+      labelHe: "וואטסאפ",
+    },
+    {
+      value: "phone",
+      labelAr: "اتصال",
+      labelEn: "Call",
+      labelHe: "שיחה",
+    },
   ];
+
+  const getLabel = (item) => {
+    if (lang === "he") return item.labelHe;
+    if (lang === "en") return item.labelEn;
+    return item.labelAr;
+  };
 
   return (
     <div dir={isRTL ? "rtl" : "ltr"}>
@@ -204,7 +237,7 @@ function PreferredChannelPicker({ value, onChange, isRTL = true, label }) {
                   : "bg-white text-gray-700 border-gray-200 hover:border-blue-200 hover:bg-blue-50/60",
               ].join(" ")}
             >
-              {item.label}
+              {getLabel(item)}
             </button>
           );
         })}
@@ -213,7 +246,12 @@ function PreferredChannelPicker({ value, onChange, isRTL = true, label }) {
   );
 }
 
-function RememberMeSwitch({ checked, onChange, isRTL = true }) {
+function RememberMeSwitch({
+  checked,
+  onChange,
+  isRTL = true,
+  label = "تذكّرني",
+}) {
   return (
     <button
       type="button"
@@ -242,7 +280,7 @@ function RememberMeSwitch({ checked, onChange, isRTL = true }) {
           ].join(" ")}
         />
       </span>
-      <span>تذكّرني</span>
+      <span>{label}</span>
     </button>
   );
 }
@@ -639,6 +677,12 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
         "Clear preference",
         "נקה העדפה",
       ),
+      rememberMe: tr(
+        "contactRememberMe",
+        "تذكّرني",
+        "Remember me",
+        "זכור אותי",
+      ),
     };
   }, [form.subject, savedHint, tr]);
 
@@ -849,6 +893,7 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
         required
         error={touched.subject ? errors.subject : undefined}
         isRTL={isRTL}
+        lang={lang}
       />
 
       <ContactField
@@ -957,6 +1002,7 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
               onChange={(v) => setForm((p) => ({ ...p, channel: v }))}
               isRTL={isRTL}
               label={labels.prefTitle}
+              lang={lang}
             />
 
             {canShowRemember && (
@@ -965,6 +1011,7 @@ export default function ContactForm({ onSend, t = {}, isRTL = true }) {
                   checked={remember}
                   onChange={setRemember}
                   isRTL={isRTL}
+                  label={labels.rememberMe}
                 />
                 {labels.savedHint && (
                   <span className="text-xs text-emerald-700">

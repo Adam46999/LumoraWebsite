@@ -1,221 +1,412 @@
 // src/header/SidebarMenu.jsx
-import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { X, ChevronLeft, ChevronRight, Globe2, Check } from "lucide-react";
+import { ChevronDown, Home, Sparkles, X } from "lucide-react";
+
 import { useLanguage } from "../context/LanguageContext";
+
+function getCopy(lang) {
+  if (lang === "he") {
+    return {
+      title: "תפריט",
+      close: "סגירת התפריט",
+      home: "ראשי",
+      allServices: "כל השירותים",
+      request: "הזמנת שירות",
+      current: "החלק הנוכחי",
+      navigation: "ניווט באתר",
+      defaultHint: "בחרו את החלק הרצוי או עברו ישירות לשירות מסוים.",
+    };
+  }
+
+  if (lang === "en") {
+    return {
+      title: "Menu",
+      close: "Close menu",
+      home: "Home",
+      allServices: "All services",
+      request: "Request service",
+      current: "Current section",
+      navigation: "Site navigation",
+      defaultHint: "Choose a section or go directly to a specific service.",
+    };
+  }
+
+  return {
+    title: "القائمة",
+    close: "إغلاق القائمة",
+    home: "الرئيسية",
+    allServices: "كل الخدمات",
+    request: "اطلب خدمة",
+    current: "القسم الحالي",
+    navigation: "التنقل في الموقع",
+    defaultHint: "اختار القسم المطلوب أو انتقل مباشرة لخدمة محددة.",
+  };
+}
 
 export default function SidebarMenu({
   menuOpen,
   setMenuOpen,
-  navItems,
+  navItems = [],
   scrollToSection,
-  activeId,
+  activeId = "home",
   hintText,
-  labels,
+  labels = {},
 }) {
-  const { lang, setLang } = useLanguage();
-  const isRTL = lang === "ar" || lang === "he";
-  const dir = isRTL ? "rtl" : "ltr";
+  const { lang, isRTL } = useLanguage();
 
+  const copy = useMemo(() => getCopy(lang), [lang]);
+
+  const [mounted, setMounted] = useState(menuOpen);
+  const [visible, setVisible] = useState(false);
   const [openParentId, setOpenParentId] = useState(null);
-  const panelRef = useRef(null);
 
-  const ArrowIcon = useMemo(
-    () => (isRTL ? ChevronLeft : ChevronRight),
-    [isRTL]
-  );
+  const panelRef = useRef(null);
+  const closeButtonRef = useRef(null);
+  const previousFocusRef = useRef(null);
 
   const close = useCallback(() => {
-    setMenuOpen(false);
-    setOpenParentId(null);
+    setMenuOpen?.(false);
   }, [setMenuOpen]);
 
-  const handleGo = useCallback(
+  const navigate = useCallback(
     (id) => {
-      try {
-        scrollToSection?.(id);
-      } finally {
-        close();
-      }
+      if (!id) return;
+
+      scrollToSection?.(id);
+      close();
     },
-    [scrollToSection, close]
+    [close, scrollToSection],
   );
 
-  // ✅ RTL-friendly order for grid
-  const langButtons = useMemo(() => {
-    const arr = [
-      { code: "ar", label: "AR" },
-      { code: "en", label: "EN" },
-      { code: "he", label: "HE" },
-    ];
-    return isRTL ? [...arr].reverse() : arr;
-  }, [isRTL]);
-
-  // Reset expanded state when closed
+  /*
+    فتح وإغلاق القائمة بحركة ناعمة.
+  */
   useEffect(() => {
-    if (!menuOpen) setOpenParentId(null);
-  }, [menuOpen]);
+    let frame;
+    let timer;
 
-  // Close on ESC (only when open)
-  useEffect(() => {
-    if (!menuOpen) return;
-    const onKeyDown = (e) => {
-      if (e.key === "Escape") close();
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [menuOpen, close]);
+    if (menuOpen) {
+      setMounted(true);
 
-  // Lock scroll (only when open)
-  useEffect(() => {
-    if (!menuOpen) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+      frame = window.requestAnimationFrame(() => {
+        setVisible(true);
+      });
+    } else {
+      setVisible(false);
+
+      timer = window.setTimeout(() => {
+        setMounted(false);
+        setOpenParentId(null);
+      }, 220);
+    }
+
     return () => {
-      document.body.style.overflow = prev || "";
+      if (frame) {
+        window.cancelAnimationFrame(frame);
+      }
+
+      if (timer) {
+        window.clearTimeout(timer);
+      }
     };
   }, [menuOpen]);
 
-  // Focus panel when opened
+  /*
+    إذا كان المستخدم داخل خدمة محددة،
+    نفتح مجموعة الخدمات تلقائيًا عند فتح القائمة.
+  */
   useEffect(() => {
     if (!menuOpen) return;
-    const t = setTimeout(() => {
-      panelRef.current?.focus?.();
-    }, 0);
-    return () => clearTimeout(t);
-  }, [menuOpen]);
 
-  // ✅ IMPORTANT: return null AFTER hooks (prevents hooks mismatch)
-  if (!menuOpen) return null;
+    const activeParent = navItems.find((item) =>
+      item?.subItems?.some((subItem) => subItem.id === activeId),
+    );
 
-  const baseBtn =
-    "relative w-full px-4 py-3 rounded-2xl border transition flex items-center justify-between";
-  const activeStyle = "border-blue-200 bg-blue-50 text-blue-800";
-  const normalStyle = "border-gray-100 hover:bg-gray-50 active:bg-gray-100";
+    if (activeParent) {
+      setOpenParentId(activeParent.id);
+    }
+  }, [activeId, menuOpen, navItems]);
 
-  const activeRail = (isActive) =>
-    isActive
-      ? [
-          "absolute top-2 bottom-2 w-[4px] rounded-full bg-blue-600",
-          isRTL ? "right-2" : "left-2",
-        ].join(" ")
-      : "";
+  /*
+    منع تحريك الصفحة الخلفية، دعم Escape،
+    وحصر تنقل الكيبورد داخل القائمة.
+  */
+  useEffect(() => {
+    if (!menuOpen) return undefined;
 
-  const ui = (
+    previousFocusRef.current = document.activeElement;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const focusTimer = window.setTimeout(() => {
+      closeButtonRef.current?.focus();
+    }, 100);
+
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        close();
+        return;
+      }
+
+      if (event.key !== "Tab" || !panelRef.current) return;
+
+      const focusableElements = panelRef.current.querySelectorAll(
+        [
+          "button:not([disabled])",
+          "a[href]",
+          "input:not([disabled])",
+          "select:not([disabled])",
+          "textarea:not([disabled])",
+          '[tabindex]:not([tabindex="-1"])',
+        ].join(","),
+      );
+
+      if (!focusableElements.length) return;
+
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements[focusableElements.length - 1];
+
+      if (event.shiftKey && document.activeElement === firstElement) {
+        event.preventDefault();
+        lastElement.focus();
+      } else if (!event.shiftKey && document.activeElement === lastElement) {
+        event.preventDefault();
+        firstElement.focus();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.clearTimeout(focusTimer);
+      window.removeEventListener("keydown", handleKeyDown);
+
+      document.body.style.overflow = previousOverflow;
+
+      if (
+        previousFocusRef.current &&
+        typeof previousFocusRef.current.focus === "function"
+      ) {
+        previousFocusRef.current.focus();
+      }
+    };
+  }, [close, menuOpen]);
+
+  if (!mounted || typeof document === "undefined") {
+    return null;
+  }
+
+  const homeIsActive = activeId === "home";
+
+  return createPortal(
     <div
-      dir={dir}
-      style={{ direction: dir }}
-      className="fixed inset-0 z-[99999]"
+      className={[
+        "fixed inset-0 z-[10040] md:hidden",
+        "transition-opacity duration-200",
+        visible ? "opacity-100" : "pointer-events-none opacity-0",
+      ].join(" ")}
+      dir={isRTL ? "rtl" : "ltr"}
       role="presentation"
-      onMouseDown={(e) => {
-        if (e.target === e.currentTarget) close();
-      }}
     >
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-[2px]" />
+      {/* الخلفية */}
+      <button
+        type="button"
+        className="
+          absolute inset-0 h-full w-full
+          cursor-default bg-slate-950/45
+          backdrop-blur-[2px]
+        "
+        onClick={close}
+        aria-label={copy.close}
+        tabIndex={-1}
+      />
 
+      {/* القائمة */}
       <aside
         ref={panelRef}
-        tabIndex={-1}
+        role="dialog"
+        aria-modal="true"
+        aria-label={copy.navigation}
         className={[
-          "absolute top-0 h-full w-[360px] max-w-[86%] bg-white shadow-2xl flex flex-col",
-          isRTL ? "right-0" : "left-0",
+          "absolute inset-y-0 flex w-[min(88vw,360px)]",
+          "flex-col bg-white",
+          "shadow-[0_0_60px_rgba(15,23,42,0.24)]",
+          "transition-transform duration-200 ease-out",
+          isRTL
+            ? "right-0 border-l border-slate-200"
+            : "left-0 border-r border-slate-200",
+          visible
+            ? "translate-x-0"
+            : isRTL
+              ? "translate-x-full"
+              : "-translate-x-full",
         ].join(" ")}
-        dir={dir}
-        style={{ direction: dir }}
-        aria-label="Mobile menu"
-        onMouseDown={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div className="p-5 border-b border-gray-100">
-          <div
-            className={[
-              "flex items-start justify-between gap-3",
-              isRTL ? "flex-row-reverse" : "",
-            ].join(" ")}
+        {/* رأس القائمة */}
+        <header
+          className="
+            flex shrink-0 items-center justify-between
+            border-b border-slate-200
+            px-4 py-4
+          "
+        >
+          <button
+            type="button"
+            onClick={() => navigate("home")}
+            className="
+              flex min-w-0 items-center gap-3
+              rounded-xl text-start
+              focus-visible:outline-none
+              focus-visible:ring-2
+              focus-visible:ring-blue-300
+            "
           >
-            <button
-              type="button"
-              onClick={() => handleGo("home")}
-              className={[
-                "flex items-center gap-3 select-none",
-                isRTL ? "flex-row-reverse" : "",
-              ].join(" ")}
-              aria-label="Go to home"
+            <span
+              className="
+                flex h-10 w-10 shrink-0
+                items-center justify-center
+                rounded-2xl bg-blue-50
+                text-lg
+              "
+              aria-hidden="true"
             >
-              <span className="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-xl">
-                🧼
+              🧼
+            </span>
+
+            <span className="min-w-0">
+              <span
+                className="
+                  block truncate text-lg font-black
+                  tracking-tight text-blue-600
+                "
+              >
+                Lumora
               </span>
 
-              <span className="text-start">
-                <span className="block font-extrabold text-lg tracking-tight text-blue-600 leading-none">
-                  Lumora
-                </span>
-                <span className="block mt-1 text-xs font-semibold text-slate-500">
-                  {lang === "en"
-                    ? "Quick navigation"
-                    : lang === "he"
-                    ? "ניווט מהיר"
-                    : "تنقّل سريع"}
-                </span>
+              <span className="block text-[11px] font-bold text-slate-500">
+                {copy.title}
               </span>
-            </button>
+            </span>
+          </button>
 
-            <button
-              type="button"
-              className="p-2 rounded-2xl border border-gray-100 hover:bg-gray-50 active:bg-gray-100 transition"
-              onClick={close}
-              aria-label={
-                lang === "en" ? "Close menu" : lang === "he" ? "סגור" : "إغلاق"
-              }
-            >
-              <X className="w-5 h-5 text-gray-800" />
-            </button>
-          </div>
+          <button
+            ref={closeButtonRef}
+            type="button"
+            onClick={close}
+            className="
+              flex h-10 w-10 shrink-0
+              items-center justify-center
+              rounded-xl border border-slate-200
+              bg-white text-slate-700
+              transition
+              hover:bg-slate-50
+              active:scale-95
+              focus-visible:outline-none
+              focus-visible:ring-2
+              focus-visible:ring-blue-300
+            "
+            aria-label={copy.close}
+          >
+            <X className="h-5 w-5" aria-hidden="true" />
+          </button>
+        </header>
 
-          <p className="mt-3 text-sm text-gray-500 leading-relaxed text-start">
-            {hintText ||
-              (lang === "en"
-                ? "Fast, clear navigation."
-                : lang === "he"
-                ? "ניווט מהיר וברור."
-                : "تنقّل بسرعة، وكل شيء واضح.")}
+        {/* تلميح بسيط */}
+        <div className="shrink-0 px-4 pt-4">
+          <p
+            className="
+              rounded-2xl border border-blue-100
+              bg-blue-50/70 px-3.5 py-3
+              text-xs font-semibold leading-5
+              text-blue-800
+            "
+          >
+            {hintText || copy.defaultHint}
           </p>
         </div>
 
-        {/* Nav */}
-        <div className="flex-1 overflow-y-auto p-4">
-          <div className="flex flex-col gap-2">
-            {navItems.map((item) => {
-              const hasSub =
-                Array.isArray(item.subItems) && item.subItems.length > 0;
-              const isOpen = openParentId === item.id;
-              const isActive = activeId === item.id;
+        {/* روابط القائمة */}
+        <nav
+          aria-label={copy.navigation}
+          className="
+            min-h-0 flex-1 overflow-y-auto
+            overscroll-contain px-4 py-4
+          "
+        >
+          <div className="space-y-2">
+            {/* الرئيسية */}
+            <button
+              type="button"
+              onClick={() => navigate("home")}
+              aria-current={homeIsActive ? "page" : undefined}
+              className={[
+                "flex min-h-12 w-full items-center gap-3",
+                "rounded-2xl border px-4 py-3",
+                "text-start text-sm font-extrabold",
+                "transition",
+                homeIsActive
+                  ? "border-blue-200 bg-blue-50 text-blue-800"
+                  : "border-transparent text-slate-700 hover:border-slate-200 hover:bg-slate-50",
+              ].join(" ")}
+            >
+              <Home
+                className={[
+                  "h-5 w-5 shrink-0",
+                  homeIsActive ? "text-blue-600" : "text-slate-500",
+                ].join(" ")}
+                aria-hidden="true"
+              />
 
-              if (!hasSub) {
+              <span className="flex-1">{labels.home || copy.home}</span>
+
+              {homeIsActive ? (
+                <span
+                  className="h-2 w-2 rounded-full bg-blue-600"
+                  aria-label={copy.current}
+                />
+              ) : null}
+            </button>
+
+            {navItems.map((item) => {
+              const hasSubItems =
+                Array.isArray(item?.subItems) && item.subItems.length > 0;
+
+              const subItemIsActive = item?.subItems?.some(
+                (subItem) => subItem.id === activeId,
+              );
+
+              const itemIsActive = activeId === item.id || subItemIsActive;
+
+              const isExpanded = openParentId === item.id;
+
+              if (!hasSubItems) {
                 return (
                   <button
                     key={item.id}
                     type="button"
-                    onClick={() => handleGo(item.id)}
+                    onClick={() => navigate(item.id)}
+                    aria-current={itemIsActive ? "page" : undefined}
                     className={[
-                      baseBtn,
-                      isActive ? activeStyle : normalStyle,
-                      isRTL ? "flex-row-reverse" : "",
+                      "flex min-h-12 w-full items-center",
+                      "gap-3 rounded-2xl border",
+                      "px-4 py-3 text-start",
+                      "text-sm font-extrabold transition",
+                      itemIsActive
+                        ? "border-blue-200 bg-blue-50 text-blue-800"
+                        : "border-transparent text-slate-700 hover:border-slate-200 hover:bg-slate-50",
                     ].join(" ")}
-                    aria-current={isActive ? "page" : undefined}
                   >
-                    {isActive ? <span className={activeRail(true)} /> : null}
-                    <span className="font-extrabold text-start">
-                      {item.label}
-                    </span>
-                    <ArrowIcon
-                      className={[
-                        "w-4 h-4 shrink-0",
-                        isActive ? "text-blue-600" : "text-gray-400",
-                      ].join(" ")}
-                      aria-hidden="true"
-                    />
+                    <span className="flex-1">{item.label}</span>
+
+                    {itemIsActive ? (
+                      <span
+                        className="h-2 w-2 rounded-full bg-blue-600"
+                        aria-label={copy.current}
+                      />
+                    ) : null}
                   </button>
                 );
               }
@@ -224,171 +415,178 @@ export default function SidebarMenu({
                 <div
                   key={item.id}
                   className={[
-                    "rounded-2xl border overflow-hidden",
-                    isActive ? "border-blue-200" : "border-gray-100",
+                    "overflow-hidden rounded-2xl border",
+                    itemIsActive
+                      ? "border-blue-200 bg-blue-50/50"
+                      : "border-slate-200 bg-white",
                   ].join(" ")}
                 >
+                  {/* رأس مجموعة الخدمات */}
                   <button
                     type="button"
-                    onClick={() =>
-                      setOpenParentId((prev) =>
-                        prev === item.id ? null : item.id
-                      )
-                    }
+                    onClick={() => {
+                      setOpenParentId((currentId) =>
+                        currentId === item.id ? null : item.id,
+                      );
+                    }}
+                    aria-expanded={isExpanded}
+                    aria-controls={`mobile-submenu-${item.id}`}
                     className={[
-                      "relative w-full px-4 py-3 transition flex items-center justify-between",
-                      "hover:bg-gray-50 active:bg-gray-100",
-                      isRTL ? "flex-row-reverse" : "",
-                      isActive ? "bg-blue-50 text-blue-800" : "text-gray-800",
+                      "flex min-h-12 w-full items-center",
+                      "gap-3 px-4 py-3 text-start",
+                      "text-sm font-extrabold transition",
+                      itemIsActive
+                        ? "text-blue-800"
+                        : "text-slate-700 hover:bg-slate-50",
                     ].join(" ")}
-                    aria-expanded={isOpen}
-                    aria-haspopup="true"
                   >
-                    {isActive ? <span className={activeRail(true)} /> : null}
-                    <span className="font-extrabold text-start">
-                      {item.label}
-                    </span>
-
-                    <span
+                    <Sparkles
                       className={[
-                        "flex items-center gap-2",
-                        isRTL ? "flex-row-reverse" : "",
+                        "h-5 w-5 shrink-0",
+                        itemIsActive ? "text-blue-600" : "text-slate-500",
                       ].join(" ")}
-                    >
-                      <span className="text-xs text-gray-400">
-                        {isOpen ? "−" : "+"}
-                      </span>
-                      <ArrowIcon
-                        className={[
-                          "w-4 h-4 transition-transform shrink-0",
-                          isOpen ? "rotate-90" : "rotate-0",
-                          isActive ? "text-blue-600" : "text-gray-400",
-                        ].join(" ")}
-                        aria-hidden="true"
-                      />
-                    </span>
+                      aria-hidden="true"
+                    />
+
+                    <span className="flex-1">{item.label}</span>
+
+                    <ChevronDown
+                      className={[
+                        "h-4 w-4 shrink-0",
+                        "transition-transform duration-200",
+                        isExpanded ? "rotate-180" : "",
+                      ].join(" ")}
+                      aria-hidden="true"
+                    />
                   </button>
 
-                  {isOpen && (
-                    <div className="px-3 pb-3">
-                      <button
-                        type="button"
-                        onClick={() => handleGo(item.id)}
-                        className="w-full px-3 py-2 rounded-xl text-sm font-extrabold text-blue-700 hover:bg-gray-50 active:bg-gray-100 transition text-start"
+                  {/* الخدمات الفرعية */}
+                  <div
+                    id={`mobile-submenu-${item.id}`}
+                    className={[
+                      "grid transition-[grid-template-rows,opacity]",
+                      "duration-200 ease-out",
+                      isExpanded
+                        ? "grid-rows-[1fr] opacity-100"
+                        : "grid-rows-[0fr] opacity-0",
+                    ].join(" ")}
+                  >
+                    <div className="overflow-hidden">
+                      <div
+                        className="
+                          border-t border-slate-200
+                          bg-white p-2
+                        "
                       >
-                        {lang === "en"
-                          ? `View ${item.label}`
-                          : lang === "he"
-                          ? `הצג ${item.label}`
-                          : `عرض ${item.label}`}
-                      </button>
+                        <button
+                          type="button"
+                          onClick={() => navigate(item.id)}
+                          className={[
+                            "flex min-h-11 w-full items-center",
+                            "rounded-xl px-3 py-2.5",
+                            "text-start text-sm font-bold",
+                            "transition",
+                            activeId === item.id
+                              ? "bg-blue-50 text-blue-800"
+                              : "text-slate-600 hover:bg-slate-50 hover:text-slate-900",
+                          ].join(" ")}
+                        >
+                          <span className="flex-1">{copy.allServices}</span>
 
-                      <div className="mt-2 rounded-2xl bg-slate-50 border border-slate-200/70 overflow-hidden">
-                        {item.subItems.map((sub, idx) => {
-                          const Icon = sub.icon;
-                          const isSubActive = activeId === sub.id;
+                          {activeId === item.id ? (
+                            <span
+                              className="h-2 w-2 rounded-full bg-blue-600"
+                              aria-hidden="true"
+                            />
+                          ) : null}
+                        </button>
+
+                        {item.subItems.map((subItem) => {
+                          const Icon = subItem.icon;
+                          const isSubActive = activeId === subItem.id;
 
                           return (
-                            <div key={sub.id}>
-                              <button
-                                type="button"
-                                onClick={() => handleGo(sub.id)}
-                                className={[
-                                  "w-full px-4 py-3 transition flex items-center gap-3",
-                                  isRTL ? "flex-row-reverse" : "",
-                                  isSubActive
-                                    ? "bg-white text-blue-900"
-                                    : "hover:bg-white/70 active:bg-white",
-                                ].join(" ")}
-                              >
-                                {Icon ? (
-                                  <Icon
-                                    className={[
-                                      "w-4 h-4 shrink-0",
-                                      isSubActive
-                                        ? "text-blue-700"
-                                        : "text-blue-600",
-                                    ].join(" ")}
-                                    aria-hidden="true"
-                                  />
-                                ) : null}
-
-                                <span className="text-sm font-semibold text-start">
-                                  {sub.label}
-                                </span>
-
-                                {isSubActive ? (
-                                  <Check
-                                    className={[
-                                      "w-4 h-4 text-blue-600",
-                                      isRTL ? "me-auto" : "ms-auto",
-                                    ].join(" ")}
-                                    aria-hidden="true"
-                                  />
-                                ) : null}
-                              </button>
-
-                              {idx !== item.subItems.length - 1 ? (
-                                <div className="h-px bg-slate-200/60" />
+                            <button
+                              key={subItem.id}
+                              type="button"
+                              onClick={() => navigate(subItem.id)}
+                              aria-current={isSubActive ? "page" : undefined}
+                              className={[
+                                "mt-1 flex min-h-11 w-full",
+                                "items-center gap-3 rounded-xl",
+                                "px-3 py-2.5 text-start",
+                                "text-sm font-bold transition",
+                                isSubActive
+                                  ? "bg-blue-50 text-blue-800"
+                                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-900",
+                              ].join(" ")}
+                            >
+                              {Icon ? (
+                                <Icon
+                                  className={[
+                                    "h-4 w-4 shrink-0",
+                                    isSubActive
+                                      ? "text-blue-600"
+                                      : "text-slate-400",
+                                  ].join(" ")}
+                                  aria-hidden="true"
+                                />
                               ) : null}
-                            </div>
+
+                              <span className="flex-1">{subItem.label}</span>
+
+                              {isSubActive ? (
+                                <span
+                                  className="h-2 w-2 rounded-full bg-blue-600"
+                                  aria-hidden="true"
+                                />
+                              ) : null}
+                            </button>
                           );
                         })}
                       </div>
                     </div>
-                  )}
+                  </div>
                 </div>
               );
             })}
           </div>
+        </nav>
 
-          {/* CTA */}
+        {/* الإجراء الأساسي */}
+        <footer
+          className="
+            shrink-0 border-t border-slate-200
+            bg-white px-4
+            pb-[max(16px,env(safe-area-inset-bottom))]
+            pt-4
+          "
+        >
           <button
             type="button"
-            onClick={() => handleGo("contact")}
-            className="mt-4 w-full px-4 py-3 rounded-2xl bg-blue-600 text-white font-extrabold hover:bg-blue-700 active:bg-blue-800 transition"
+            onClick={() => navigate("services")}
+            className="
+              inline-flex min-h-12 w-full
+              items-center justify-center gap-2
+              rounded-2xl bg-blue-600
+              px-5 text-sm font-extrabold
+              text-white
+              shadow-[0_10px_28px_rgba(37,99,235,0.24)]
+              transition
+              hover:bg-blue-700
+              active:scale-[0.98]
+              focus-visible:outline-none
+              focus-visible:ring-4
+              focus-visible:ring-blue-200
+            "
           >
-            {labels?.ctaShort ||
-              (lang === "en" ? "Book" : lang === "he" ? "הזמן" : "احجز")}
+            <Sparkles className="h-4 w-4" aria-hidden="true" />
+
+            <span>{labels.cta || copy.request}</span>
           </button>
-        </div>
-
-        {/* Language */}
-        <div className="p-4 border-t border-gray-100">
-          <div
-            className={[
-              "flex items-center gap-2 mb-3",
-              isRTL ? "flex-row-reverse" : "",
-            ].join(" ")}
-          >
-            <Globe2 className="w-4 h-4 text-gray-500" aria-hidden="true" />
-            <span className="text-sm font-extrabold text-gray-700 text-start">
-              {labels?.langLabel ||
-                (lang === "en" ? "Language" : lang === "he" ? "שפה" : "اللغة")}
-            </span>
-          </div>
-
-          <div className="grid grid-cols-3 gap-2">
-            {langButtons.map((b) => (
-              <button
-                key={b.code}
-                type="button"
-                onClick={() => setLang(b.code)}
-                className={[
-                  "px-3 py-2 rounded-xl border text-sm font-extrabold transition",
-                  lang === b.code
-                    ? "border-blue-600 text-blue-700 bg-blue-50"
-                    : "border-gray-200 hover:bg-gray-50",
-                ].join(" ")}
-              >
-                {b.label}
-              </button>
-            ))}
-          </div>
-        </div>
+        </footer>
       </aside>
-    </div>
+    </div>,
+    document.body,
   );
-
-  return createPortal(ui, document.body);
 }

@@ -1,16 +1,31 @@
 // src/components/faq/FAQItem.jsx
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import {
+  CalendarClock,
   ChevronDown,
   Clock3,
-  ShieldCheck,
-  Sparkles,
+  CreditCard,
   Droplets,
   MapPin,
-  CreditCard,
-  CalendarClock,
+  ShieldCheck,
   Sofa,
+  Sparkles,
 } from "lucide-react";
+
+const ICONS = {
+  time: Clock3,
+  schedule: CalendarClock,
+  safety: ShieldCheck,
+  results: Sparkles,
+  dry: Droplets,
+  coverage: MapPin,
+  price: CreditCard,
+  fabric: Sofa,
+};
+
+function createSafeId(value) {
+  return String(value ?? "item").replace(/[^a-zA-Z0-9_-]/g, "-");
+}
 
 export default function FAQItem({
   id,
@@ -21,134 +36,153 @@ export default function FAQItem({
   isOpen,
   onToggle,
   dir = "ltr",
-  variant = "default", // ✅ NEW
+  variant = "default",
 }) {
-  const [more, setMore] = useState(false);
+  const Icon = useMemo(() => ICONS[icon] || Sparkles, [icon]);
 
-  const Icon = useMemo(() => {
-    const map = {
-      time: Clock3,
-      schedule: CalendarClock,
-      safety: ShieldCheck,
-      results: Sparkles,
-      dry: Droplets,
-      coverage: MapPin,
-      price: CreditCard,
-      fabric: Sofa,
-    };
-    return map[icon] || Sparkles;
-  }, [icon]);
+  const isRTL = dir === "rtl";
+  const isCompact = variant === "compact";
+
+  const safeId = createSafeId(id);
+  const buttonId = `faq-button-${safeId}`;
+  const panelId = `faq-panel-${safeId}`;
+
+  const openLabel = isRTL ? "إغلاق الإجابة" : "Close answer";
+
+  const closedLabel = isRTL ? "فتح الإجابة" : "Open answer";
 
   const handleToggle = () => {
-    if (isOpen) setMore(false);
     onToggle?.(id);
   };
 
-  const isCompact = variant === "compact";
-
   return (
-    <div
+    <article
       className={[
-        "rounded-2xl bg-white border transition-all",
-        isCompact ? "shadow-none" : "shadow-sm",
+        "overflow-hidden rounded-2xl border bg-white",
+        "transition-[border-color,box-shadow,transform] duration-300",
         isOpen
-          ? "border-blue-200 shadow-[0_10px_30px_rgba(2,132,199,0.14)]"
-          : "border-slate-200 hover:border-slate-300 hover:shadow-md",
+          ? "border-blue-200 shadow-[0_14px_38px_rgba(37,99,235,0.12)]"
+          : "border-slate-200 shadow-sm hover:border-slate-300 hover:shadow-md",
       ].join(" ")}
+      dir={dir}
     >
-      <button
-        type="button"
-        onClick={handleToggle}
-        className={[
-          "w-full flex items-start justify-between gap-4 text-start transition",
-          isCompact ? "px-4 py-3" : "px-5 py-4",
-        ].join(" ")}
-        aria-expanded={isOpen}
-      >
-        <div className="flex items-start gap-3">
-          <span
-            className={[
-              "mt-0.5 inline-flex rounded-xl items-center justify-center border",
-              isCompact
-                ? "w-8 h-8 bg-blue-50 border-blue-100"
-                : "w-9 h-9 bg-blue-50 border-blue-100",
-            ].join(" ")}
-          >
-            <Icon className="w-4 h-4 text-blue-700" aria-hidden="true" />
-          </span>
-
-          <div>
-            <h3
+      <h3>
+        <button
+          id={buttonId}
+          type="button"
+          onClick={handleToggle}
+          aria-expanded={isOpen}
+          aria-controls={panelId}
+          aria-label={`${isOpen ? openLabel : closedLabel}: ${question}`}
+          className={[
+            "flex w-full items-start justify-between gap-4",
+            "text-start transition-colors",
+            "focus-visible:outline-none",
+            "focus-visible:ring-4 focus-visible:ring-inset",
+            "focus-visible:ring-blue-100",
+            isCompact ? "px-4 py-4" : "px-5 py-5",
+            isOpen ? "bg-blue-50/45" : "bg-white hover:bg-slate-50/70",
+          ].join(" ")}
+        >
+          <span className="flex min-w-0 flex-1 items-start gap-3">
+            <span
               className={[
-                "font-extrabold text-slate-900 leading-snug",
-                isCompact ? "text-sm" : "text-sm sm:text-base",
+                "mt-0.5 inline-flex shrink-0 items-center justify-center",
+                "rounded-xl border border-blue-100 bg-blue-50",
+                "text-blue-700 transition",
+                isCompact ? "h-9 w-9" : "h-10 w-10",
+                isOpen ? "border-blue-200 bg-blue-100" : "",
               ].join(" ")}
+              aria-hidden="true"
             >
-              {question}
-            </h3>
+              <Icon
+                className={isCompact ? "h-4 w-4" : "h-[18px] w-[18px]"}
+                strokeWidth={2.3}
+              />
+            </span>
 
-            {/* مختصر */}
-            {short ? (
-              <p
+            <span className="min-w-0 flex-1">
+              <span
                 className={[
-                  "mt-1 text-slate-600 leading-relaxed",
-                  isCompact ? "text-[13px]" : "text-sm",
+                  "block font-extrabold leading-6 text-slate-950",
+                  isCompact ? "text-sm" : "text-sm sm:text-base",
                 ].join(" ")}
               >
-                {short}
-              </p>
-            ) : null}
-          </div>
-        </div>
+                {question}
+              </span>
 
-        <ChevronDown
-          className={[
-            "w-5 h-5 text-slate-500 transition-transform duration-300 mt-1",
-            isOpen ? "rotate-180" : "",
-          ].join(" ")}
-        />
-      </button>
+              {short ? (
+                <span
+                  className={[
+                    "mt-1.5 block font-medium leading-6 text-slate-600",
+                    isCompact ? "text-[13px]" : "text-sm",
+                  ].join(" ")}
+                >
+                  {short}
+                </span>
+              ) : null}
+            </span>
+          </span>
 
-      {/* تفاصيل إضافية */}
+          <span
+            className={[
+              "mt-1 flex h-8 w-8 shrink-0 items-center justify-center",
+              "rounded-full border transition",
+              isOpen
+                ? "border-blue-200 bg-blue-100 text-blue-700"
+                : "border-slate-200 bg-white text-slate-500",
+            ].join(" ")}
+            aria-hidden="true"
+          >
+            <ChevronDown
+              className={[
+                "h-4 w-4 transition-transform duration-300",
+                isOpen ? "rotate-180" : "",
+              ].join(" ")}
+              strokeWidth={2.5}
+            />
+          </span>
+        </button>
+      </h3>
+
       <div
+        id={panelId}
+        role="region"
+        aria-labelledby={buttonId}
+        aria-hidden={!isOpen}
         className={[
-          "grid transition-all duration-300 ease-in-out",
+          "grid transition-[grid-template-rows,opacity] duration-300 ease-out",
           isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0",
         ].join(" ")}
       >
-        <div className="overflow-hidden px-5 pb-4">
+        <div className="overflow-hidden">
           {details ? (
-            <>
-              <button
-                type="button"
-                onClick={() => setMore((v) => !v)}
-                className="mt-1 inline-flex items-center gap-2 text-sm font-extrabold text-blue-700 hover:text-blue-800 transition"
-              >
-                {dir === "rtl"
-                  ? more
-                    ? "إخفاء التفاصيل"
-                    : "تفاصيل أكثر"
-                  : more
-                  ? "Hide details"
-                  : "More details"}
-              </button>
-
-              <div
-                className={[
-                  "grid transition-all duration-300 ease-in-out",
-                  more
-                    ? "grid-rows-[1fr] opacity-100 mt-2"
-                    : "grid-rows-[0fr] opacity-0",
-                ].join(" ")}
-              >
-                <div className="overflow-hidden text-slate-600 text-sm leading-relaxed">
-                  {details}
-                </div>
-              </div>
-            </>
-          ) : null}
+            <div
+              className={[
+                "border-t border-slate-100",
+                "text-sm font-medium leading-7 text-slate-600",
+                "whitespace-pre-line",
+                isCompact
+                  ? "px-4 pb-5 pt-4 sm:ps-16"
+                  : "px-5 pb-6 pt-4 sm:ps-[76px]",
+              ].join(" ")}
+            >
+              {details}
+            </div>
+          ) : (
+            <div
+              className={[
+                "border-t border-slate-100 text-sm text-slate-500",
+                isCompact
+                  ? "px-4 pb-5 pt-4 sm:ps-16"
+                  : "px-5 pb-6 pt-4 sm:ps-[76px]",
+              ].join(" ")}
+            >
+              {short}
+            </div>
+          )}
         </div>
       </div>
-    </div>
+    </article>
   );
 }

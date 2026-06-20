@@ -1,49 +1,45 @@
 import sofaImg from "../../assets/hero1.jpg";
-import carImg from "../../assets/hero2.jpg";
 import carpetImg from "../../assets/hero3.jpg";
 import seatsImg from "../../assets/hero4.jpg";
+import glassImg from "../../assets/glasscleaning.jpg";
 
 export const serviceDetails = {
   sofa: {
     id: "sofa",
+
     title_ar: "تنظيف الكنب",
     title_en: "Sofa Cleaning",
     title_he: "ניקוי ספות",
-    subtitle_ar: "تنظيف عميق وتعقيم احترافي وتجفيف سريع لمظهر منتعش.",
-    subtitle_en: "Deep clean, professional sanitization, and quick dry.",
-    subtitle_he: "ניקוי עמוק, חיטוי מקצועי וייבוש מהיר למראה רענן.",
+
+    subtitle_ar:
+      "تنظيف عميق للكنب داخل بيتك، مع عناية بنوع القماش والبقع الموجودة.",
+    subtitle_en:
+      "Deep sofa cleaning at your home, with care suited to the fabric and existing stains.",
+    subtitle_he: "ניקוי עמוק של הספות בביתכם, בהתאמה לסוג הבד ולכתמים הקיימים.",
+
     image: sofaImg,
-    color: "blue",
+
     cards: [
       {
-        name_ar: "تنظيف شامل للكنب",
-        name_en: "Full Sofa Cleaning",
-        name_he: "ניקוי ספות מלא",
-
-        duration_ar: "45 دقيقة",
-        duration_en: "45 min",
-        duration_he: "45 דקות",
-        duration: "45 دقيقة",
-
-        price_ar: "150 ₪",
-        price_en: "₪150",
-        price_he: "150 ₪",
-        price: "150 ₪",
-
         features_ar: [
-          "إزالة البقع والأوساخ العميقة",
-          "تعقيم احترافي",
-          "تجفيف سريع ولمسة نهائية منعشة",
+          "تنظيف الكنب في بيت الزبون",
+          "إزالة الأوساخ والبقع قدر الإمكان",
+          "تنظيف مناسب لنوع القماش",
+          "تنظيف وتعقيم للمقاعد والمساند",
         ],
+
         features_en: [
-          "Deep stain & dirt removal",
-          "Professional sanitization (no steam)",
-          "Quick dry & fresh finish",
+          "Sofa cleaning at the customer’s home",
+          "Removal of dirt and stains when possible",
+          "Cleaning suited to the fabric type",
+          "Cleaning and sanitizing seats and cushions",
         ],
+
         features_he: [
-          "הסרת כתמים ולכלוך עמוק",
-          "חיטוי מקצועי (ללא קיטור)",
-          "ייבוש מהיר וגימור רענן",
+          "ניקוי הספות בבית הלקוח",
+          "הסרת לכלוך וכתמים ככל האפשר",
+          "ניקוי המותאם לסוג הבד",
+          "ניקוי וחיטוי המושבים והכריות",
         ],
       },
     ],
@@ -51,45 +47,41 @@ export const serviceDetails = {
 
   carpet: {
     id: "carpet",
+
     title_ar: "تنظيف السجاد",
     title_en: "Carpet Cleaning",
     title_he: "ניקוי שטיחים",
-    subtitle_ar: "تنظيف ألياف عميق يحافظ على اللون والملمس، بدون استخدام بخار.",
+
+    subtitle_ar:
+      "تنظيف عميق للسجاد مع إمكانية التنظيف في البيت أو الاستلام والإرجاع حسب المنطقة.",
     subtitle_en:
-      "Deep fiber cleaning that preserves color & texture (no steam).",
-    subtitle_he: "ניקוי סיבים עמוק ששומר על צבע ומרקם (ללא קיטור).",
+      "Deep carpet cleaning at home or through pickup and return, depending on the area.",
+    subtitle_he:
+      "ניקוי עמוק של שטיחים בבית או באמצעות איסוף והחזרה, בהתאם לאזור.",
+
     image: carpetImg,
-    color: "emerald",
+
     cards: [
       {
-        name_ar: "تنظيف السجاد بالمتر",
-        name_en: "Per-Meter Carpet Cleaning",
-        name_he: "ניקוי שטיח לפי מטר",
-
-        duration_ar: "حسب المساحة",
-        duration_en: "Depends on area",
-        duration_he: "לפי שטח",
-        duration: "حسب المساحة",
-
-        price_ar: "15 ₪ / متر",
-        price_en: "₪15 / meter",
-        price_he: "15 ₪ / מטר",
-        price: "15 ₪ / متر",
-
         features_ar: [
-          "تنظيف رغوي عميق مع تجفيف كامل",
-          "إزالة البقع والروائح العالقة",
-          "آمن على الألوان والأقمشة الحساسة",
+          "تنظيف عميق لألياف السجاد",
+          "إزالة الأوساخ والبقع والروائح قدر الإمكان",
+          "الحفاظ على لون وملمس السجاد",
+          "تنظيف في البيت أو استلام وإرجاع حسب المنطقة",
         ],
+
         features_en: [
-          "Foam deep-clean with full drying",
-          "Stain & odor removal",
-          "Color & fabric-safe process",
+          "Deep cleaning of carpet fibers",
+          "Removal of dirt, stains, and odors when possible",
+          "Care that preserves color and texture",
+          "Home cleaning or pickup and return depending on the area",
         ],
+
         features_he: [
-          "ניקוי קצף עמוק עם ייבוש מלא",
-          "הסרת כתמים וריחות",
-          "תהליך בטוח לצבעים ולבדים עדינים",
+          "ניקוי עמוק של סיבי השטיח",
+          "הסרת לכלוך, כתמים וריחות ככל האפשר",
+          "שמירה על צבע ומרקם השטיח",
+          "ניקוי בבית או איסוף והחזרה בהתאם לאזור",
         ],
       },
     ],
@@ -97,151 +89,83 @@ export const serviceDetails = {
 
   carSeats: {
     id: "carSeats",
+
     title_ar: "تنظيف فرش السيارات",
     title_en: "Car Interior Cleaning",
-    title_he: "ניקוי פנים רכב",
-    subtitle_ar: "نظافة داخلية متكاملة: المقاعد، الأرضية، أو الاثنين معًا.",
-    subtitle_en: "Complete interior cleaning: seats, floor, or both.",
-    subtitle_he: "ניקוי פנים מלא: מושבים, רצפה או שניהם.",
+    title_he: "ניקוי ריפודי רכב",
+
+    subtitle_ar:
+      "تنظيف مقاعد وفرش السيارة لإزالة الأوساخ والبقع والروائح وإعادة الانتعاش للداخلية.",
+    subtitle_en:
+      "Cleaning car seats and upholstery to reduce dirt, stains, and odors and refresh the interior.",
+    subtitle_he:
+      "ניקוי מושבים וריפודי הרכב להסרת לכלוך, כתמים וריחות ולרענון פנים הרכב.",
+
     image: seatsImg,
-    color: "teal",
+
     cards: [
       {
-        name_ar: "تنظيف المقاعد فقط",
-        name_en: "Seats Only",
-        name_he: "מושבים בלבד",
-
-        duration_ar: "2 ساعة و20 دقيقة",
-        duration_en: "2h 20m",
-        duration_he: "שעתיים ו־20 דק׳",
-        duration: "2 ساعه و20 دقيقه",
-
-        price_ar: "ابتداءً من 400 ₪",
-        price_en: "From ₪400",
-        price_he: "החל מ־400 ₪",
-        price: "ابتداء من 400 ₪",
-
-        features_ar: ["تنظيف عميق للمقاعد (قماش/جلد)", "إزالة البقع والروائح"],
-        features_en: [
-          "Deep seat cleaning (fabric/leather)",
-          "Stain & odor removal",
-        ],
-        features_he: ["ניקוי מושבים עמוק (בד/עור)", "הסרת כתמים וריחות"],
-      },
-      {
-        name_ar: "تنظيف أرضيات السيارة",
-        name_en: "Floor Only",
-        name_he: "רצפה בלבד",
-
-        duration_ar: "40 دقيقة",
-        duration_en: "40 min",
-        duration_he: "40 דק׳",
-        duration: "40 دقيقه",
-
-        price_ar: "ابتداءً من 150 ₪",
-        price_en: "From ₪150",
-        price_he: "החל מ־150 ₪",
-        price: "ابتداء من 150 ₪",
-
-        features_ar: ["تنظيف الأرضيات والفرش السفلي", "إزالة الغبار والرواسب"],
-        features_en: ["Floor & mat cleaning", "Dust & residue removal"],
-        features_he: ["ניקוי רצפה ושטיחונים", "הסרת אבק ושאריות"],
-      },
-      {
-        name_ar: "تنظيف داخلي شامل (مقاعد + أرضية)",
-        name_en: "Full Interior (Seats + Floor)",
-        name_he: "ניקוי פנים מלא (מושבים + רצפה)",
-
-        duration_ar: "3 ساعات ونصف",
-        duration_en: "3.5 hours",
-        duration_he: "3.5 שעות",
-        duration: "3 ساعات ونصف",
-
-        price_ar: "500 ₪",
-        price_en: "₪500",
-        price_he: "500 ₪",
-        price: "500 ₪",
-
         features_ar: [
-          "تنظيف شامل للمقاعد والأرضية",
-          "إزالة البقع والروائح",
-          "نتيجة داخلية أنظف وأكثر انتعاشًا",
+          "تنظيف مقاعد القماش أو الجلد حسب النوع",
+          "تنظيف الفرش والأرضيات الداخلية",
+          "إزالة البقع والروائح قدر الإمكان",
+          "تنظيف المناطق الداخلية التي يصعب الوصول إليها",
         ],
+
         features_en: [
-          "Complete seat and floor cleaning",
-          "Stain & odor removal",
-          "Cleaner, fresher interior result",
+          "Cleaning fabric or leather seats according to type",
+          "Cleaning interior upholstery and floors",
+          "Removal of stains and odors when possible",
+          "Cleaning hard-to-reach interior areas",
         ],
+
         features_he: [
-          "ניקוי מלא של המושבים והרצפה",
-          "הסרת כתמים וריחות",
-          "תוצאה פנימית נקייה ורעננה יותר",
+          "ניקוי מושבי בד או עור בהתאם לסוג",
+          "ניקוי ריפודים ורצפת הרכב",
+          "הסרת כתמים וריחות ככל האפשר",
+          "ניקוי אזורים פנימיים שקשה להגיע אליהם",
         ],
       },
     ],
   },
 
-  car: {
-    id: "car",
-    title_ar: "غسيل السيارات",
-    title_en: "Car Wash",
-    title_he: "שטיפת רכב",
-    subtitle_ar: "اختر بين غسيل سريع يومي أو عناية فاخرة متكاملة.",
-    subtitle_en: "Choose a quick daily wash or premium full care.",
-    subtitle_he: "בחר בין שטיפה יומית מהירה לבין טיפול פרימיום מלא.",
-    image: carImg,
-    color: "amber",
+  glass: {
+    id: "glass",
+
+    title_ar: "تنظيف الزجاج",
+    title_en: "Glass Cleaning",
+    title_he: "ניקוי זכוכית",
+
+    subtitle_ar:
+      "تنظيف زجاج المنازل والمكاتب والواجهات الزجاجية مع الاهتمام بالمسارات والزوايا.",
+    subtitle_en:
+      "Cleaning home and office windows, glass fronts, tracks, and difficult corners.",
+    subtitle_he:
+      "ניקוי חלונות בבתים ובמשרדים, חזיתות זכוכית, מסילות ופינות קשות.",
+
+    image: glassImg,
+
     cards: [
       {
-        name_ar: "غسيل لومورا",
-        name_en: "LUMORA Wash",
-        name_he: "שטיפת Lumora",
-
-        price_ar: "80 سيارة / 100 جيب ₪",
-        price_en: "₪80 car / ₪100 SUV",
-        price_he: "80 ₪ רכב / 100 ₪ ג׳יפ",
-        price: "80 سياره / 100 جيب ₪",
-
         features_ar: [
-          "تنظيف خارجي شامل وتجفيف يدوي",
-          "معطّر مجاني",
-          "مثالي للاستخدام اليومي",
+          "تنظيف شبابيك المنازل والمكاتب",
+          "تنظيف الواجهات الزجاجية",
+          "تنظيف سكك ومسارات الشبابيك المتحركة",
+          "تنظيف داخلي وخارجي حسب إمكانية الوصول",
         ],
-        features_en: [
-          "Full exterior wash & hand dry",
-          "Free fragrance & surface finisher",
-          "Perfect for daily care",
-        ],
-        features_he: [
-          "שטיפה חיצונית מלאה וייבוש ידני",
-          "ריחון מתנה",
-          "מושלם לשימוש יומיומי",
-        ],
-      },
-      {
-        name_ar: "غسيل VIP",
-        name_en: "VIP Wash",
-        name_he: "שטיפת VIP",
 
-        price_ar: "130 سيارة / 150 جيب ₪",
-        price_en: "₪130 car / ₪150 SUV",
-        price_he: "130 ₪ רכב / 150 ₪ ג׳יפ",
-        price: "130 سياره / 150 جيب ₪",
-
-        features_ar: [
-          "تنظيف داخلي وخارجي عميق (بدون بخار)",
-          "معطّر فاخر ولمعة نهائية",
-          "عناية بالطلاء والتفاصيل الدقيقة",
-        ],
         features_en: [
-          "Deep interior & exterior cleaning (no steam)",
-          "Luxury scent & final shine",
-          "Paint & detailing care",
+          "Cleaning windows in homes and offices",
+          "Cleaning glass fronts and facades",
+          "Cleaning sliding-window tracks and rails",
+          "Interior and exterior cleaning where safely accessible",
         ],
+
         features_he: [
-          "ניקוי פנים וחוץ עמוק (ללא קיטור)",
-          "ריח יוקרתי וברק סופי",
-          "טיפול בצבע ובפרטים",
+          "ניקוי חלונות בבתים ובמשרדים",
+          "ניקוי חזיתות זכוכית",
+          "ניקוי מסילות של חלונות הזזה",
+          "ניקוי פנימי וחיצוני בהתאם לאפשרות הגישה",
         ],
       },
     ],

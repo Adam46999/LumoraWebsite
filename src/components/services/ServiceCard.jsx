@@ -1,21 +1,60 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { useLanguage } from "../../context/LanguageContext";
+// src/components/services/ServiceCard.jsx
+import { useEffect, useRef, useState } from "react";
 import {
-  Sofa,
-  Car,
-  Layers,
-  Droplet,
+  ArrowLeft,
   ArrowRight,
+  Car,
+  Check,
+  Layers,
   MessageCircle,
+  Sofa,
+  Sparkles,
 } from "lucide-react";
-import { serviceDetails } from "./serviceDetailsData";
 
-const iconMap = {
-  couch: <Sofa size={22} strokeWidth={2.2} />,
-  car: <Car size={22} strokeWidth={2.2} />,
-  "layer-group": <Layers size={22} strokeWidth={2.2} />,
-  tint: <Droplet size={22} strokeWidth={2.2} />,
+import { useLanguage } from "../../context/LanguageContext";
+
+const ICONS = {
+  couch: Sofa,
+  car: Car,
+  "layer-group": Layers,
+  sparkles: Sparkles,
 };
+
+function getCopy(lang) {
+  if (lang === "he") {
+    return {
+      available: "השירות זמין",
+      popular: "מבוקש",
+      request: "הזמנת השירות",
+      details: "פרטים",
+      requestHint: "בחירת פרטים והמשך ב-WhatsApp",
+      imageAltPrefix: "תמונה של",
+      ariaOpen: "פתיחת פרטי השירות",
+    };
+  }
+
+  if (lang === "en") {
+    return {
+      available: "Service available",
+      popular: "Popular",
+      request: "Request service",
+      details: "Details",
+      requestHint: "Choose the details, then continue through WhatsApp",
+      imageAltPrefix: "Image of",
+      ariaOpen: "Open service details",
+    };
+  }
+
+  return {
+    available: "الخدمة متاحة",
+    popular: "الأكثر طلبًا",
+    request: "اطلب الخدمة",
+    details: "التفاصيل",
+    requestHint: "حدد التفاصيل ثم تابع عبر واتساب",
+    imageAltPrefix: "صورة خدمة",
+    ariaOpen: "فتح تفاصيل الخدمة",
+  };
+}
 
 export default function ServiceCard({
   id,
@@ -23,125 +62,262 @@ export default function ServiceCard({
   titleKey,
   descriptionKey,
   image,
+  priority = "secondary",
   onClick,
-  onBook,
-  meta,
-  badge,
 }) {
-  const { t, tFn, lang, isRTL } = useLanguage();
+  const { t, lang, isRTL } = useLanguage();
+
+  const cardRef = useRef(null);
   const [visible, setVisible] = useState(false);
-  const ref = useRef(null);
+
+  const copy = getCopy(lang);
+
+  const Icon = ICONS[icon] || Sparkles;
+  const DirectionArrow = isRTL ? ArrowLeft : ArrowRight;
+
+  const title = t?.[titleKey] || titleKey;
+  const description = t?.[descriptionKey] || descriptionKey;
+
+  const isPrimary = priority === "primary";
 
   useEffect(() => {
-    const obs = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setVisible(true);
-            obs.unobserve(entry.target);
-          }
-        });
+    const element = cardRef.current;
+
+    if (!element) return undefined;
+
+    const reduceMotion = window.matchMedia?.(
+      "(prefers-reduced-motion: reduce)",
+    )?.matches;
+
+    if (reduceMotion || !("IntersectionObserver" in window)) {
+      setVisible(true);
+      return undefined;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+
+        setVisible(true);
+        observer.unobserve(entry.target);
       },
-      { threshold: 0.15 },
+      {
+        threshold: 0.12,
+        rootMargin: "0px 0px -30px 0px",
+      },
     );
-    if (ref.current) obs.observe(ref.current);
-    return () => obs.disconnect();
+
+    observer.observe(element);
+
+    return () => {
+      observer.disconnect();
+    };
   }, []);
 
-  const computedMeta = useMemo(() => {
-    const d = serviceDetails?.[id];
-    const first = d?.cards?.[0];
-    if (!first) return meta || null;
-
-    const duration = first?.[`duration_${lang}`] ?? first?.duration ?? null;
-
-    if (!duration) return null;
-
-    return duration;
-  }, [id, lang, meta]);
-
-  const bidiBoxProps = { dir: "ltr", style: { unicodeBidi: "plaintext" } };
+  const openDetails = () => {
+    onClick?.();
+  };
 
   return (
     <article
-      ref={ref}
-      onClick={onClick}
-      className={[
-        "group cursor-pointer select-none overflow-hidden rounded-2xl border border-gray-100 bg-white",
-        "shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500 ease-out",
-        "flex flex-col p-5 sm:p-6",
-        "min-h-[340px]",
-        visible
-          ? "opacity-100 translate-y-0"
-          : "opacity-0 translate-y-4 duration-700",
-      ].join(" ")}
-      aria-label={t?.[titleKey] || titleKey}
+      ref={cardRef}
+      id={`service-${id}`}
       data-service-id={id}
+      data-service-priority={priority}
+      data-service-available="true"
+      className={[
+        "group relative flex h-full scroll-mt-[calc(var(--app-topbar-h,64px)+18px)]",
+        "flex-col overflow-hidden rounded-[28px] border bg-white",
+        "text-start transition-[transform,opacity,box-shadow,border-color]",
+        "duration-500 ease-out",
+        visible ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0",
+        isPrimary
+          ? "border-blue-100 shadow-[0_16px_44px_rgba(15,23,42,0.10)]"
+          : "border-slate-200 shadow-[0_12px_34px_rgba(15,23,42,0.07)]",
+        "hover:-translate-y-1 hover:border-blue-200",
+        "hover:shadow-[0_22px_55px_rgba(15,23,42,0.13)]",
+      ].join(" ")}
+      dir={isRTL ? "rtl" : "ltr"}
     >
-      <div className="relative w-full h-36 sm:h-40 overflow-hidden rounded-xl mb-4">
+      {/* صورة الخدمة */}
+      <button
+        type="button"
+        onClick={openDetails}
+        className="
+          relative block aspect-[16/10] w-full
+          overflow-hidden bg-slate-100 text-start
+          focus-visible:outline-none
+          focus-visible:ring-4 focus-visible:ring-inset
+          focus-visible:ring-blue-300
+        "
+        aria-label={`${copy.ariaOpen}: ${title}`}
+      >
         <img
           src={image}
-          alt={t?.[titleKey] || titleKey}
-          className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+          alt={`${copy.imageAltPrefix} ${title}`}
+          draggable={false}
           loading="lazy"
+          decoding="async"
+          className="
+            h-full w-full object-cover
+            transition-transform duration-500 ease-out
+            group-hover:scale-[1.035]
+          "
+          sizes="
+            (max-width: 640px) 100vw,
+            (max-width: 1280px) 50vw,
+            25vw
+          "
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
 
-        {badge ? (
-          <div
-            className="absolute top-3 start-3 rounded-full bg-white/90 backdrop-blur px-3 py-1 text-xs font-black text-gray-800 shadow-sm"
-            style={{ unicodeBidi: "plaintext" }}
+        <div
+          className="
+            pointer-events-none absolute inset-0
+            bg-gradient-to-t
+            from-slate-950/65
+            via-slate-950/5
+            to-transparent
+          "
+          aria-hidden="true"
+        />
+
+        {/* حالة الخدمة */}
+        <div
+          className="
+            absolute start-3 top-3
+            inline-flex items-center gap-1.5
+            rounded-full border border-white/25
+            bg-slate-950/55 px-3 py-1.5
+            text-[11px] font-extrabold text-white
+            shadow-sm backdrop-blur-md
+          "
+        >
+          <span
+            className="
+              flex h-4 w-4 items-center justify-center
+              rounded-full bg-emerald-500
+            "
+            aria-hidden="true"
           >
-            {badge}
-          </div>
-        ) : null}
-      </div>
+            <Check size={11} strokeWidth={3} />
+          </span>
 
-      <div className="flex flex-col flex-1">
-        <div className="flex items-center gap-2 mb-2 text-blue-600">
-          {iconMap[icon]}
-          <h3 className="text-lg sm:text-xl font-extrabold text-gray-900">
-            {t?.[titleKey] || titleKey}
-          </h3>
+          <span>{copy.available}</span>
         </div>
 
-        {computedMeta ? (
-          <div className="mb-3 text-xs font-semibold text-gray-500">
-            <span {...bidiBoxProps}>{computedMeta}</span>
+        {isPrimary ? (
+          <div
+            className="
+              absolute end-3 top-3
+              rounded-full border border-blue-200/40
+              bg-blue-600/90 px-3 py-1.5
+              text-[11px] font-extrabold text-white
+              shadow-sm backdrop-blur-md
+            "
+          >
+            {copy.popular}
           </div>
         ) : null}
 
-        <p className="text-sm text-gray-600 leading-relaxed flex-1">
-          {t?.[descriptionKey] || descriptionKey}
-        </p>
+        {/* أيقونة الخدمة */}
+        <div
+          className="
+            absolute bottom-3 start-3
+            flex h-11 w-11 items-center justify-center
+            rounded-2xl border border-white/20
+            bg-white/90 text-slate-900
+            shadow-lg backdrop-blur-md
+          "
+          aria-hidden="true"
+        >
+          <Icon size={22} strokeWidth={2.3} />
+        </div>
+      </button>
 
-        <div className="mt-5 grid grid-cols-2 gap-2">
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onClick?.();
-            }}
-            className="rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold py-2.5 text-sm transition-all active:scale-95 inline-flex items-center justify-center gap-2"
+      {/* محتوى الكرت */}
+      <div className="flex flex-1 flex-col p-5 sm:p-6">
+        <div className="flex-1">
+          <h3
+            className="
+              text-xl font-black leading-tight
+              tracking-tight text-slate-950
+            "
           >
-            {tFn("services.actions.details")}
-            <ArrowRight
-              size={16}
-              className={isRTL ? "rotate-180" : ""}
+            {title}
+          </h3>
+
+          <p
+            className="
+              mt-2 min-h-[48px]
+              text-sm font-medium leading-6
+              text-slate-600
+            "
+          >
+            {description}
+          </p>
+
+          <div
+            className="
+              mt-4 flex items-start gap-2
+              rounded-2xl bg-slate-50
+              px-3.5 py-3
+              text-xs font-bold leading-5
+              text-slate-600
+            "
+          >
+            <MessageCircle
+              size={17}
+              className="mt-0.5 shrink-0 text-blue-600"
               aria-hidden="true"
             />
+
+            <span>{copy.requestHint}</span>
+          </div>
+        </div>
+
+        {/* الأزرار */}
+        <div className="mt-5 grid grid-cols-[1fr_auto] gap-2.5">
+          <button
+            type="button"
+            onClick={openDetails}
+            className="
+              inline-flex min-h-12 items-center
+              justify-center gap-2 rounded-2xl
+              bg-blue-600 px-4 py-3
+              text-sm font-extrabold text-white
+              shadow-[0_10px_25px_rgba(37,99,235,0.25)]
+              transition
+              hover:bg-blue-700
+              active:scale-[0.98]
+              focus-visible:outline-none
+              focus-visible:ring-4
+              focus-visible:ring-blue-200
+            "
+          >
+            <span>{copy.request}</span>
+
+            <DirectionArrow size={17} strokeWidth={2.5} aria-hidden="true" />
           </button>
 
           <button
             type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onBook?.();
-            }}
-            className="rounded-xl bg-gray-900 hover:bg-gray-800 text-white font-bold py-2.5 text-sm transition-all active:scale-95 inline-flex items-center justify-center gap-2"
+            onClick={openDetails}
+            className="
+              inline-flex min-h-12 items-center
+              justify-center rounded-2xl
+              border border-slate-200 bg-white
+              px-4 py-3
+              text-sm font-extrabold text-slate-700
+              transition
+              hover:border-slate-300 hover:bg-slate-50
+              active:scale-[0.98]
+              focus-visible:outline-none
+              focus-visible:ring-4
+              focus-visible:ring-slate-200
+            "
+            aria-label={`${copy.details}: ${title}`}
           >
-            <MessageCircle size={16} aria-hidden="true" />
-            {tFn("services.actions.book")}
+            {copy.details}
           </button>
         </div>
       </div>

@@ -1,5 +1,6 @@
 // src/firebase.js
-import { initializeApp } from "firebase/app";
+import { getApp, getApps, initializeApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
@@ -12,5 +13,22 @@ const firebaseConfig = {
   measurementId: "G-0TXG6KPPN5",
 };
 
-const app = initializeApp(firebaseConfig);
+/*
+  يمنع تهيئة Firebase أكثر من مرة أثناء التطوير
+  أو عند استخدام Hot Module Reload في Vite.
+*/
+const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+
+/*
+  قاعدة بيانات Firestore الحالية.
+  كل الملفات القديمة التي تستورد db ستستمر بالعمل.
+*/
 export const db = getFirestore(app);
+
+/*
+  Firebase Authentication.
+  سنستخدمه بدل PIN المكتوب داخل كود الموقع.
+*/
+export const auth = getAuth(app);
+
+export default app;

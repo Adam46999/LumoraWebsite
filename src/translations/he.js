@@ -1,197 +1,206 @@
-// src/translations/he.js
 export default {
+  __lang: "he",
+
   // Navigation / Header
-  home: "בית",
+  home: "ראשי",
   services: "שירותים",
   beforeafter: "לפני / אחרי",
-  contact: "צור קשר",
+
+  nav: {
+    contact: "צור קשר",
+  },
 
   // Hero
-  heroStatic: "ניקיון עמוק ומסודר ל",
-  heroHighlight1: "ספות",
-  heroHighlight2: "רכבים",
-  heroHighlight3: "שטיחים",
+  heroHighlight1: "ניקיון מקצועי",
+  heroHighlight2: "לספות, מזרנים, שטיחים, רכבים וזכוכית",
   heroSubtitle:
-    "אנחנו מציעים שירותי ניקוי עמוק לספות ביתיות, פנים וחוץ של רכבים, ושטיחים — באמצעות מכשירים מודרניים וחומרים בטוחים לשימוש.",
-  heroAlt: "שירות ניקיון",
+    "שירותי ניקיון מקצועיים בבית הלקוח לספות, מזרנים, שטיחים, ריפודי רכב וזכוכית, באזורי הצפון והמרכז.",
+  heroButton: "הזמנת שירות",
+  heroAlt: "שירות ניקיון בבית הלקוח",
 
-  // Hero Buttons (used by HeroButton.jsx)
-  heroButtonPrimary: "וואטסאפ עכשיו",
-  heroButtonSecondary: "בקש הצעת מחיר",
-  // اختياري إذا بدك تتحكم بالروابط من الترجمة:
-  // whatsappLink: "https://wa.me/9725XXXXXXXX?text=שלום",
-  // callLink: "tel:+9725XXXXXXXX",
-  // showCallButton: true,
-  callNow: "התקשר",
-
-  // Hero Trust Pills
-  heroPill1: "עמידה בזמנים",
-  heroPill2: "דיוק בפרטים ותוצאות ברורות",
-  heroPill3: "חומרים בטוחים וידידותיים לסביבה",
-
-  // Services Section
+  // Services
   servicesTitle1: "שירותי",
   servicesTitle2: "ניקיון",
   servicesDescription:
-    "אנו מציעים פתרונות ניקוי מלאים לספות, שטיחים, רכבים ועוד תוך שימוש בטכנולוגיה מתקדמת.",
+    "בחרו את השירות המתאים, מלאו את הפרטים הבסיסיים והמשיכו את הבקשה ב-WhatsApp.",
 
   sofaTitle: "ניקוי ספות",
-  sofaDescription: "ניקוי עמוק והסרת כתמים.",
-  sofaDetails: `אנו מנקים את כל סוגי הספות באמצעות מכשירי אדים מודרניים וחומרי ניקוי בטוחים לבד.
-כולל:
-- הסרת כתמים קשים
-- חיטוי נגד חיידקים
-- ייבוש מהיר ללא ריח`,
+  sofaDescription:
+    "ניקוי עמוק של ספות בביתכם, כולל גם ניקוי מזרנים, באמצעות ציוד וחומרים המתאימים לסוג הבד.",
 
-  carTitle: "ניקוי רכבים",
-  carDescription: "פנים וחוץ כולל חיטוי.",
-  carDetails: `כולל ניקוי מלא של המושבים, הרצפה, הזגוגיות והקונסולה.
-אנו משתמשים בחומרים מיוחדים לכל סוג עור או בד, עם חיטוי באדים לאזורים רגישים.`,
+  carTitle: "שטיפת רכבים",
+  carDescription: "ניקוי הרכב וטיפול בפרטים הפנימיים והחיצוניים במיקום הלקוח.",
 
   carpetTitle: "ניקוי שטיחים",
-  carpetDescription: "כביסה וייבוש שטיחים.",
-  carpetDetails: `כביסה ידנית ומכאנית לשטיחים ושטיחונים עם ייבוש מהיר.
-משחזרים את צבעי השטיח המקוריים ומחזירים לו את הרכות.`,
+  carpetDescription:
+    "ניקוי עמוק של השטיחים בבית הלקוח, ללא העברה או לקיחת השטיחים למקום אחר.",
 
-  steamTitle: "חיטוי באדים",
-  steamDescription: "חיטוי באדים בטמפרטורה גבוהה.",
-  steamDetails: `אדים בטמפרטורה גבוהה של 160° לחיטוי רצפות, רהיטים ואזורים לחים.
-הורג 99.9% מהחיידקים והנגיפים.`,
+  carSeatsTitle: "ניקוי ריפודי רכב",
+  carSeatsDescription:
+    "ניקוי מושבים וריפודים פנימיים של הרכב במיקום הלקוח באמצעות ציוד מתאים.",
 
-  // Before After
-  beforeAfterHint: "גרור כדי לראות את ההבדל",
+  glassTitle: "ניקוי זכוכית",
+  glassDescription:
+    "ניקוי יסודי של חלונות וחזיתות זכוכית בבתים ובמשרדים במיקום הלקוח.",
+
+  // ======================
+  // Before / After
+  // ======================
   beforeAlt: "לפני",
   afterAlt: "אחרי",
-  beforeAfterTitle1: "לפני",
-  beforeAfterTitle2: " / אחרי ניקיון",
-  beforeAfterDescription:
-    "ראה את ההבדל האמיתי לפני ואחרי ניקוי ספות ושטיחים באמצעות גרירת התמונות.",
+  beforeAfterTitle: "לפני / אחרי",
+  beforeAfterSubtitle: "השוואה ברורה של התוצאה לפני ואחרי הניקוי.",
+  beforeAfterAria: "לפני ואחרי",
 
-  // Contact Section (flat keys)
-  contactTitleSpan: "צור",
-  contactTitle: " קשר",
-  contactSubtitle: "יש לך שאלה או הערה? שלח לנו הודעה ונשיב לך!",
-  contactNameLabel: "שם מלא",
-  contactNamePlaceholder: "הכנס את שמך",
-  contactPhoneLabel: "מספר טלפון",
-  contactPhonePlaceholder: "הכנס מספר טלפון",
-  contactMessageLabel: "ההודעה שלך",
-  contactMessagePlaceholder: "כתוב את ההודעה כאן...",
-  contactSendButton: "שלח",
-  contactSuccessMessage: "ההודעה נשלחה בהצלחה!",
-  contactPhoneError: "מספר טלפון לא חוקי. ודא שהוא מתחיל ב-05 ומכיל 10 ספרות.",
-  contactFillAllFields: "אנא מלא את כל השדות.",
-  contactCallNow: "התקשר עכשיו",
-  contactMapLocation: "המיקום שלנו במפה",
-  contactChooseLanguage: "בחר שפה",
+  // ======================
+  // Contact – Header
+  // נשמר לשימוש עתידי
+  // ======================
+  contactTitleSpan: "צרו",
+  contactTitle: "קשר",
+  contactSubtitle: "יש לכם שאלה או הערה? שלחו לנו הודעה ונחזור אליכם.",
 
-  // Lang Switch
-  langArabic: "ערבית",
-  langEnglish: "אנגלית",
-  langHebrew: "עברית",
+  // Contact – Labels
+  contactSubjectLabel: "נושא",
+  contactNameLabel: "שם",
+  contactPhoneLabel: "טלפון",
+  contactMessageLabel: "הודעה",
 
-  // Nav
-  navHome: "ראשי",
-  navServices: "שירותים",
-  navBeforeAfter: "לפני / אחרי",
-  navContact: "צור קשר",
-  closeMenu: "סגור תפריט",
-  chooseLanguage: "בחר שפה",
+  // Contact – Placeholders
+  contactPhName: "שם מלא",
+  contactPhPhone: "מספר טלפון",
+  contactPhMessageInquiry: "כתבו את השאלה או הבקשה שלכם…",
+  contactPhMessageBooking: "כתבו את השירות והפרטים המתאימים…",
+  contactPhMessageComplaint: "כתבו את התלונה…",
+  contactPhMessageOther: "כתבו את ההודעה שלכם…",
 
-  // Services Short
-  serviceCarpet: "ניקוי שטיחים",
-  serviceSofa: "ניקוי ספות",
-  serviceCar: "ניקוי רכבים",
-  carSeatsTitle: "ניקוי פנים רכב",
-  carSeatsDescription:
-    "מושבים, רצפה או שניהם — עם אפשרות לחבילה הכוללת שטיפה חיצונית.",
+  // Contact – Buttons
+  contactSend: "שליחה",
+  contactSending: "שולח...",
+  contactSent: "נשלח!",
+  contactNeedMore: "השלימו את השדות",
+
+  // Contact – Assist
+  contactAssistName: "כתבו את שמכם המלא כפי שיופיע בתקשורת.",
+  contactAssistPhone: "מומלץ להזין מספר שזמין ב-WhatsApp לצורך מענה נוח.",
+  contactAssistMsg: "כתבו את הבקשה במשפט ברור וקצר.",
+
+  // Contact – Errors
+  contactErrSubject: "בחרו נושא",
+  contactErrName: "כתבו את שמכם",
+  contactErrPhoneEmpty: "הזינו מספר טלפון",
+  contactErrPhoneInvalid: "מספר הטלפון אינו תקין",
+  contactErrMessage: "כתבו הודעה",
+
+  // Contact – Preferences
+  contactMoreOpts: "אפשרויות נוספות",
+  contactMoreOptsHide: "הסתרת האפשרויות",
+  contactPrefTitle: "דרך התקשרות מועדפת",
+  contactPrefPhone: "שיחת טלפון",
+  contactPrefWA: "WhatsApp",
+  contactPrefEither: "אין העדפה",
+  contactPrefSummary: "העדפה:",
+  contactClearPrefA11y: "הסרת ההעדפה",
+
+  // Contact – WhatsApp
+  contactWAButton: "WhatsApp",
+  contactWAPreviewTitle: "תצוגה מקדימה של הודעת WhatsApp",
+  contactWAOpenNow: "פתיחת WhatsApp עכשיו",
+  contactWACopy: "העתקת הטקסט",
+  contactWAPreviewClose: "סגירת התצוגה",
+
+  // Contact – Saved
+  contactSavedHint: "הפרטים נשמרו במכשיר.",
+
+  // Common
+  commonClose: "סגירה",
 
   header: {
     brand: "Lumora",
     menu_title: "תפריט ראשי",
-
     services: "שירותים",
-    gallery: "גלריית תמונות",
+    gallery: "גלריה",
     contact: "צור קשר",
-
     carpet_clean: "ניקוי שטיחים",
     sofa_clean: "ניקוי ספות",
-    car_clean: "ניקוי רכבים",
-
-    choose_language: "בחר שפה",
+    car_clean: "ניקוי ריפודי רכב",
+    choose_language: "בחירת שפה",
     ar: "ערבית",
     en: "אנגלית",
     he: "עברית",
   },
+
+  contact: {
+    titleSpan: "צרו",
+    title: "קשר",
+    subtitle: "יש לכם שאלה או הערה? שלחו לנו הודעה ונחזור אליכם.",
+  },
+
+  heroStatic: "ניקיון מקצועי של",
+
+  // Rotating words
+  heroHighlight1: "ספות ומזרנים",
+  heroHighlight2: "ריפודי רכב",
+  heroHighlight3: "שטיחים",
+
+  // Description
+  heroSubtitle:
+    "אנחנו מגיעים אליכם ומעניקים שירותי ניקיון מקצועיים בבית או במיקום שלכם באזורי הצפון והמרכז. המחיר והמועד נקבעים לפי סוג השירות ופרטי הבקשה.",
+
+  // Hero buttons
+  heroButtonPrimary: "הזמנת שירות",
+  heroButtonSecondary: "לצפייה בשירותים",
+  whatsappLink: "https://wa.me/972543075619",
+  callLink: "tel:+972543075619",
+  showCallButton: false,
+  callNow: "התקשרות",
+
+  // Trust pills
+  heroPill1: "השירות במיקום שלכם",
+  heroPill2: "צפון ומרכז",
+  heroPill3: "ציוד וחומרים מתאימים",
+
+  // Scroll hint
+  scrollExplore: "גלו עוד",
+
   common: {
-    close: "סגור",
+    close: "סגירה",
     opening: "פותח…",
   },
 
   services: {
     section: {
-      badge: "שירותים",
-      title: "בחר את השירות",
-      titleAccent: "המתאים",
-      subtitle: "פרטים ברורים לכל שירות, והזמנה דרך הודעת וואטסאפ מוכנה.",
+      badge: "שירותי ניקיון בבית הלקוח",
+      title: "בחרו את",
+      titleAccent: "השירות המתאים",
+      subtitle:
+        "בחרו את השירות המתאים, מלאו את הפרטים הבסיסיים והמשיכו את הבקשה ב-WhatsApp. השירותים שלנו זמינים באזורי הצפון והמרכז.",
     },
+
     actions: {
-      details: "פרטים",
-      book: "הזמן",
+      details: "פרטים נוספים",
+      book: "הזמנת שירות",
     },
+
     badges: {
-      popular: "פופולרי",
-      fast: "מהיר",
+      popular: "הכי מבוקש",
+      fast: "הזמנה מהירה",
     },
-    meta: {
-      from: "החל מ־{price}",
-    },
+
     modal: {
-      quick: {
-        durationLabel: "משך",
-        priceLabel: "מחיר",
-        assuranceLabel: "אחריות",
-        assuranceValue: "איכות וחיטוי",
-        varies: "משתנה",
-      },
-      includesTitle: "כולל",
-      moreDetails: "פרטים נוספים לפי בקשה.",
-      bookingTitle: "פרטי הזמנה",
-      bookingSubtitle: "אופציונלי — עוזר לנו לענות מהר ובמדויק יותר.",
-      prefTitle: "זמן מועדף",
-      pref: {
-        today: "היום",
-        tomorrow: "מחר",
-        week: "השבוע",
-      },
-      noteTitle: "הערה",
-      notePlaceholder: "לדוגמה: כתמי קפה / חיית מחמד / כתובת / הערות מיוחדות…",
-      afterSend: "אחרי השליחה: נחזור אליך מהר כדי לאשר מחיר ומועד.",
-      notesTitle: "הערות",
-      notesBody:
-        "המחיר הסופי תלוי בגודל/מצב. הזמן דרך וואטסאפ ונחזור אליך במהירות.",
-      footerHint: "שולח הודעת וואטסאפ מוכנה — בלי למלא טופס",
-      quickQuestion: "שאלה קצרה",
-      bookNow: "הזמן עכשיו (וואטסאפ)",
+      includesTitle: "מה כולל השירות?",
+      moreDetails:
+        "מלאו את היישוב ואת פרטי השירות הבסיסיים והמשיכו את הבקשה ב-WhatsApp.",
+      footerHint: "המשיכו את הבקשה בקלות דרך WhatsApp",
+      quickQuestion: "שאלה על השירות",
+      bookNow: "הזמנת שירות",
     },
+
     whatsapp: {
-      lineDuration: "משך: {duration}",
-      linePrice: "מחיר: {price}",
-      linePreferred: "זמן מועדף: {preferred}",
-      lineNote: "הערה: {note}",
-      questionIntro: "היי, יש לי שאלה לגבי השירות: {title}",
-      questionOutro: "אפשר עוד פרטים?",
-      bookIntro: "היי, אני רוצה להזמין: {title}",
-      bookOutro: "מה המועד הקרוב ביותר שיש לכם?",
+      questionIntro: "שלום, אני מתעניין/ת בשירות {title}.",
+      questionOutro: "אפשר לקבל פרטים נוספים?",
+      bookIntro: "שלום, אני רוצה להזמין שירות {title} במיקום שלי.",
+      bookOutro: "אשלח את הפרטים הדרושים דרך WhatsApp.",
     },
   },
-  nav: {
-    contact: "צור קשר",
-  },
-  contact: {
-    titleSpan: "צור קשר",
-    title: "איתנו",
-    subtitle: "יש לך שאלה או הערה? שלח/י לנו הודעה ונחזור אליך!",
-  },
-  scrollExplore: "דפדף",
 };

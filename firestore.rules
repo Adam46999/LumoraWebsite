@@ -1,0 +1,53 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /*
+      مهم:
+      استبدل البريد الموجود هنا بنفس البريد الذي وضعته في:
+      VITE_ADMIN_EMAIL داخل .env.local
+
+      مثال:
+      return request.auth != null
+        && request.auth.token.email == "admin@example.com";
+    */
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email != null
+        && request.auth.token.email == "PUT_YOUR_ADMIN_EMAIL_HERE";
+    }
+
+    /*
+      بيانات العمل اليومية:
+      الدخل، السجاد، حالة إغلاق اليوم وباقي بيانات لوحة الإدارة.
+    */
+    match /manager_daily_v2/{dateKey} {
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    /*
+      رسائل التواصل القديمة.
+
+      بما أننا أزلنا نموذج التواصل العام من الموقع،
+      لم يعد هناك داعٍ للسماح للزائر بإنشاء رسائل جديدة.
+    */
+    match /contact_messages/{messageId} {
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    /*
+      إغلاق أي Collection أخرى غير مذكورة أعلاه.
+      هذا يمنع الوصول غير المقصود لأي بيانات نضيفها لاحقًا.
+    */
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

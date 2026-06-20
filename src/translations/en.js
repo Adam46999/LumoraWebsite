@@ -1,131 +1,174 @@
-// src/translations/en.js
 export default {
-  // Navigation / Header (top)
+  __lang: "en",
+
+  // Navigation / Header
   home: "Home",
   services: "Services",
   beforeafter: "Before / After",
-  contact: "Contact Us",
+
+  nav: {
+    contact: "Contact Us",
+  },
 
   // Hero
-  heroStatic: "Deep & neat cleaning for",
-  heroHighlight1: "Sofas",
-  heroHighlight2: "Cars",
-  heroHighlight3: "Carpets",
+  heroHighlight1: "Professional cleaning",
+  heroHighlight2: "for sofas, mattresses, carpets, cars and glass",
   heroSubtitle:
-    "Deep cleaning for home sofas, car interiors & exteriors, and carpets — using modern steam devices and safe materials.",
-  heroAlt: "Cleaning Service",
+    "Professional on-site cleaning services for sofas, mattresses, carpets, car interiors and glass, available across northern and central areas.",
+  heroButton: "Request Service",
+  heroAlt: "On-site cleaning service",
 
-  // Hero Buttons (used by HeroButton.jsx)
-  heroButtonPrimary: "WhatsApp now",
-  heroButtonSecondary: "Get a quote",
-  whatsappLink: "https://wa.me/972543075619",
-  callLink: "tel:+972543075619",
-  showCallButton: false,
-  callNow: "Call",
-
-  // Hero Trust Pills
-  heroPill1: "On-time commitment",
-  heroPill2: "Precise details, visible results",
-  heroPill3: "Safe materials & eco-friendly options",
-
-  // Scroll hint (if you use it)
-  scrollExplore: "Explore",
-
-  // Services Section
-  servicesTitle1: "Our",
+  // Services
+  servicesTitle1: "Cleaning",
   servicesTitle2: "Services",
-  servicesDescription: "Pick what suits you.",
+  servicesDescription:
+    "Choose the service you need, enter the basic details, then continue your request through WhatsApp.",
 
   sofaTitle: "Sofa Cleaning",
-  sofaDescription: "Full cleaning, sanitization and quick dry.",
-  sofaDetails: `We clean all types of sofas using modern steam devices and fabric-safe cleaning materials.
-Includes:
-- Tough stain removal
-- Bacteria sanitization
-- Quick drying without odor`,
+  sofaDescription:
+    "Deep sofa cleaning inside your home, including mattress cleaning, using suitable equipment and materials for each fabric type.",
 
-  carTitle: "Car Wash",
-  carDescription: "Choose quick daily wash or premium care.",
-  carDetails: `Includes full cleaning of seats, floors, glass, and console.
-We use special materials for each type of leather or fabric, with steam sanitization for sensitive areas.`,
+  carTitle: "Car Washing",
+  carDescription:
+    "Car cleaning and detailed interior and exterior care at the customer's location.",
 
   carpetTitle: "Carpet Cleaning",
-  carpetDescription: "Deep clean that preserves color & texture.",
-  carpetDetails: `Manual and machine washing for carpets and rugs with fast drying.
-We restore original carpet colors and softness.`,
+  carpetDescription:
+    "Deep carpet cleaning inside the customer's home, without moving or taking the carpets elsewhere.",
 
-  steamTitle: "Steam Sanitization",
-  steamDescription: "High-temperature steam sanitization.",
-  steamDetails: `High temperature steam at 160° for disinfecting floors, upholstery, and damp areas.
-Kills 99.9% of bacteria and germs.`,
-
-  // Services Short
-  serviceCarpet: "Carpet Cleaning",
-  serviceSofa: "Sofa Cleaning",
-  serviceCar: "Car Cleaning",
   carSeatsTitle: "Car Interior Cleaning",
   carSeatsDescription:
-    "Seats, floor, or both — with optional exterior wash bundle.",
+    "Cleaning car seats and interior upholstery at the customer's location using suitable equipment.",
 
+  glassTitle: "Glass Cleaning",
+  glassDescription:
+    "Careful cleaning of windows and glass façades for homes and offices at the customer's location.",
+
+  // ======================
   // Before / After
-  beforeAfterHint: "Slide to see the difference",
+  // ======================
   beforeAlt: "Before",
   afterAlt: "After",
-  beforeAfterTitle1: "Before",
-  beforeAfterTitle2: " / After Cleaning",
-  beforeAfterDescription:
-    "See the real difference before and after cleaning sofas and carpets by sliding the images.",
+  beforeAfterTitle: "Before / After",
+  beforeAfterSubtitle:
+    "A clear comparison of the results before and after cleaning.",
+  beforeAfterAria: "Before and after",
 
-  // Contact Section (flat keys, no nested object!)
+  // ======================
+  // Contact – Header
+  // Saved for future use
+  // ======================
   contactTitleSpan: "Contact",
-  contactTitle: " Us",
+  contactTitle: "Us",
   contactSubtitle:
-    "Have a question or note? Just send us a message and we'll reply!",
-  contactNameLabel: "Full Name",
-  contactNamePlaceholder: "Enter your name",
-  contactPhoneLabel: "Phone Number",
-  contactPhonePlaceholder: "Enter phone number",
-  contactMessageLabel: "Your Message",
-  contactMessagePlaceholder: "Write your message here...",
-  contactSendButton: "Send",
-  contactSuccessMessage: "Message sent successfully!",
-  contactPhoneError:
-    "Invalid phone number. Must start with 05 and have 10 digits.",
-  contactFillAllFields: "Please fill in all fields.",
-  contactCallNow: "Call Us Now",
-  contactMapLocation: "Our Location on the Map",
-  contactChooseLanguage: "Choose Language",
+    "Have a question or comment? Send us a message and we will get back to you.",
 
-  // Lang Switch
-  langArabic: "Arabic",
-  langEnglish: "English",
-  langHebrew: "Hebrew",
+  // Contact – Labels
+  contactSubjectLabel: "Subject",
+  contactNameLabel: "Name",
+  contactPhoneLabel: "Phone",
+  contactMessageLabel: "Message",
 
-  // Nav (sidebar etc.)
-  navHome: "Home",
-  navServices: "Services",
-  navBeforeAfter: "Before / After",
-  navContact: "Contact Us",
-  closeMenu: "Close menu",
-  chooseLanguage: "Choose Language",
+  // Contact – Placeholders
+  contactPhName: "Full name",
+  contactPhPhone: "Phone number",
+  contactPhMessageInquiry: "Write your question or request…",
+  contactPhMessageBooking: "Write the service and relevant details…",
+  contactPhMessageComplaint: "Write your complaint…",
+  contactPhMessageOther: "Write your message…",
+
+  // Contact – Buttons
+  contactSend: "Send",
+  contactSending: "Sending...",
+  contactSent: "Sent!",
+  contactNeedMore: "Complete the fields",
+
+  // Contact – Assist
+  contactAssistName:
+    "Enter your full name as you would like it to appear in communication.",
+  contactAssistPhone:
+    "A phone number connected to WhatsApp is preferred for an easier response.",
+  contactAssistMsg: "Summarize your request in one clear sentence.",
+
+  // Contact – Errors
+  contactErrSubject: "Choose a subject",
+  contactErrName: "Enter your name",
+  contactErrPhoneEmpty: "Enter your phone number",
+  contactErrPhoneInvalid: "Invalid phone number",
+  contactErrMessage: "Enter a message",
+
+  // Contact – Preferences
+  contactMoreOpts: "Additional options",
+  contactMoreOptsHide: "Hide options",
+  contactPrefTitle: "Preferred contact method",
+  contactPrefPhone: "Phone call",
+  contactPrefWA: "WhatsApp",
+  contactPrefEither: "No preference",
+  contactPrefSummary: "Preferred:",
+  contactClearPrefA11y: "Remove preference",
+
+  // Contact – WhatsApp
+  contactWAButton: "WhatsApp",
+  contactWAPreviewTitle: "WhatsApp Preview",
+  contactWAOpenNow: "Open WhatsApp Now",
+  contactWACopy: "Copy Text",
+  contactWAPreviewClose: "Close Preview",
+
+  // Contact – Saved
+  contactSavedHint: "Your information was saved locally.",
+
+  // Common
+  commonClose: "Close",
 
   header: {
     brand: "Lumora",
-    menu_title: "Navigation",
-
+    menu_title: "Main Menu",
     services: "Services",
     gallery: "Gallery",
     contact: "Contact Us",
-
     carpet_clean: "Carpet Cleaning",
     sofa_clean: "Sofa Cleaning",
-    car_clean: "Car Cleaning",
-
+    car_clean: "Car Interior Cleaning",
     choose_language: "Choose Language",
     ar: "Arabic",
     en: "English",
     he: "Hebrew",
   },
+
+  contact: {
+    titleSpan: "Contact",
+    title: "Us",
+    subtitle:
+      "Have a question or comment? Send us a message and we will get back to you.",
+  },
+
+  heroStatic: "Professional cleaning for",
+
+  // Rotating words
+  heroHighlight1: "sofas and mattresses",
+  heroHighlight2: "car interiors",
+  heroHighlight3: "carpets",
+
+  // Description
+  heroSubtitle:
+    "We come to you and provide professional cleaning at your home or location across northern and central areas. The price and appointment are confirmed according to the service and request details.",
+
+  // Hero buttons
+  heroButtonPrimary: "Request Service",
+  heroButtonSecondary: "View Our Services",
+  whatsappLink: "https://wa.me/972543075619",
+  callLink: "tel:+972543075619",
+  showCallButton: false,
+  callNow: "Call",
+
+  // Trust pills
+  heroPill1: "Service at your location",
+  heroPill2: "North and center",
+  heroPill3: "Suitable equipment and materials",
+
+  // Scroll hint
+  scrollExplore: "Explore",
+
   common: {
     close: "Close",
     opening: "Opening…",
@@ -133,73 +176,37 @@ Kills 99.9% of bacteria and germs.`,
 
   services: {
     section: {
-      badge: "Services",
-      title: "Choose the right",
-      titleAccent: "service",
+      badge: "On-site cleaning services",
+      title: "Choose the",
+      titleAccent: "right service",
       subtitle:
-        "Clear details for each service, with booking via a ready WhatsApp message.",
+        "Choose the service you need, enter the basic details, then continue your request through WhatsApp. Our services are available across northern and central areas.",
     },
+
     actions: {
-      details: "Details",
-      book: "Book",
+      details: "Learn More",
+      book: "Request Service",
     },
+
     badges: {
-      popular: "Popular",
-      fast: "Fast",
+      popular: "Most Popular",
+      fast: "Quick Request",
     },
-    meta: {
-      from: "From {price}",
-    },
+
     modal: {
-      quick: {
-        durationLabel: "Duration",
-        priceLabel: "Price",
-        assuranceLabel: "Assurance",
-        assuranceValue: "Quality & Sanitization",
-        varies: "Varies",
-      },
-      includesTitle: "Includes",
-      moreDetails: "More details on request.",
-      bookingTitle: "Booking details",
-      bookingSubtitle:
-        "Optional — helps us respond faster and more accurately.",
-      prefTitle: "Preferred time",
-      pref: {
-        today: "Today",
-        tomorrow: "Tomorrow",
-        week: "This week",
-      },
-      noteTitle: "Note",
-      notePlaceholder:
-        "Example: coffee stains / pets / address / special notes…",
-      afterSend:
-        "After sending: we’ll reply quickly to confirm price and schedule.",
-      notesTitle: "Notes",
-      notesBody:
-        "Final pricing depends on size/condition. Book via WhatsApp and we’ll reply quickly.",
-      footerHint: "Sends a pre-filled WhatsApp message — no form needed",
-      quickQuestion: "Quick question",
-      bookNow: "Book now (WhatsApp)",
+      includesTitle: "What does the service include?",
+      moreDetails:
+        "Enter your town and the basic service details, then continue your request through WhatsApp.",
+      footerHint: "Continue your request easily through WhatsApp",
+      quickQuestion: "Ask About the Service",
+      bookNow: "Request Service",
     },
+
     whatsapp: {
-      lineDuration: "Duration: {duration}",
-      linePrice: "Price: {price}",
-      linePreferred: "Preferred time: {preferred}",
-      lineNote: "Note: {note}",
-      questionIntro: "Hi, I have a question about: {title}",
-      questionOutro: "Can you share more details?",
-      bookIntro: "Hi, I'd like to book: {title}",
-      bookOutro: "What is the earliest available slot?",
+      questionIntro: "Hello, I am interested in {title}.",
+      questionOutro: "Could you provide more details?",
+      bookIntro: "Hello, I would like to request {title} at my location.",
+      bookOutro: "I will send the necessary details through WhatsApp.",
     },
   },
-  nav: {
-    contact: "Contact Us",
-  },
-  contact: {
-    titleSpan: "Contact",
-    title: "Us",
-    subtitle:
-      "Have a question or a note? Just send us a message and we’ll reply!",
-  },
-  scrollExplore: "explore",
 };

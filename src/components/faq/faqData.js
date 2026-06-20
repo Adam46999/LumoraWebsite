@@ -1,251 +1,118 @@
 // src/components/faq/faqData.js
 export const FAQ_DATA = {
   ar: [
-    // 17) ترتيب رحلة العميل: وقت/موعد -> أمان -> نتائج -> تجفيف -> أقمشة -> تغطية -> إلخ
-    {
-      icon: "time",
-      q: "كم يستغرق تنظيف الكنب أو السيارة؟",
-      short: "عادةً 60–120 دقيقة حسب الحالة ونوع الخدمة.",
-      details:
-        "الوقت يتأثر بحجم القطعة، كمية الأوساخ/البقع، ونوع الخدمة. إذا بعتت صورة، بنعطيك تقدير أدق قبل ما نبدأ.",
-    },
-    {
-      icon: "schedule",
-      q: "هل لازم أكون متواجد أثناء التنظيف؟",
-      short: "يفضّل تكون موجود بالبداية فقط، وبعدها براحتك.",
-      details:
-        "يكفي تأكيد التفاصيل (المكان/الخدمة/الملاحظات) بالبداية. إذا في بوابة أو تعليمات دخول، خبرنا مسبقًا.",
-    },
-    {
-      icon: "safety",
-      q: "هل المواد المستخدمة آمنة للأطفال والحيوانات؟",
-      short:
-        "نعم، نستخدم مواد آمنة ومعتمدة وخالية من المواد الضارة قدر الإمكان.",
-      details:
-        "إذا عندك حساسية أو أطفال صغار جدًا، احكيلنا قبل الخدمة عشان نختار الأنسب ونركز على الشطف/التهوية.",
-    },
-    {
-      icon: "results",
-      q: "هل التنظيف يزيل الروائح الكريهة؟",
-      short:
-        "نعم، التنظيف العميق يساعد على إزالة الروائح والبكتيريا المسببة لها.",
-      details:
-        "الروائح القديمة جدًا أو الناتجة عن رطوبة قوية قد تحتاج جلسة إضافية/تعقيم مخصص — بنوضح ذلك بعد المعاينة.",
-    },
-    {
-      icon: "dry",
-      q: "كم يحتاج وقت للتجفيف بعد تنظيف الكنب؟",
-      short: "عادةً من 2 إلى 6 ساعات حسب القماش والطقس والتهوية.",
-      details:
-        "ننصح بفتح شباك/تشغيل مروحة لتسريع التجفيف. في الشتاء أو الرطوبة العالية قد يزيد الوقت قليلًا.",
-    },
-    {
-      icon: "dry",
-      q: "هل بضل ريحة مواد بعد التنظيف؟",
-      short: "غالبًا لا، وأي رائحة خفيفة بتروح بسرعة مع التهوية.",
-      details:
-        "نستخدم مواد لطيفة، وإذا حاب نخفف العطر أو نشتغل بدون عطر تمامًا خبرنا قبل الموعد.",
-    },
-    {
-      icon: "fabric",
-      q: "هل بتنظفوا كل أنواع الأقمشة؟ (مخمل/كتان/جلد…)",
-      short: "بننظف معظم الأقمشة، لكن طريقة التنظيف بتختلف حسب النوع.",
-      details:
-        "قبل ما نبدأ بنحدد نوع القماش ونختار الطريقة الأنسب. الجلد/الشمواه وبعض الأقمشة الحساسة تحتاج مواد وتقنية خاصة.",
-    },
-    {
-      icon: "fabric",
-      q: "هل بتروح البقع الصعبة 100%؟",
-      short:
-        "بنزيل أغلب البقع بشكل ممتاز، لكن في بقع قديمة/حارقة ممكن تترك أثر خفيف.",
-      details:
-        "النتيجة تعتمد على نوع البقعة (حبر/دهون/صبغة)، مدة بقائها، ونوع القماش. بنكون صريحين قبل وبعد.",
-    },
     {
       icon: "coverage",
-      q: "هل الخدمة داخل البيت؟ وهل بتنظفوا بالبيت ولا بتاخذوا القطعة؟",
-      short: "نعم، الخدمة عادة داخل البيت/الموقع — حسب نوع الخدمة.",
+      q: "بأي مناطق بتخدموا؟",
+      short: "نقدّم خدماتنا في مناطق الشمال والمركز.",
       details:
-        "تنظيف الكنب غالبًا بالمكان. السجاد حسب النوع والحالة قد يكون بالمكان أو باستلام/تسليم (إذا متوفر عندكم).",
-    },
-    {
-      icon: "coverage",
-      q: "شو المناطق اللي بتخدموها؟ وهل في رسوم تنقّل؟",
-      short: "بنخدم مناطق قريبة حسب الجدول، ورسوم التنقّل تعتمد على المسافة.",
-      details:
-        "ابعت موقعك (المدينة/الحي) وبنأكد لك بسرعة إذا متاح اليوم/غدًا وهل في رسوم تنقّل.",
+        "اكتب اسم بلدتك عند طلب الخدمة، وسنتأكد من توفر الخدمة في منطقتك قبل تثبيت الموعد.",
     },
     {
       icon: "price",
-      q: "كيف بتحددوا السعر؟",
-      short: "حسب الحجم/الحالة/عدد القطع ونوع الخدمة.",
+      q: "كيف يتحدد السعر؟",
+      short: "طريقة تحديد السعر تختلف حسب نوع الخدمة.",
       details:
-        "أفضل طريقة: ابعت صورة + اذكر نوع الخدمة (كنب/سيارة/سجاد) وبنرد عليك بسعر واضح خلال دقائق.",
+        "بالنسبة للكنب، يتحدد السعر حسب عدد المقاعد والصور والتفاصيل. أما السجاد، فيُحسب السعر حسب القياسات وسعر المتر، ويمكنك إرسال القياسات أو سؤالنا عن سعر المتر.",
+    },
+    {
+      icon: "results",
+      q: "هل لازم أرسل صور قبل تحديد الموعد؟",
+      short: "صور الكنب تساعدنا على إعطائك سعرًا وتقديرًا أوضح.",
+      details:
+        "في خدمة الكنب، نطلب صورًا واضحة مع عدد المقاعد. أما السجاد، فيمكنك إرسال القياسات أو سؤالنا عن سعر المتر، والصور تكون مفيدة لتوضيح الطلب لكنها ليست أساس تحديد السعر.",
+    },
+    {
+      icon: "dry",
+      q: "كم يستغرق التنظيف وكم يحتاج لينشف؟",
+      short: "المدة تختلف حسب الكمية ونوع الخدمة والتهوية.",
+      details:
+        "نخبرك بالمدة التقريبية عند تأكيد الطلب. وقت التجفيف يتأثر بنوع القماش والطقس والتهوية، وعادة يساعد فتح الشبابيك أو تشغيل مروحة على تسريع التجفيف.",
+    },
+    {
+      icon: "schedule",
+      q: "شو لازم يكون جاهز قبل ما توصلوا؟",
+      short: "أخلِ المنطقة من الأغراض الصغيرة، ووفّر كهرباء ومياه قريبة.",
+      details:
+        "يفضّل إبعاد الأغراض الصغيرة من حول مكان العمل، وتجهيز مصدر كهرباء ومياه قريب. إذا كان هناك مدخل خاص، بوابة أو تعليمات للوصول، أخبرنا بها قبل الموعد.",
     },
   ],
 
   en: [
     {
-      icon: "time",
-      q: "How long does sofa or car cleaning take?",
-      short: "Usually 60–120 minutes depending on condition and service type.",
-      details:
-        "Time depends on size, stain level, and the service type. Send a photo and we’ll give a more accurate estimate.",
-    },
-    {
-      icon: "schedule",
-      q: "Do I need to stay during the cleaning?",
-      short:
-        "It’s best to be present at the start, then you may leave if you wish.",
-      details:
-        "We just need to confirm details (service, notes, access). If there’s a gate/code, let us know in advance.",
-    },
-    {
-      icon: "safety",
-      q: "Are the cleaning materials safe for children and pets?",
-      short: "Yes— we use certified, gentle materials whenever possible.",
-      details:
-        "If you have allergies or very young children, tell us so we can choose the mildest option and focus on proper rinsing/ventilation.",
-    },
-    {
-      icon: "results",
-      q: "Does deep cleaning remove bad odors?",
-      short:
-        "Yes— deep cleaning helps remove odor-causing bacteria and buildup.",
-      details:
-        "Very old odors or heavy moisture may require an extra session or targeted sanitizing— we’ll advise after inspection.",
-    },
-    {
-      icon: "dry",
-      q: "How long does it take to dry after sofa cleaning?",
-      short:
-        "Typically 2–6 hours depending on fabric, weather, and ventilation.",
-      details:
-        "Opening windows or using a fan speeds up drying. In winter/humidity it may take a bit longer.",
-    },
-    {
-      icon: "dry",
-      q: "Will there be a chemical smell after cleaning?",
-      short: "Usually no; any light scent fades quickly with ventilation.",
-      details:
-        "We can reduce fragrance or do fragrance-free cleaning if requested before the appointment.",
-    },
-    {
-      icon: "fabric",
-      q: "Do you clean all fabric types? (velvet/linen/leather…)",
-      short: "We clean most fabrics, but the method varies by material.",
-      details:
-        "We identify the fabric first and use the safest technique. Leather/suede and delicate materials may require special products.",
-    },
-    {
-      icon: "fabric",
-      q: "Can you remove tough stains 100%?",
-      short:
-        "We remove most stains very well, but very old stains may leave slight traces.",
-      details:
-        "Results depend on stain type (ink/grease/dye), how long it’s been there, and fabric type. We’ll be transparent before and after.",
-    },
-    {
       icon: "coverage",
-      q: "Is the service done at my place, or do you take the item away?",
-      short: "Most services are done on-site, depending on the service.",
+      q: "Which areas do you serve?",
+      short: "Our services are available in northern and central areas.",
       details:
-        "Sofa cleaning is usually on-site. Rugs may be on-site or pickup/delivery (if available in your area).",
-    },
-    {
-      icon: "coverage",
-      q: "Which areas do you cover? Is there a travel fee?",
-      short:
-        "We cover nearby areas based on schedule; travel fee depends on distance.",
-      details:
-        "Send your location (city/area) and we’ll confirm availability and any travel fee quickly.",
+        "Enter your town when requesting the service, and we will confirm availability in your area before arranging the appointment.",
     },
     {
       icon: "price",
-      q: "How do you price the service?",
-      short: "Based on size, condition, number of items, and service type.",
+      q: "How is the price determined?",
+      short: "The pricing method depends on the type of service.",
       details:
-        "Best way: send a photo + service type (sofa/car/rug) and we’ll reply with a clear quote within minutes.",
+        "For sofa cleaning, the price is based on the number of seats, photos and request details. Carpet cleaning is priced according to measurements and the price per meter. You can send the measurements or ask us for the price per meter.",
+    },
+    {
+      icon: "results",
+      q: "Do I need to send photos before arranging an appointment?",
+      short:
+        "Sofa photos help us provide a clearer price and service estimate.",
+      details:
+        "For sofa cleaning, please send clear photos and the number of seats. For carpets, you can send the measurements or ask for the price per meter. Photos are helpful for explaining the request, but they do not determine the carpet price.",
+    },
+    {
+      icon: "dry",
+      q: "How long does cleaning take, and how long does drying take?",
+      short: "The time depends on the quantity, service type and ventilation.",
+      details:
+        "We will provide an approximate duration when confirming the request. Drying time depends on the fabric, weather and ventilation. Opening windows or using a fan can help speed up drying.",
+    },
+    {
+      icon: "schedule",
+      q: "What should be ready before you arrive?",
+      short:
+        "Clear small items from the area and provide nearby water and electricity.",
+      details:
+        "Please move small items away from the work area and make sure a nearby water and electricity source is available. Let us know in advance about gates, special entrances or access instructions.",
     },
   ],
 
   he: [
     {
-      icon: "time",
-      q: "כמה זמן לוקח ניקוי ספות או רכב?",
-      short: "בדרך כלל 60–120 דקות, תלוי במצב ובסוג השירות.",
-      details:
-        "הזמן תלוי בגודל, ברמת הכתמים/הלכלוך ובסוג השירות. שלחו תמונה ונוכל לתת הערכה מדויקת יותר.",
-    },
-    {
-      icon: "schedule",
-      q: "האם צריך להישאר בזמן הניקוי?",
-      short: "מומלץ להיות בהתחלה בלבד, ואז אפשר לצאת אם רוצים.",
-      details:
-        "אנחנו צריכים רק לוודא פרטים (שירות/הערות/גישה). אם יש שער/קוד כניסה — עדכנו מראש.",
-    },
-    {
-      icon: "safety",
-      q: "האם חומרי הניקוי בטוחים לילדים ולחיות מחמד?",
-      short: "כן — אנחנו משתמשים בחומרים עדינים ומאושרים ככל האפשר.",
-      details:
-        "אם יש אלרגיות או ילדים קטנים מאוד — עדכנו מראש כדי לבחור את האופציה העדינה ביותר ולהקפיד על שטיפה/אוורור.",
-    },
-    {
-      icon: "results",
-      q: "האם ניקוי עמוק מסיר ריחות לא נעימים?",
-      short: "כן, ניקוי עמוק עוזר להסיר ריחות ולכלוך שמייצר אותם.",
-      details:
-        "ריחות ישנים מאוד או לחות חזקה עשויים לדרוש טיפול נוסף/חיטוי ממוקד — נעדכן אחרי בדיקה.",
-    },
-    {
-      icon: "dry",
-      q: "כמה זמן לוקח להתייבש אחרי ניקוי ספה?",
-      short: "בדרך כלל 2–6 שעות, תלוי בבד, במזג האוויר ובאוורור.",
-      details:
-        "פתיחת חלון או הפעלת מאוורר מזרזים ייבוש. בחורף/לחות גבוהה זה עשוי לקחת מעט יותר.",
-    },
-    {
-      icon: "dry",
-      q: "האם נשאר ריח כימי אחרי הניקוי?",
-      short: "לרוב לא; ואם יש ריח קל — הוא נעלם מהר עם אוורור.",
-      details:
-        "אפשר לבקש ניקוי ללא בישום/עם מינימום ריח — רק להגיד לנו לפני ההגעה.",
-    },
-    {
-      icon: "fabric",
-      q: "האם אתם מנקים כל סוגי הבדים? (קטיפה/פשתן/עור…)",
-      short: "אנחנו מנקים רוב הבדים, אבל שיטת הניקוי משתנה לפי חומר.",
-      details:
-        "לפני שמתחילים מזהים את סוג הבד ובוחרים טכניקה בטוחה. עור/זמש וחומרים עדינים דורשים טיפול ייעודי.",
-    },
-    {
-      icon: "fabric",
-      q: "האם אפשר להסיר כתמים קשים ב-100%?",
-      short:
-        "ברוב המקרים התוצאה מצוינת, אבל כתמים ישנים מאוד עלולים להשאיר סימן קל.",
-      details:
-        "זה תלוי בסוג הכתם (דיו/שומן/צבע), כמה זמן הוא שם, וסוג הבד. אנחנו נהיה שקופים לפני ואחרי.",
-    },
-    {
       icon: "coverage",
-      q: "האם השירות מתבצע בבית? או שאתם לוקחים את הפריט?",
-      short: "ברוב המקרים השירות מתבצע במקום — תלוי בסוג השירות.",
+      q: "באילו אזורים אתם נותנים שירות?",
+      short: "השירות שלנו זמין באזורי הצפון והמרכז.",
       details:
-        "ניקוי ספות בדרך כלל בבית. שטיחים — לפעמים במקום או איסוף/החזרה (אם זמין באזור).",
-    },
-    {
-      icon: "coverage",
-      q: "באילו אזורים אתם עובדים? והאם יש עלות הגעה?",
-      short: "אנחנו מגיעים לפי אזור ולו״ז; עלות הגעה תלויה במרחק.",
-      details: "שלחו מיקום (עיר/אזור) ונאשר זמינות ועלות הגעה במהירות.",
+        "הזינו את שם היישוב בעת בקשת השירות, ואנחנו נאשר שהשירות זמין באזורכם לפני קביעת המועד.",
     },
     {
       icon: "price",
       q: "איך נקבע המחיר?",
-      short: "לפי גודל, מצב, מספר פריטים וסוג השירות.",
+      short: "אופן התמחור משתנה לפי סוג השירות.",
       details:
-        "הכי קל: לשלוח תמונה + סוג השירות (ספה/רכב/שטיח) ונחזיר הצעת מחיר ברורה תוך דקות.",
+        "בניקוי ספות, המחיר נקבע לפי מספר המושבים, התמונות ופרטי הבקשה. ניקוי שטיחים מחושב לפי המידות והמחיר למטר. אפשר לשלוח מידות או לשאול אותנו מה המחיר למטר.",
+    },
+    {
+      icon: "results",
+      q: "האם צריך לשלוח תמונות לפני קביעת מועד?",
+      short: "תמונות של הספות עוזרות לנו לתת מחיר והערכה ברורים יותר.",
+      details:
+        "בניקוי ספות יש לשלוח תמונות ברורות ואת מספר המושבים. בשטיחים אפשר לשלוח מידות או לשאול מה המחיר למטר. התמונות יכולות לעזור להבין את הבקשה, אך הן אינן קובעות את מחיר ניקוי השטיחים.",
+    },
+    {
+      icon: "dry",
+      q: "כמה זמן לוקח הניקוי וכמה זמן לוקח הייבוש?",
+      short: "הזמן משתנה לפי הכמות, סוג השירות והאוורור.",
+      details:
+        "בעת אישור הבקשה ניתן הערכת זמן משוערת. זמן הייבוש תלוי בסוג הבד, במזג האוויר ובאוורור. פתיחת חלונות או הפעלת מאוורר יכולה לזרז את הייבוש.",
+    },
+    {
+      icon: "schedule",
+      q: "מה צריך להכין לפני שאנחנו מגיעים?",
+      short: "יש לפנות חפצים קטנים מאזור העבודה ולהכין מים וחשמל בקרבת מקום.",
+      details:
+        "מומלץ להזיז חפצים קטנים מאזור העבודה ולוודא שיש מקור מים וחשמל קרוב. אם יש שער, כניסה מיוחדת או הוראות גישה, יש לעדכן אותנו מראש.",
     },
   ],
 };
