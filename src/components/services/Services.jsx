@@ -1,281 +1,93 @@
 // src/components/services/Services.jsx
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
-import { useLanguage } from "../../context/LanguageContext";
-import ServiceCard from "./ServiceCard";
-import ServiceModal from "./ServiceModal";
+import { ClipboardList, MessageCircle, Plus } from "lucide-react";
+
 import { services } from "./servicesData";
+import ServiceCard from "./ServiceCard";
+import OrderBuilderModal from "./OrderBuilderModal";
+import { useLanguage } from "../../context/LanguageContext";
 
-/*
-  توزيع المسؤولين حسب الخدمة:
-
-  السجاد:
-  054-307-5619
-
-  باقي الخدمات:
-  050-272-7724
-*/
 const WHATSAPP_NUMBERS = {
-  sofa: "972502727724",
+  upholstery: "972502727724",
   carpet: "972543075619",
-  carSeats: "972502727724",
-  glass: "972502727724",
+  mixed: "972543075619",
 };
 
-const DEFAULT_WHATSAPP_NUMBER = "972502727724";
+const EMPTY_SUMMARY = {
+  sofaSeats: 0,
+  carpetCount: 0,
+  mattressCount: 0,
+  selectedServiceCount: 0,
+  totalItems: 0,
+  hasItems: false,
+};
 
-function getText(lang, values) {
-  if (lang === "he") return values.he;
-  if (lang === "en") return values.en;
+const UNAVAILABLE_SERVICE_IDS = new Set(["glass"]);
 
-  return values.ar;
-}
-
-function normalizeWhatsAppNumber(value) {
-  return String(value || "").replace(/\D/g, "");
-}
-
-function getCarpetPriceOptionText(lang, option) {
-  const options = {
-    measurements: {
-      ar: "أعرف القياسات وسأرسل طول وعرض كل سجادة.",
-      he: "אני יודע/ת את המידות ואשלח אורך ורוחב של כל שטיח.",
-      en: "I know the measurements and will send the length and width of each carpet.",
-    },
-
-    meterPrice: {
-      ar: "أريد معرفة سعر المتر.",
-      he: "אני רוצה לדעת מה המחיר למטר.",
-      en: "I would like to know the price per meter.",
-    },
-
-    onSiteMeasure: {
-      ar: "لا أعرف القياسات وأحتاج قياس السجاد في الموقع.",
-      he: "אני לא יודע/ת את המידות וצריך/ה מדידה במקום.",
-      en: "I do not know the measurements and need the carpets measured at my location.",
-    },
-  };
-
-  const selectedOption = options[option];
-
-  if (!selectedOption) return "";
-
-  return getText(lang, selectedOption);
-}
-
-function getServiceName(service, translations, lang) {
-  if (!service) {
-    return getText(lang, {
-      ar: "خدمة تنظيف",
-      he: "שירות ניקיון",
-      en: "Cleaning service",
-    });
-  }
-
-  return (
-    translations?.[service.titleKey] ||
-    getText(lang, {
-      ar: "خدمة تنظيف",
-      he: "שירות ניקיון",
-      en: "Cleaning service",
-    })
-  );
-}
-
-function buildWhatsAppMessage({ service, orderDetails, translations, lang }) {
-  const serviceName = getServiceName(service, translations, lang);
-
-  const location = String(orderDetails?.location || "").trim();
-  const quantity = orderDetails?.quantity;
-  const carpetPriceOption = orderDetails?.carpetPriceOption;
-
-  const lines = [];
-
+const getText = (lang, values) => {
   if (lang === "he") {
-    lines.push("שלום, אני מעוניין/ת להזמין שירות דרך אתר Lumora.");
-    lines.push("");
-    lines.push(`שירות: ${serviceName}`);
-
-    if (location) {
-      lines.push(`יישוב / אזור: ${location}`);
-    }
-
-    if (quantity !== null && quantity !== undefined && quantity !== "") {
-      lines.push(
-        service?.id === "carpet"
-          ? `מספר שטיחים משוער: ${quantity}`
-          : `כמות משוערת: ${quantity}`,
-      );
-    }
-
-    const carpetChoice = getCarpetPriceOptionText(lang, carpetPriceOption);
-
-    if (carpetChoice) {
-      lines.push(`פרטי מחיר / מדידה: ${carpetChoice}`);
-    }
-
-    lines.push("");
-    lines.push("אשמח לקבל פרטים לגבי המחיר והמועד האפשרי.");
-
-    return lines.join("\n");
+    return values.he;
   }
 
   if (lang === "en") {
-    lines.push(
-      "Hello, I would like to request a service through the Lumora website.",
-    );
-    lines.push("");
-    lines.push(`Service: ${serviceName}`);
-
-    if (location) {
-      lines.push(`Town / area: ${location}`);
-    }
-
-    if (quantity !== null && quantity !== undefined && quantity !== "") {
-      lines.push(
-        service?.id === "carpet"
-          ? `Estimated number of carpets: ${quantity}`
-          : `Estimated quantity: ${quantity}`,
-      );
-    }
-
-    const carpetChoice = getCarpetPriceOptionText(lang, carpetPriceOption);
-
-    if (carpetChoice) {
-      lines.push(`Pricing / measurement details: ${carpetChoice}`);
-    }
-
-    lines.push("");
-    lines.push(
-      "Please send me more information about the price and available time.",
-    );
-
-    return lines.join("\n");
+    return values.en;
   }
 
-  lines.push("مرحبًا، أريد طلب خدمة من خلال موقع Lumora.");
-  lines.push("");
-  lines.push(`الخدمة: ${serviceName}`);
+  return values.ar;
+};
 
-  if (location) {
-    lines.push(`البلدة / المنطقة: ${location}`);
+const getOrderWhatsAppNumber = (order) => {
+  const hasCarpets = order?.carpets?.length > 0;
+
+  const hasUpholstery =
+    order?.sofas?.length > 0 || order?.mattresses?.length > 0;
+
+  if (hasCarpets && hasUpholstery) {
+    return WHATSAPP_NUMBERS.mixed;
   }
 
-  if (quantity !== null && quantity !== undefined && quantity !== "") {
-    lines.push(
-      service?.id === "carpet"
-        ? `عدد السجاد التقريبي: ${quantity}`
-        : `الكمية التقريبية: ${quantity}`,
-    );
+  if (hasCarpets) {
+    return WHATSAPP_NUMBERS.carpet;
   }
 
-  const carpetChoice = getCarpetPriceOptionText(lang, carpetPriceOption);
-
-  if (carpetChoice) {
-    lines.push(`تفاصيل السعر أو القياس: ${carpetChoice}`);
-  }
-
-  lines.push("");
-  lines.push("أريد معرفة السعر والموعد المتاح، شكرًا.");
-
-  return lines.join("\n");
-}
-
-function openWhatsAppWindow(number, message) {
-  const normalizedNumber = normalizeWhatsAppNumber(number);
-
-  if (!normalizedNumber) return;
-
-  const url = `https://wa.me/${normalizedNumber}?text=${encodeURIComponent(
-    message,
-  )}`;
-
-  const openedWindow = window.open(url, "_blank", "noopener,noreferrer");
-
-  /*
-    بعض متصفحات الموبايل تمنع window.open.
-    إذا انمنعت، ننقل المستخدم للرابط مباشرة.
-  */
-  if (!openedWindow) {
-    window.location.href = url;
-  }
-}
+  return WHATSAPP_NUMBERS.upholstery;
+};
 
 export default function Services() {
-  const { t, lang, isRTL } = useLanguage();
+  const { lang, isRTL } = useLanguage();
 
-  const [selected, setSelected] = useState(null);
   const [titleVisible, setTitleVisible] = useState(false);
 
-  const serviceList = useMemo(
-    () =>
-      services.filter(
-        (service) =>
-          service &&
-          service.id &&
-          service.titleKey &&
-          service.descriptionKey &&
-          service.image,
-      ),
-    [],
-  );
+  const [orderBuilderOpen, setOrderBuilderOpen] = useState(false);
 
-  const sectionCopy = useMemo(
-    () => ({
-      badge: getText(lang, {
-        ar: "نخدمك في موقعك",
-        he: "השירות מגיע עד אליך",
-        en: "Service at your location",
-      }),
+  const [initialServiceId, setInitialServiceId] = useState(null);
 
-      title: getText(lang, {
-        ar: "اختر خدمة التنظيف المناسبة",
-        he: "בחרו את שירות הניקיון המתאים",
-        en: "Choose the right cleaning service",
-      }),
-
-      subtitle: getText(lang, {
-        ar: "اختر الخدمة، أدخل التفاصيل الأساسية، وسنفتح لك واتساب برسالة مرتبة إلى الشخص المسؤول عنها.",
-        he: "בחרו שירות, מלאו את הפרטים הבסיסיים ונפתח עבורכם הודעת WhatsApp מסודרת לאיש הקשר המתאים.",
-        en: "Choose a service, enter the basic details, and continue through WhatsApp with a prepared message to the right contact.",
-      }),
-
-      ariaLabel: getText(lang, {
-        ar: "خدمات التنظيف",
-        he: "שירותי ניקיון",
-        en: "Cleaning services",
-      }),
-    }),
-    [lang],
-  );
+  const [orderSummary, setOrderSummary] = useState(EMPTY_SUMMARY);
 
   useEffect(() => {
     const element = document.getElementById("services-title");
 
     if (!element) {
-      setTitleVisible(true);
       return undefined;
     }
 
-    const reduceMotion = window.matchMedia?.(
-      "(prefers-reduced-motion: reduce)",
-    )?.matches;
-
-    if (reduceMotion || !("IntersectionObserver" in window)) {
+    if (!("IntersectionObserver" in window)) {
       setTitleVisible(true);
       return undefined;
     }
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (!entry.isIntersecting) return;
+        if (!entry.isIntersecting) {
+          return;
+        }
 
         setTitleVisible(true);
-        observer.disconnect();
+        observer.unobserve(entry.target);
       },
       {
-        threshold: 0.2,
-        rootMargin: "0px 0px -50px 0px",
+        threshold: 0.18,
       },
     );
 
@@ -286,141 +98,389 @@ export default function Services() {
     };
   }, []);
 
-  const openWhatsApp = (service, orderDetails = {}) => {
-    if (!service) return;
+  /*
+   * حماية إضافية:
+   * أي خدمة سيارات لن تظهر حتى لو أضيفت
+   * إلى بيانات الخدمات بالخطأ لاحقًا.
+   */
+  const serviceList = useMemo(
+    () =>
+      services.filter(
+        (service) =>
+          service.id !== "car" &&
+          service.id !== "cars" &&
+          service.id !== "carSeats",
+      ),
+    [],
+  );
 
-    const number = WHATSAPP_NUMBERS[service.id] || DEFAULT_WHATSAPP_NUMBER;
-
-    const message = buildWhatsAppMessage({
-      service,
-      orderDetails,
-      translations: t,
-      lang,
-    });
-
-    openWhatsAppWindow(number, message);
+  const isServiceAvailable = (service) => {
+    return Boolean(service) && !UNAVAILABLE_SERVICE_IDS.has(service.id);
   };
 
-  const handleOrder = (orderDetails) => {
-    const currentService = selected;
-
-    if (!currentService) return;
-
-    /*
-      نغلق المودال أولًا، ثم نفتح واتساب.
-      التأخير القصير يمنع تعارض الحركة مع فتح التطبيق.
-    */
-    setSelected(null);
-
-    window.setTimeout(() => {
-      openWhatsApp(currentService, orderDetails);
-    }, 180);
+  const openOrderBuilder = (serviceId = null) => {
+    setInitialServiceId(serviceId);
+    setOrderBuilderOpen(true);
   };
+
+  const closeOrderBuilder = () => {
+    setOrderBuilderOpen(false);
+    setInitialServiceId(null);
+  };
+
+  const handleOrderSubmit = ({ order, message }) => {
+    const phone = getOrderWhatsAppNumber(order);
+
+    const whatsappUrl =
+      `https://wa.me/${phone}` + `?text=${encodeURIComponent(message)}`;
+
+    window.open(whatsappUrl, "_blank", "noopener,noreferrer");
+
+    closeOrderBuilder();
+  };
+
+  const sectionBadge = getText(lang, {
+    ar: "خدمات في بيت الزبون",
+    he: "שירותים בבית הלקוח",
+    en: "Services at your location",
+  });
+
+  const sectionTitle = getText(lang, {
+    ar: "شو الخدمة اللي بتحتاجها؟",
+    he: "איזה שירות אתם צריכים?",
+    en: "Which service do you need?",
+  });
+
+  const sectionSubtitle = getText(lang, {
+    ar: "اختار خدمة واحدة أو اجمع أكثر من خدمة بنفس الطلب. بتقدر تضيف كل سجادة وكل فرشة بتفاصيلها لحالها.",
+    he: "בחרו שירות אחד או שלבו כמה שירותים באותה הזמנה. ניתן להוסיף כל שטיח וכל מזרן עם הפרטים שלו.",
+    en: "Choose one service or combine several in the same order. Each carpet and mattress can have its own details.",
+  });
+
+  const startOrderText = getText(lang, {
+    ar: "جهّز طلب متعدد الخدمات",
+    he: "בניית הזמנה עם כמה שירותים",
+    en: "Build a multi-service order",
+  });
+
+  const startOrderHint = getText(lang, {
+    ar: "كنب، سجاد وفرشات نوم في رسالة واحدة",
+    he: "ספות, שטיחים ומזרנים בהודעה אחת",
+    en: "Sofas, carpets, and mattresses in one message",
+  });
+
+  const viewOrderText = getText(lang, {
+    ar: "عرض الطلب",
+    he: "צפייה בהזמנה",
+    en: "View order",
+  });
+
+  const itemText = getText(lang, {
+    ar: orderSummary.totalItems === 1 ? "عنصر" : "عناصر",
+
+    he: "פריטים",
+    en: orderSummary.totalItems === 1 ? "item" : "items",
+  });
 
   return (
     <>
-      <section
-        id="services"
-        aria-label={sectionCopy.ariaLabel}
-        className="
-          relative scroll-mt-[calc(var(--app-topbar-h,64px)+12px)]
-          overflow-hidden
-          bg-gradient-to-b
-          from-white via-slate-50/70 to-white
-          px-4 py-14
-          sm:px-6 sm:py-16
-          lg:px-8 lg:py-20
-        "
-        dir={isRTL ? "rtl" : "ltr"}
-      >
-        <div
-          className="
-            pointer-events-none absolute inset-x-0 top-0 h-px
-            bg-gradient-to-r
-            from-transparent via-slate-200 to-transparent
-          "
-          aria-hidden="true"
-        />
+      <div dir={isRTL ? "rtl" : "ltr"} className="mx-auto w-full max-w-5xl">
+        <header
+          id="services-title"
+          className={[
+            "mx-auto mb-8 max-w-3xl text-center sm:mb-10",
+            "transition-all duration-500 ease-out",
 
-        <div className="mx-auto max-w-7xl">
-          <header
-            id="services-title"
-            className={[
-              "mx-auto mb-8 max-w-3xl text-center sm:mb-10",
-              "transition-all duration-700 ease-out",
-              titleVisible
-                ? "translate-y-0 opacity-100"
-                : "translate-y-3 opacity-0",
-            ].join(" ")}
-          >
-            <div
-              className="
-                inline-flex items-center gap-2
-                rounded-full border border-slate-200
-                bg-white px-4 py-2
-                text-xs font-extrabold text-slate-700
-                shadow-sm
-              "
-            >
-              <span
-                className="h-2 w-2 rounded-full bg-emerald-600"
-                aria-hidden="true"
-              />
-
-              <span>{sectionCopy.badge}</span>
-            </div>
-
-            <h2
-              className="
-                mt-5
-                text-[clamp(26px,7vw,42px)]
-                font-black leading-tight
-                tracking-tight text-slate-950
-              "
-            >
-              {sectionCopy.title}
-            </h2>
-
-            <p
-              className="
-                mx-auto mt-3 max-w-2xl
-                text-[15px] font-medium leading-7
-                text-slate-600 sm:text-base
-              "
-            >
-              {sectionCopy.subtitle}
-            </p>
-          </header>
-
+            titleVisible
+              ? "translate-y-0 opacity-100"
+              : "translate-y-2 opacity-0",
+          ].join(" ")}
+        >
           <div
             className="
-              grid grid-cols-1 gap-5
-              sm:grid-cols-2 sm:gap-6
-              xl:grid-cols-4 xl:gap-5
+              inline-flex
+              items-center
+              gap-2
+              rounded-full
+              border
+              border-[rgba(17,21,47,0.10)]
+              bg-[#f7f9f5]
+              px-3.5
+              py-1.5
+              text-xs
+              font-extrabold
+              text-[var(--lumora-navy-900)]
             "
           >
-            {serviceList.map((service) => (
-              <ServiceCard
-                key={service.id}
-                id={service.id}
-                icon={service.icon}
-                titleKey={service.titleKey}
-                descriptionKey={service.descriptionKey}
-                image={service.image}
-                priority={service.priority}
-                onClick={() => setSelected(service)}
-              />
-            ))}
-          </div>
-        </div>
-      </section>
+            <span
+              aria-hidden="true"
+              className="
+                h-2
+                w-2
+                rounded-full
+                bg-[var(--lumora-lime)]
+              "
+            />
 
-      <ServiceModal
-        isOpen={Boolean(selected)}
-        selected={selected}
-        onClose={() => setSelected(null)}
-        onOrderNow={handleOrder}
+            <span>{sectionBadge}</span>
+          </div>
+
+          <h2
+            className="
+              mt-4
+              text-[clamp(26px,6vw,40px)]
+              font-black
+              leading-tight
+              tracking-tight
+              text-[var(--lumora-navy-900)]
+            "
+          >
+            {sectionTitle}
+          </h2>
+
+          <p
+            className="
+              mx-auto
+              mt-3
+              max-w-2xl
+              text-[15px]
+              font-medium
+              leading-7
+              text-slate-600
+              sm:text-base
+            "
+          >
+            {sectionSubtitle}
+          </p>
+        </header>
+
+        <div
+          className="
+            grid
+            grid-cols-1
+            gap-5
+            sm:grid-cols-2
+            sm:gap-6
+          "
+        >
+          {serviceList.map((service) => {
+            const available = isServiceAvailable(service);
+
+            return (
+              <div key={service.id} className="h-full">
+                <ServiceCard
+                  id={service.id}
+                  icon={service.icon}
+                  titleKey={service.titleKey}
+                  descriptionKey={service.descriptionKey}
+                  image={service.image}
+                  priority={service.priority}
+                  onClick={
+                    available ? () => openOrderBuilder(service.id) : undefined
+                  }
+                  onBook={
+                    available ? () => openOrderBuilder(service.id) : undefined
+                  }
+                />
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Main multi-service order button */}
+        <button
+          type="button"
+          onClick={() => openOrderBuilder()}
+          className="
+            group
+            mt-7
+            flex
+            w-full
+            items-center
+            gap-3
+            rounded-2xl
+            border
+            border-[rgba(16,148,192,0.18)]
+            bg-[var(--lumora-navy-950)]
+            px-4
+            py-4
+            text-start
+            shadow-[0_16px_40px_rgba(8,12,29,0.12)]
+            transition
+            hover:-translate-y-0.5
+            hover:shadow-[0_20px_48px_rgba(8,12,29,0.17)]
+            active:translate-y-0
+            sm:px-5
+          "
+        >
+          <span
+            className="
+              flex
+              h-12
+              w-12
+              shrink-0
+              items-center
+              justify-center
+              rounded-2xl
+              bg-[rgba(174,221,57,0.12)]
+              text-[var(--lumora-lime-light)]
+            "
+          >
+            <ClipboardList className="h-5 w-5" />
+          </span>
+
+          <span className="min-w-0 flex-1">
+            <span
+              className="
+                block
+                text-sm
+                font-black
+                text-white
+                sm:text-base
+              "
+            >
+              {startOrderText}
+            </span>
+
+            <span
+              className="
+                mt-1
+                block
+                text-xs
+                font-medium
+                leading-5
+                text-white/60
+                sm:text-sm
+              "
+            >
+              {startOrderHint}
+            </span>
+          </span>
+
+          <span
+            className="
+              flex
+              h-9
+              w-9
+              shrink-0
+              items-center
+              justify-center
+              rounded-xl
+              bg-[var(--lumora-lime)]
+              text-[var(--lumora-navy-950)]
+              transition
+              group-hover:scale-105
+            "
+          >
+            <Plus className="h-4 w-4" />
+          </span>
+        </button>
+      </div>
+
+      <OrderBuilderModal
+        isOpen={orderBuilderOpen}
+        onClose={closeOrderBuilder}
+        initialServiceId={initialServiceId}
+        onSummaryChange={setOrderSummary}
+        onSubmit={handleOrderSubmit}
       />
+
+      {/* Persistent order button */}
+      {orderSummary.hasItems && (
+        <button
+          type="button"
+          dir={isRTL ? "rtl" : "ltr"}
+          onClick={() => openOrderBuilder()}
+          className={[
+            "fixed bottom-4 z-[9996]",
+            "flex min-h-14 items-center gap-3",
+            "rounded-2xl",
+            "border border-white/15",
+            "bg-[var(--lumora-navy-950)]",
+            "px-3.5 py-2.5",
+            "text-white",
+            "shadow-[0_16px_45px_rgba(0,0,0,0.28)]",
+            "transition",
+            "hover:-translate-y-1",
+            "active:scale-[0.98]",
+
+            isRTL ? "right-4" : "left-4",
+          ].join(" ")}
+        >
+          <span
+            className="
+              relative
+              flex
+              h-10
+              w-10
+              shrink-0
+              items-center
+              justify-center
+              rounded-xl
+              bg-[rgba(174,221,57,0.13)]
+              text-[var(--lumora-lime-light)]
+            "
+          >
+            <ClipboardList className="h-5 w-5" />
+
+            <span
+              className="
+                absolute
+                -end-1.5
+                -top-1.5
+                flex
+                min-h-5
+                min-w-5
+                items-center
+                justify-center
+                rounded-full
+                bg-[var(--lumora-lime)]
+                px-1
+                text-[10px]
+                font-black
+                leading-none
+                text-[var(--lumora-navy-950)]
+              "
+            >
+              {orderSummary.totalItems}
+            </span>
+          </span>
+
+          <span className="text-start">
+            <span
+              className="
+                block
+                text-xs
+                font-black
+                leading-tight
+              "
+            >
+              {viewOrderText}
+            </span>
+
+            <span
+              className="
+                mt-0.5
+                block
+                text-[10px]
+                font-bold
+                text-white/60
+              "
+            >
+              {orderSummary.totalItems} {itemText}
+            </span>
+          </span>
+
+          <MessageCircle
+            aria-hidden="true"
+            className="
+              h-4
+              w-4
+              text-[var(--lumora-lime-light)]
+            "
+          />
+        </button>
+      )}
     </>
   );
 }

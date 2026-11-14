@@ -1,8 +1,13 @@
 // src/components/services/ServiceModal.jsx
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import {
-  Check,
   CheckCircle2,
   MapPin,
   MessageCircle,
@@ -15,157 +20,59 @@ import {
 import { useLanguage } from "../../context/LanguageContext";
 import { serviceDetails } from "./serviceDetailsData";
 
-const CARPET_PRICE_OPTIONS = [
-  {
-    id: "measurements",
-    icon: Ruler,
-  },
-  {
-    id: "meterPrice",
-    icon: MessageCircle,
-  },
-  {
-    id: "onSiteMeasure",
-    icon: MapPin,
-  },
-];
+const CARPET_PRICE_OPTIONS = {
+  MEASUREMENTS: "measurements",
+  METER_PRICE: "meterPrice",
+  ON_SITE_MEASURE: "onSiteMeasure",
+};
 
-function getCopy(lang) {
+const MATTRESS_SIZES = {
+  SINGLE: "single",
+  SINGLE_AND_HALF: "singleAndHalf",
+  DOUBLE: "double",
+};
+
+const MATTRESS_SIDES = {
+  ONE: "one",
+  TWO: "two",
+};
+
+function getText(lang, values) {
   if (lang === "he") {
-    return {
-      dialogLabel: "פרטי בקשת השירות",
-      available: "השירות זמין",
-      detailsTitle: "מה כולל השירות?",
-      requestTitle: "פרטי הבקשה",
-      requestSubtitle: "מלאו רק את הפרטים הבסיסיים והמשיכו ל-WhatsApp.",
-      locationLabel: "יישוב או אזור",
-      locationPlaceholder: "לדוגמה: עכו",
-      locationHint: "כתבו את היישוב שבו נדרש השירות.",
-      locationError: "יש להזין יישוב או אזור.",
-      sofaQuantity: "מספר חלקי הספה",
-      carpetQuantity: "מספר השטיחים",
-      quantityHint: "הערכה ראשונית מספיקה בשלב הזה.",
-      quantityError: "יש לבחור כמות תקינה.",
-      carpetOptionTitle: "איך תרצו לקבל הצעת מחיר?",
-      carpetOptionError: "יש לבחור אפשרות אחת.",
-      carpetOptions: {
-        measurements: {
-          title: "יש לי מידות",
-          description: "אשלח אורך ורוחב של כל שטיח בהודעת WhatsApp.",
-        },
-        meterPrice: {
-          title: "מחיר למטר",
-          description: "אני רוצה לקבל מידע על מחיר הניקוי לפי מטר.",
-        },
-        onSiteMeasure: {
-          title: "מדידה במקום",
-          description: "אין לי מידות ואני צריך בדיקה או מדידה במקום.",
-        },
-      },
-      cancel: "ביטול",
-      submit: "המשך ל-WhatsApp",
-      submitHint: "שום דבר לא נשלח לפני פתיחת WhatsApp ואישור ההודעה.",
-      close: "סגירת החלון",
-      imageAlt: "תמונת השירות",
-      decrease: "הפחתת כמות",
-      increase: "הגדלת כמות",
-    };
+    return values.he;
   }
 
   if (lang === "en") {
-    return {
-      dialogLabel: "Service request details",
-      available: "Service available",
-      detailsTitle: "What is included?",
-      requestTitle: "Request details",
-      requestSubtitle:
-        "Enter the basic details, then continue through WhatsApp.",
-      locationLabel: "Town or area",
-      locationPlaceholder: "For example: Acre",
-      locationHint: "Enter the town where the service is needed.",
-      locationError: "Please enter your town or area.",
-      sofaQuantity: "Number of sofa sections",
-      carpetQuantity: "Number of carpets",
-      quantityHint: "An approximate quantity is enough for now.",
-      quantityError: "Please choose a valid quantity.",
-      carpetOptionTitle: "How would you like to receive a quote?",
-      carpetOptionError: "Please choose one option.",
-      carpetOptions: {
-        measurements: {
-          title: "I have measurements",
-          description:
-            "I will send the length and width of each carpet through WhatsApp.",
-        },
-        meterPrice: {
-          title: "Price per meter",
-          description:
-            "I would like information about the cleaning price per meter.",
-        },
-        onSiteMeasure: {
-          title: "On-site measurement",
-          description:
-            "I do not know the measurements and need an on-site check.",
-        },
-      },
-      cancel: "Cancel",
-      submit: "Continue to WhatsApp",
-      submitHint:
-        "Nothing is sent until WhatsApp opens and you approve the message.",
-      close: "Close dialog",
-      imageAlt: "Service image",
-      decrease: "Decrease quantity",
-      increase: "Increase quantity",
-    };
+    return values.en;
   }
 
-  return {
-    dialogLabel: "تفاصيل طلب الخدمة",
-    available: "الخدمة متاحة",
-    detailsTitle: "شو بتشمل الخدمة؟",
-    requestTitle: "تفاصيل الطلب",
-    requestSubtitle: "اكتب التفاصيل الأساسية فقط، وبعدها كمل عبر واتساب.",
-    locationLabel: "البلدة أو المنطقة",
-    locationPlaceholder: "مثال: عكا",
-    locationHint: "اكتب البلدة التي تريد تنفيذ الخدمة فيها.",
-    locationError: "لازم تكتب البلدة أو المنطقة.",
-    sofaQuantity: "عدد قطع أو مقاعد الكنب",
-    carpetQuantity: "عدد السجاد",
-    quantityHint: "عدد تقريبي بكفي حاليًا.",
-    quantityError: "اختار كمية صحيحة.",
-    carpetOptionTitle: "كيف بدك تعرف السعر؟",
-    carpetOptionError: "اختار واحد من الخيارات.",
-    carpetOptions: {
-      measurements: {
-        title: "بعرف القياسات",
-        description: "سأرسل طول وعرض كل سجادة برسالة واتساب.",
-      },
-      meterPrice: {
-        title: "بدي أعرف سعر المتر",
-        description: "أريد تفاصيل عن سعر التنظيف حسب المتر.",
-      },
-      onSiteMeasure: {
-        title: "بدي قياس بالموقع",
-        description: "ما بعرف القياسات وبحتاج فحص أو قياس بالمكان.",
-      },
-    },
-    cancel: "إلغاء",
-    submit: "متابعة عبر واتساب",
-    submitHint: "ما رح ينبعث أي شيء قبل ما يفتح واتساب وتراجع الرسالة.",
-    close: "إغلاق النافذة",
-    imageAlt: "صورة الخدمة",
-    decrease: "تقليل الكمية",
-    increase: "زيادة الكمية",
-  };
+  return values.ar;
 }
 
-function getLocalizedValue(object, key, lang) {
-  return (
-    object?.[`${key}_${lang}`] ||
-    object?.[`${key}_ar`] ||
-    object?.[`${key}_he`] ||
-    object?.[`${key}_en`] ||
-    ""
-  );
+function getLocalizedValue(source, lang, keyPrefix) {
+  if (!source) {
+    return "";
+  }
+
+  if (lang === "he") {
+    return source[`${keyPrefix}_he`] || "";
+  }
+
+  if (lang === "en") {
+    return source[`${keyPrefix}_en`] || "";
+  }
+
+  return source[`${keyPrefix}_ar`] || "";
+}
+
+function normalizePositiveInteger(value, fallback = 1) {
+  const parsedValue = Number.parseInt(value, 10);
+
+  if (!Number.isFinite(parsedValue) || parsedValue < 1) {
+    return fallback;
+  }
+
+  return parsedValue;
 }
 
 export default function ServiceModal({
@@ -177,192 +84,384 @@ export default function ServiceModal({
   const { lang, t } = useLanguage();
 
   const isRTL = lang === "ar" || lang === "he";
-  const copy = useMemo(() => getCopy(lang), [lang]);
 
-  const [mounted, setMounted] = useState(isOpen);
-  const [visible, setVisible] = useState(false);
-  const [activeService, setActiveService] = useState(selected);
+  const [isVisible, setIsVisible] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
 
   const [location, setLocation] = useState("");
+
+  // Sofa
   const [quantity, setQuantity] = useState(1);
+
+  // Mattress
+  const [mattressCount, setMattressCount] = useState(1);
+  const [mattressSize, setMattressSize] = useState("");
+  const [mattressSides, setMattressSides] = useState("");
+
+  // Carpet
+  const [carpetQuantity, setCarpetQuantity] = useState("");
   const [carpetPriceOption, setCarpetPriceOption] = useState("");
+
   const [showErrors, setShowErrors] = useState(false);
 
-  const dialogRef = useRef(null);
-  const closeButtonRef = useRef(null);
+  const closeTimerRef = useRef(null);
   const locationInputRef = useRef(null);
-  const previousFocusRef = useRef(null);
 
-  useEffect(() => {
-    if (selected) {
-      setActiveService(selected);
+  const details = useMemo(() => {
+    if (!selected) {
+      return null;
     }
+
+    return serviceDetails?.[selected.id] || null;
   }, [selected]);
 
-  useEffect(() => {
-    let frame;
-    let timer;
+  const firstCard = details?.cards?.[0] || null;
 
-    if (isOpen) {
-      setMounted(true);
+  const isSofa = selected?.id === "sofa";
+  const isMattress = selected?.id === "mattress";
+  const isCarpet = selected?.id === "carpet";
 
-      frame = window.requestAnimationFrame(() => {
-        setVisible(true);
-      });
-    } else {
-      setVisible(false);
+  const title =
+    getLocalizedValue(details, lang, "title") ||
+    t?.[selected?.titleKey] ||
+    selected?.id ||
+    "";
 
-      timer = window.setTimeout(() => {
-        setMounted(false);
-      }, 220);
+  const description =
+    getLocalizedValue(details, lang, "subtitle") ||
+    t?.[selected?.descriptionKey] ||
+    "";
+
+  const features = useMemo(() => {
+    if (!firstCard) {
+      return [];
     }
 
-    return () => {
-      if (frame) {
-        window.cancelAnimationFrame(frame);
-      }
+    if (lang === "he") {
+      return firstCard.features_he || [];
+    }
 
-      if (timer) {
-        window.clearTimeout(timer);
-      }
+    if (lang === "en") {
+      return firstCard.features_en || [];
+    }
+
+    return firstCard.features_ar || [];
+  }, [firstCard, lang]);
+
+  const text = useMemo(
+    () => ({
+      includesTitle: getText(lang, {
+        ar: "ماذا تشمل الخدمة؟",
+        he: "מה כולל השירות?",
+        en: "What does the service include?",
+      }),
+
+      locationLabel: getText(lang, {
+        ar: "البلدة",
+        he: "יישוב",
+        en: "Town",
+      }),
+
+      locationPlaceholder: getText(lang, {
+        ar: "اكتب اسم البلدة",
+        he: "הקלידו את שם היישוב",
+        en: "Enter your town",
+      }),
+
+      locationHint: getText(lang, {
+        ar: "الخدمة متاحة في مناطق الشمال والمركز.",
+        he: "השירות זמין באזורי הצפון והמרכז.",
+        en: "Service is available in the north and center.",
+      }),
+
+      locationError: getText(lang, {
+        ar: "اكتب اسم البلدة للمتابعة.",
+        he: "יש להזין את שם היישוב.",
+        en: "Enter your town to continue.",
+      }),
+
+      sofaCountLabel: getText(lang, {
+        ar: "عدد مقاعد الكنب",
+        he: "מספר מושבי הספה",
+        en: "Number of sofa seats",
+      }),
+
+      sofaCountHint: getText(lang, {
+        ar: "احسب مجموع المقاعد التي تريد تنظيفها.",
+        he: "יש לחשב את מספר המושבים הכולל שתרצו לנקות.",
+        en: "Enter the total number of sofa seats to clean.",
+      }),
+
+      mattressCountLabel: getText(lang, {
+        ar: "عدد فرشات النوم",
+        he: "מספר המזרנים",
+        en: "Number of mattresses",
+      }),
+
+      mattressCountHint: getText(lang, {
+        ar: "اختر عدد الفرشات التي تريد تنظيفها.",
+        he: "בחרו את מספר המזרנים שתרצו לנקות.",
+        en: "Choose the number of mattresses to clean.",
+      }),
+
+      mattressSizeLabel: getText(lang, {
+        ar: "حجم الفرشة",
+        he: "גודל המזרן",
+        en: "Mattress size",
+      }),
+
+      mattressSizeHint: getText(lang, {
+        ar: "اختر الحجم حتى يتم تحديد السعر بشكل صحيح.",
+        he: "בחרו את הגודל כדי לחשב את המחיר נכון.",
+        en: "Choose the size so the price can be calculated correctly.",
+      }),
+
+      mattressSingle: getText(lang, {
+        ar: "مفرد",
+        he: "יחיד",
+        en: "Single",
+      }),
+
+      mattressSingleAndHalf: getText(lang, {
+        ar: "مفرد ونص",
+        he: "מיטה וחצי",
+        en: "Single and a half",
+      }),
+
+      mattressDouble: getText(lang, {
+        ar: "مزدوج",
+        he: "זוגי",
+        en: "Double",
+      }),
+
+      mattressSidesLabel: getText(lang, {
+        ar: "عدد الأوجه",
+        he: "מספר צדדים",
+        en: "Cleaning sides",
+      }),
+
+      mattressOneSide: getText(lang, {
+        ar: "وجه واحد",
+        he: "צד אחד",
+        en: "One side",
+      }),
+
+      mattressTwoSides: getText(lang, {
+        ar: "وجهين",
+        he: "שני צדדים",
+        en: "Two sides",
+      }),
+
+      mattressPricingHint: getText(lang, {
+        ar: "السعر يتحدد حسب الحجم، عدد الفرشات، وتنظيف وجه واحد أو وجهين.",
+        he: "המחיר נקבע לפי הגודל, מספר המזרנים וניקוי צד אחד או שני צדדים.",
+        en: "The price depends on size, mattress count, and whether one or both sides are cleaned.",
+      }),
+
+      mattressSizeError: getText(lang, {
+        ar: "اختر حجم الفرشة.",
+        he: "יש לבחור את גודל המזרן.",
+        en: "Choose the mattress size.",
+      }),
+
+      mattressSidesError: getText(lang, {
+        ar: "اختر وجه واحد أو وجهين.",
+        he: "יש לבחור צד אחד או שני צדדים.",
+        en: "Choose one side or two sides.",
+      }),
+
+      carpetCountLabel: getText(lang, {
+        ar: "عدد السجاد",
+        he: "מספר שטיחים",
+        en: "Number of carpets",
+      }),
+
+      carpetCountOptional: getText(lang, {
+        ar: "اختياري",
+        he: "אופציונלי",
+        en: "Optional",
+      }),
+
+      carpetPriceLabel: getText(lang, {
+        ar: "كيف تريد معرفة السعر؟",
+        he: "איך תרצו לקבל מחיר?",
+        en: "How would you like to receive a price?",
+      }),
+
+      carpetMeasurements: getText(lang, {
+        ar: "بعرف القياسات",
+        he: "אני יודע/ת את המידות",
+        en: "I know the measurements",
+      }),
+
+      carpetMeasurementsHint: getText(lang, {
+        ar: "سأرسل طول وعرض كل سجادة.",
+        he: "אשלח אורך ורוחב של כל שטיח.",
+        en: "I will send the length and width of each carpet.",
+      }),
+
+      carpetMeterPrice: getText(lang, {
+        ar: "بدي سعر المتر",
+        he: "אני רוצה מחיר למטר",
+        en: "I want the price per meter",
+      }),
+
+      carpetMeterPriceHint: getText(lang, {
+        ar: "أريد معرفة تكلفة التنظيف حسب المتر.",
+        he: "אני רוצה לדעת את מחיר הניקוי לפי מטר.",
+        en: "I want to know the cleaning price per meter.",
+      }),
+
+      carpetOnSite: getText(lang, {
+        ar: "ما بعرف القياسات",
+        he: "אני לא יודע/ת את המידות",
+        en: "I do not know the measurements",
+      }),
+
+      carpetOnSiteHint: getText(lang, {
+        ar: "أحتاج قياس السجاد في الموقع.",
+        he: "אני צריך/ה מדידה במקום.",
+        en: "I need the carpets measured at my location.",
+      }),
+
+      carpetOptionError: getText(lang, {
+        ar: "اختر طريقة معرفة السعر.",
+        he: "יש לבחור כיצד לקבל מחיר.",
+        en: "Choose how you would like to receive a price.",
+      }),
+
+      submit: getText(lang, {
+        ar: "متابعة عبر واتساب",
+        he: "המשך ב-WhatsApp",
+        en: "Continue through WhatsApp",
+      }),
+
+      close: getText(lang, {
+        ar: "إغلاق",
+        he: "סגירה",
+        en: "Close",
+      }),
+
+      orderSummary: getText(lang, {
+        ar: "أدخل التفاصيل الأساسية ونكمل الطلب عبر واتساب.",
+        he: "הזינו את הפרטים הבסיסיים ונמשיך דרך WhatsApp.",
+        en: "Enter the basic details and continue through WhatsApp.",
+      }),
+    }),
+    [lang],
+  );
+
+  const closeModal = useCallback(() => {
+    if (isClosing) {
+      return;
+    }
+
+    setIsClosing(true);
+    setIsVisible(false);
+
+    closeTimerRef.current = window.setTimeout(() => {
+      setIsClosing(false);
+      onClose?.();
+    }, 220);
+  }, [isClosing, onClose]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setIsVisible(false);
+      setIsClosing(false);
+      return undefined;
+    }
+
+    const frameId = window.requestAnimationFrame(() => {
+      setIsVisible(true);
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
     };
   }, [isOpen]);
 
   useEffect(() => {
-    if (!isOpen || !activeService) return;
-
     setLocation("");
+
     setQuantity(1);
+
+    setMattressCount(1);
+    setMattressSize("");
+    setMattressSides("");
+
+    setCarpetQuantity("");
     setCarpetPriceOption("");
+
     setShowErrors(false);
-  }, [activeService?.id, isOpen]);
-
-  const details = useMemo(() => {
-    if (!activeService) return null;
-
-    return serviceDetails?.[activeService.id] || null;
-  }, [activeService]);
-
-  const title =
-    getLocalizedValue(details, "title", lang) ||
-    t?.[activeService?.titleKey] ||
-    activeService?.id ||
-    "";
-
-  const description =
-    getLocalizedValue(details, "subtitle", lang) ||
-    t?.[activeService?.descriptionKey] ||
-    "";
-
-  const features = useMemo(() => {
-    const firstCard = details?.cards?.[0];
-
-    return (
-      firstCard?.[`features_${lang}`] ||
-      firstCard?.features_ar ||
-      firstCard?.features_he ||
-      firstCard?.features_en ||
-      []
-    );
-  }, [details, lang]);
-
-  const serviceImage = details?.image || activeService?.image;
-
-  const isSofa = activeService?.id === "sofa";
-  const isCarpet = activeService?.id === "carpet";
-  const showsQuantity = isSofa || isCarpet;
-
-  const locationIsValid = location.trim().length >= 2;
-
-  const quantityIsValid =
-    !showsQuantity ||
-    (Number.isInteger(quantity) && quantity >= 1 && quantity <= 99);
-
-  const carpetOptionIsValid = !isCarpet || Boolean(carpetPriceOption);
-
-  const formIsValid = locationIsValid && quantityIsValid && carpetOptionIsValid;
-
-  const handleClose = useCallback(() => {
-    onClose?.();
-  }, [onClose]);
+  }, [selected?.id]);
 
   useEffect(() => {
-    if (!isOpen) return undefined;
-
-    previousFocusRef.current = document.activeElement;
+    if (!isOpen) {
+      return undefined;
+    }
 
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
-    const focusTimer = window.setTimeout(() => {
-      closeButtonRef.current?.focus();
-    }, 100);
-
     const handleKeyDown = (event) => {
       if (event.key === "Escape") {
-        event.preventDefault();
-        handleClose();
-        return;
-      }
-
-      if (event.key !== "Tab" || !dialogRef.current) return;
-
-      const focusableElements = dialogRef.current.querySelectorAll(
-        [
-          "button:not([disabled])",
-          "input:not([disabled])",
-          "select:not([disabled])",
-          "textarea:not([disabled])",
-          '[tabindex]:not([tabindex="-1"])',
-        ].join(","),
-      );
-
-      if (!focusableElements.length) return;
-
-      const firstElement = focusableElements[0];
-      const lastElement = focusableElements[focusableElements.length - 1];
-
-      if (event.shiftKey && document.activeElement === firstElement) {
-        event.preventDefault();
-        lastElement.focus();
-      } else if (!event.shiftKey && document.activeElement === lastElement) {
-        event.preventDefault();
-        firstElement.focus();
+        closeModal();
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      window.clearTimeout(focusTimer);
       window.removeEventListener("keydown", handleKeyDown);
-
       document.body.style.overflow = previousOverflow;
+    };
+  }, [closeModal, isOpen]);
 
-      if (
-        previousFocusRef.current &&
-        typeof previousFocusRef.current.focus === "function"
-      ) {
-        previousFocusRef.current.focus();
+  useEffect(() => {
+    return () => {
+      if (closeTimerRef.current) {
+        window.clearTimeout(closeTimerRef.current);
       }
     };
-  }, [handleClose, isOpen]);
+  }, []);
 
-  const changeQuantity = (amount) => {
-    setQuantity((currentQuantity) => {
-      const nextQuantity = currentQuantity + amount;
+  if (!isOpen || !selected) {
+    return null;
+  }
 
-      return Math.min(99, Math.max(1, nextQuantity));
-    });
-  };
+  const locationValid = location.trim().length >= 2;
 
-  const handleSubmit = (event) => {
-    event.preventDefault();
+  const sofaQuantityValid =
+    !isSofa || (Number.isInteger(Number(quantity)) && Number(quantity) >= 1);
 
-    if (!formIsValid) {
-      setShowErrors(true);
+  const mattressCountValid =
+    !isMattress ||
+    (Number.isInteger(Number(mattressCount)) && Number(mattressCount) >= 1);
 
-      if (!locationIsValid) {
+  const mattressSizeValid =
+    !isMattress || Object.values(MATTRESS_SIZES).includes(mattressSize);
+
+  const mattressSidesValid =
+    !isMattress || Object.values(MATTRESS_SIDES).includes(mattressSides);
+
+  const carpetPriceOptionValid =
+    !isCarpet ||
+    Object.values(CARPET_PRICE_OPTIONS).includes(carpetPriceOption);
+
+  const formValid =
+    locationValid &&
+    sofaQuantityValid &&
+    mattressCountValid &&
+    mattressSizeValid &&
+    mattressSidesValid &&
+    carpetPriceOptionValid;
+
+  const handleSubmit = () => {
+    setShowErrors(true);
+
+    if (!formValid) {
+      if (!locationValid) {
         locationInputRef.current?.focus();
       }
 
@@ -371,148 +470,152 @@ export default function ServiceModal({
 
     onOrderNow?.({
       location: location.trim(),
-      quantity: showsQuantity ? quantity : null,
-      carpetPriceOption: isCarpet ? carpetPriceOption : "",
+
+      quantity: isSofa
+        ? normalizePositiveInteger(quantity)
+        : isCarpet && carpetQuantity !== ""
+          ? normalizePositiveInteger(carpetQuantity)
+          : null,
+
+      mattressCount: isMattress
+        ? normalizePositiveInteger(mattressCount)
+        : null,
+
+      mattressSize: isMattress ? mattressSize : null,
+
+      mattressSides: isMattress ? mattressSides : null,
+
+      carpetPriceOption: isCarpet ? carpetPriceOption : null,
     });
   };
 
-  if (!mounted || !activeService) {
-    return null;
-  }
-
   return (
     <div
-      className={[
-        "fixed inset-0 z-[10050] flex items-end justify-center",
-        "bg-slate-950/60 px-0 backdrop-blur-[3px]",
-        "transition-opacity duration-200",
-        "sm:items-center sm:px-4 sm:py-6",
-        visible ? "opacity-100" : "pointer-events-none opacity-0",
-      ].join(" ")}
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) {
-          handleClose();
-        }
-      }}
       dir={isRTL ? "rtl" : "ltr"}
+      className={[
+        "fixed inset-0 z-[10020]",
+        "flex items-end justify-center",
+        "sm:items-center sm:p-4",
+        "transition-colors duration-200",
+        isVisible ? "bg-[rgba(3,7,24,0.68)]" : "bg-transparent",
+      ].join(" ")}
+      role="presentation"
     >
+      <button
+        type="button"
+        onClick={closeModal}
+        aria-label={text.close}
+        className="absolute inset-0 h-full w-full cursor-default"
+      />
+
       <section
-        ref={dialogRef}
         role="dialog"
         aria-modal="true"
-        aria-label={`${copy.dialogLabel}: ${title}`}
-        aria-describedby="service-modal-description"
+        aria-labelledby="service-modal-title"
         className={[
-          "relative flex max-h-[calc(100dvh-10px)] w-full",
-          "flex-col overflow-hidden bg-white",
-          "rounded-t-[30px] border border-slate-200",
-          "shadow-[0_-18px_60px_rgba(15,23,42,0.28)]",
+          "relative z-10",
+          "flex max-h-[94dvh] w-full flex-col",
+          "overflow-hidden bg-white",
+          "rounded-t-[28px]",
+          "shadow-[0_-20px_70px_rgba(0,0,0,0.28)]",
           "transition-transform duration-200 ease-out",
-          "sm:max-h-[min(820px,calc(100dvh-48px))]",
-          "sm:max-w-2xl sm:rounded-[30px]",
-          "sm:shadow-[0_28px_90px_rgba(15,23,42,0.30)]",
-          visible ? "translate-y-0 scale-100" : "translate-y-5 scale-[0.985]",
+          "sm:max-w-2xl sm:rounded-[28px]",
+          "sm:shadow-[0_28px_90px_rgba(0,0,0,0.34)]",
+          isVisible ? "translate-y-0 scale-100" : "translate-y-8 scale-[0.985]",
         ].join(" ")}
       >
-        {/* المقبض يظهر فقط على الموبايل */}
-        <div
-          className="flex h-6 shrink-0 items-center justify-center sm:hidden"
-          aria-hidden="true"
-        >
-          <span className="h-1.5 w-11 rounded-full bg-slate-300" />
-        </div>
+        {/* Image header */}
+        <div className="relative h-36 shrink-0 overflow-hidden sm:h-44">
+          <img
+            src={selected.image || details?.image}
+            alt=""
+            draggable={false}
+            className="h-full w-full object-cover"
+          />
 
-        {/* رأس النافذة */}
-        <header className="relative shrink-0">
-          <div className="relative h-36 overflow-hidden bg-slate-200 sm:h-48">
-            {serviceImage ? (
-              <img
-                src={serviceImage}
-                alt={`${copy.imageAlt}: ${title}`}
-                draggable={false}
-                className="h-full w-full object-cover"
-                decoding="async"
-              />
-            ) : null}
+          <div
+            aria-hidden="true"
+            className="
+              absolute
+              inset-0
+              bg-gradient-to-t
+              from-[rgba(8,12,29,0.94)]
+              via-[rgba(8,12,29,0.30)]
+              to-[rgba(8,12,29,0.08)]
+            "
+          />
 
-            <div
+          <button
+            type="button"
+            onClick={closeModal}
+            aria-label={text.close}
+            className="
+              absolute
+              end-3
+              top-3
+              flex
+              h-10
+              w-10
+              items-center
+              justify-center
+              rounded-full
+              border
+              border-white/20
+              bg-black/35
+              text-white
+              backdrop-blur-md
+              transition
+              hover:bg-black/50
+              active:scale-95
+            "
+          >
+            <X aria-hidden="true" className="h-5 w-5" />
+          </button>
+
+          <div className="absolute inset-x-0 bottom-0 p-5 sm:p-6">
+            <h2
+              id="service-modal-title"
               className="
-                absolute inset-0
-                bg-gradient-to-t
-                from-slate-950/85 via-slate-950/20 to-slate-950/20
+                text-2xl
+                font-black
+                leading-tight
+                text-white
+                sm:text-3xl
               "
-              aria-hidden="true"
-            />
-
-            <button
-              ref={closeButtonRef}
-              type="button"
-              onClick={handleClose}
-              className="
-                absolute end-3 top-3
-                flex h-11 w-11 items-center justify-center
-                rounded-full border border-white/25
-                bg-slate-950/55 text-white
-                shadow-lg backdrop-blur-md
-                transition hover:bg-slate-950/75
-                active:scale-95
-                focus-visible:outline-none
-                focus-visible:ring-2 focus-visible:ring-white
-              "
-              aria-label={copy.close}
             >
-              <X className="h-5 w-5" aria-hidden="true" />
-            </button>
+              {title}
+            </h2>
 
-            <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5">
-              <div
+            {description && (
+              <p
                 className="
-                  mb-2 inline-flex items-center gap-1.5
-                  rounded-full border border-white/20
-                  bg-black/25 px-2.5 py-1
-                  text-[11px] font-extrabold text-white
-                  backdrop-blur-md
+                  mt-1.5
+                  max-w-xl
+                  text-sm
+                  font-medium
+                  leading-6
+                  text-white/78
                 "
               >
-                <CheckCircle2
-                  className="h-3.5 w-3.5 text-emerald-300"
-                  aria-hidden="true"
-                />
+                {description}
+              </p>
+            )}
+          </div>
+        </div>
 
-                <span>{copy.available}</span>
-              </div>
-
-              <h2 className="text-xl font-black text-white sm:text-2xl">
-                {title}
-              </h2>
-
-              {description ? (
-                <p
-                  id="service-modal-description"
+        {/* Scrollable body */}
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+          <div className="space-y-6 px-4 py-5 sm:px-6 sm:py-6">
+            {features.length > 0 && (
+              <div>
+                <h3
                   className="
-                    mt-1 line-clamp-2
-                    text-xs font-medium leading-5
-                    text-white/85 sm:text-sm
+                    text-sm
+                    font-black
+                    text-[var(--lumora-navy-900)]
                   "
                 >
-                  {description}
-                </p>
-              ) : null}
-            </div>
-          </div>
-        </header>
-
-        <form
-          className="flex min-h-0 flex-1 flex-col"
-          onSubmit={handleSubmit}
-          noValidate
-        >
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-5 sm:px-6">
-            {/* ما تشمل الخدمة */}
-            {features.length > 0 ? (
-              <div>
-                <h3 className="text-sm font-black text-slate-950">
-                  {copy.detailsTitle}
+                  {text.includesTitle}
                 </h3>
 
                 <div className="mt-3 grid gap-2 sm:grid-cols-2">
@@ -520,328 +623,556 @@ export default function ServiceModal({
                     <div
                       key={`${feature}-${index}`}
                       className="
-                        flex items-start gap-2.5
-                        rounded-2xl bg-slate-50
-                        px-3.5 py-3
+                        flex
+                        items-start
+                        gap-2.5
+                        rounded-xl
+                        bg-[#f7f9f5]
+                        px-3
+                        py-2.5
                       "
                     >
+                      <CheckCircle2
+                        aria-hidden="true"
+                        className="
+                          mt-0.5
+                          h-4
+                          w-4
+                          shrink-0
+                          text-[var(--lumora-green)]
+                        "
+                      />
+
                       <span
                         className="
-                          mt-0.5 flex h-5 w-5 shrink-0
-                          items-center justify-center
-                          rounded-full bg-emerald-100
-                          text-emerald-700
+                          text-sm
+                          font-medium
+                          leading-5
+                          text-slate-700
                         "
-                        aria-hidden="true"
                       >
-                        <Check className="h-3 w-3" strokeWidth={3} />
-                      </span>
-
-                      <span className="text-xs font-bold leading-5 text-slate-700">
                         {feature}
                       </span>
                     </div>
                   ))}
                 </div>
               </div>
-            ) : null}
+            )}
 
-            <div
-              className={[
-                features.length ? "mt-6 border-t border-slate-200 pt-6" : "",
-              ].join(" ")}
-            >
-              <h3 className="text-base font-black text-slate-950">
-                {copy.requestTitle}
-              </h3>
+            {/* Location */}
+            <div>
+              <label
+                htmlFor="service-location"
+                className="
+                  flex
+                  items-center
+                  gap-2
+                  text-sm
+                  font-black
+                  text-[var(--lumora-navy-900)]
+                "
+              >
+                <MapPin
+                  aria-hidden="true"
+                  className="h-4 w-4 text-[var(--lumora-cyan)]"
+                />
 
-              <p className="mt-1 text-xs font-medium leading-5 text-slate-500">
-                {copy.requestSubtitle}
+                <span>{text.locationLabel}</span>
+              </label>
+
+              <input
+                ref={locationInputRef}
+                id="service-location"
+                type="text"
+                value={location}
+                onChange={(event) => {
+                  setLocation(event.target.value);
+                }}
+                placeholder={text.locationPlaceholder}
+                autoComplete="address-level2"
+                className={[
+                  "mt-2 h-12 w-full rounded-xl",
+                  "border bg-white px-4",
+                  "text-sm font-bold text-slate-900",
+                  "outline-none transition",
+                  "placeholder:text-slate-400",
+                  showErrors && !locationValid
+                    ? ["border-rose-400", "ring-2 ring-rose-100"].join(" ")
+                    : [
+                        "border-slate-200",
+                        "focus:border-[var(--lumora-cyan)]",
+                        "focus:ring-2",
+                        "focus:ring-[rgba(16,148,192,0.12)]",
+                      ].join(" "),
+                ].join(" ")}
+              />
+
+              <p
+                className={[
+                  "mt-1.5 text-xs leading-5",
+                  showErrors && !locationValid
+                    ? "font-bold text-rose-600"
+                    : "text-slate-500",
+                ].join(" ")}
+              >
+                {showErrors && !locationValid
+                  ? text.locationError
+                  : text.locationHint}
               </p>
+            </div>
 
-              {/* البلدة */}
-              <div className="mt-5">
-                <label
-                  htmlFor="service-location"
-                  className="block text-sm font-extrabold text-slate-800"
+            {/* Sofa fields */}
+            {isSofa && (
+              <QuantityField
+                label={text.sofaCountLabel}
+                hint={text.sofaCountHint}
+                value={quantity}
+                onChange={setQuantity}
+              />
+            )}
+
+            {/* Mattress fields */}
+            {isMattress && (
+              <div className="space-y-5">
+                <QuantityField
+                  label={text.mattressCountLabel}
+                  hint={text.mattressCountHint}
+                  value={mattressCount}
+                  onChange={setMattressCount}
+                />
+
+                <ChoiceSection
+                  icon={<Ruler className="h-4 w-4" />}
+                  label={text.mattressSizeLabel}
+                  hint={text.mattressSizeHint}
+                  error={
+                    showErrors && !mattressSizeValid
+                      ? text.mattressSizeError
+                      : ""
+                  }
+                  columns="grid-cols-3"
+                  options={[
+                    {
+                      value: MATTRESS_SIZES.SINGLE,
+                      label: text.mattressSingle,
+                    },
+                    {
+                      value: MATTRESS_SIZES.SINGLE_AND_HALF,
+                      label: text.mattressSingleAndHalf,
+                    },
+                    {
+                      value: MATTRESS_SIZES.DOUBLE,
+                      label: text.mattressDouble,
+                    },
+                  ]}
+                  selectedValue={mattressSize}
+                  onSelect={setMattressSize}
+                />
+
+                <ChoiceSection
+                  label={text.mattressSidesLabel}
+                  error={
+                    showErrors && !mattressSidesValid
+                      ? text.mattressSidesError
+                      : ""
+                  }
+                  columns="grid-cols-2"
+                  options={[
+                    {
+                      value: MATTRESS_SIDES.ONE,
+                      label: text.mattressOneSide,
+                    },
+                    {
+                      value: MATTRESS_SIDES.TWO,
+                      label: text.mattressTwoSides,
+                    },
+                  ]}
+                  selectedValue={mattressSides}
+                  onSelect={setMattressSides}
+                />
+
+                <div
+                  className="
+                    rounded-xl
+                    border
+                    border-[rgba(16,148,192,0.14)]
+                    bg-[rgba(16,148,192,0.06)]
+                    px-3.5
+                    py-3
+                    text-xs
+                    font-bold
+                    leading-5
+                    text-slate-600
+                  "
                 >
-                  {copy.locationLabel}
-                </label>
-
-                <div className="relative mt-2">
-                  <MapPin
-                    className="
-                      pointer-events-none absolute start-3.5 top-1/2
-                      h-5 w-5 -translate-y-1/2 text-slate-400
-                    "
-                    aria-hidden="true"
-                  />
-
-                  <input
-                    ref={locationInputRef}
-                    id="service-location"
-                    type="text"
-                    value={location}
-                    onChange={(event) => {
-                      setLocation(event.target.value);
-
-                      if (showErrors) {
-                        setShowErrors(false);
-                      }
-                    }}
-                    placeholder={copy.locationPlaceholder}
-                    autoComplete="address-level2"
-                    maxLength={60}
-                    aria-invalid={
-                      showErrors && !locationIsValid ? "true" : "false"
-                    }
-                    aria-describedby="service-location-hint"
-                    className={[
-                      "h-13 w-full rounded-2xl border bg-white",
-                      "py-3 ps-11 pe-4 text-sm font-bold text-slate-900",
-                      "outline-none transition",
-                      "placeholder:font-medium placeholder:text-slate-400",
-                      showErrors && !locationIsValid
-                        ? "border-rose-400 ring-4 ring-rose-100"
-                        : "border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-100",
-                    ].join(" ")}
-                  />
+                  {text.mattressPricingHint}
                 </div>
-
-                <p
-                  id="service-location-hint"
-                  className={[
-                    "mt-1.5 text-xs font-medium",
-                    showErrors && !locationIsValid
-                      ? "text-rose-600"
-                      : "text-slate-500",
-                  ].join(" ")}
-                >
-                  {showErrors && !locationIsValid
-                    ? copy.locationError
-                    : copy.locationHint}
-                </p>
               </div>
+            )}
 
-              {/* الكمية */}
-              {showsQuantity ? (
-                <div className="mt-5">
-                  <div className="flex items-end justify-between gap-3">
-                    <div>
-                      <label className="block text-sm font-extrabold text-slate-800">
-                        {isCarpet ? copy.carpetQuantity : copy.sofaQuantity}
-                      </label>
-
-                      <p className="mt-1 text-xs font-medium text-slate-500">
-                        {copy.quantityHint}
-                      </p>
-                    </div>
-
-                    <div
+            {/* Carpet fields */}
+            {isCarpet && (
+              <div className="space-y-5">
+                <div>
+                  <div className="flex items-center justify-between gap-3">
+                    <label
+                      htmlFor="carpet-quantity"
                       className="
-                        flex shrink-0 items-center gap-1
-                        rounded-2xl border border-slate-200
-                        bg-slate-50 p-1
+                        text-sm
+                        font-black
+                        text-[var(--lumora-navy-900)]
                       "
                     >
-                      <button
-                        type="button"
-                        onClick={() => changeQuantity(-1)}
-                        disabled={quantity <= 1}
-                        className="
-                          flex h-10 w-10 items-center justify-center
-                          rounded-xl bg-white text-slate-700
-                          shadow-sm transition
-                          hover:bg-slate-100 active:scale-95
-                          disabled:cursor-not-allowed disabled:opacity-35
-                          focus-visible:outline-none
-                          focus-visible:ring-2 focus-visible:ring-blue-400
-                        "
-                        aria-label={copy.decrease}
-                      >
-                        <Minus className="h-4 w-4" aria-hidden="true" />
-                      </button>
+                      {text.carpetCountLabel}
+                    </label>
 
-                      <output
-                        className="
-                          min-w-10 text-center
-                          text-base font-black text-slate-950
-                        "
-                        aria-live="polite"
-                      >
-                        {quantity}
-                      </output>
-
-                      <button
-                        type="button"
-                        onClick={() => changeQuantity(1)}
-                        disabled={quantity >= 99}
-                        className="
-                          flex h-10 w-10 items-center justify-center
-                          rounded-xl bg-white text-slate-700
-                          shadow-sm transition
-                          hover:bg-slate-100 active:scale-95
-                          disabled:cursor-not-allowed disabled:opacity-35
-                          focus-visible:outline-none
-                          focus-visible:ring-2 focus-visible:ring-blue-400
-                        "
-                        aria-label={copy.increase}
-                      >
-                        <Plus className="h-4 w-4" aria-hidden="true" />
-                      </button>
-                    </div>
-                  </div>
-
-                  {showErrors && !quantityIsValid ? (
-                    <p className="mt-2 text-xs font-bold text-rose-600">
-                      {copy.quantityError}
-                    </p>
-                  ) : null}
-                </div>
-              ) : null}
-
-              {/* خيارات تسعير السجاد */}
-              {isCarpet ? (
-                <fieldset className="mt-6">
-                  <legend className="text-sm font-extrabold text-slate-800">
-                    {copy.carpetOptionTitle}
-                  </legend>
-
-                  <div className="mt-3 grid gap-2.5">
-                    {CARPET_PRICE_OPTIONS.map((option) => {
-                      const optionCopy = copy.carpetOptions[option.id];
-
-                      const Icon = option.icon;
-                      const selectedOption = carpetPriceOption === option.id;
-
-                      return (
-                        <label
-                          key={option.id}
-                          className={[
-                            "relative flex cursor-pointer items-start gap-3",
-                            "rounded-2xl border p-3.5 transition",
-                            selectedOption
-                              ? "border-blue-500 bg-blue-50 ring-4 ring-blue-100"
-                              : "border-slate-200 bg-white hover:border-slate-300",
-                          ].join(" ")}
-                        >
-                          <input
-                            type="radio"
-                            name="carpet-price-option"
-                            value={option.id}
-                            checked={selectedOption}
-                            onChange={() => {
-                              setCarpetPriceOption(option.id);
-
-                              if (showErrors) {
-                                setShowErrors(false);
-                              }
-                            }}
-                            className="sr-only"
-                          />
-
-                          <span
-                            className={[
-                              "flex h-10 w-10 shrink-0",
-                              "items-center justify-center rounded-xl",
-                              selectedOption
-                                ? "bg-blue-600 text-white"
-                                : "bg-slate-100 text-slate-600",
-                            ].join(" ")}
-                            aria-hidden="true"
-                          >
-                            <Icon className="h-5 w-5" />
-                          </span>
-
-                          <span className="min-w-0 flex-1">
-                            <span className="block text-sm font-black text-slate-900">
-                              {optionCopy.title}
-                            </span>
-
-                            <span className="mt-1 block text-xs font-medium leading-5 text-slate-500">
-                              {optionCopy.description}
-                            </span>
-                          </span>
-
-                          <span
-                            className={[
-                              "mt-1 flex h-5 w-5 shrink-0",
-                              "items-center justify-center rounded-full border",
-                              selectedOption
-                                ? "border-blue-600 bg-blue-600 text-white"
-                                : "border-slate-300 bg-white text-transparent",
-                            ].join(" ")}
-                            aria-hidden="true"
-                          >
-                            <Check className="h-3 w-3" strokeWidth={3} />
-                          </span>
-                        </label>
-                      );
-                    })}
-                  </div>
-
-                  {showErrors && !carpetOptionIsValid ? (
-                    <p
-                      className="mt-2 text-xs font-bold text-rose-600"
-                      role="alert"
+                    <span
+                      className="
+                        rounded-full
+                        bg-slate-100
+                        px-2
+                        py-1
+                        text-[10px]
+                        font-bold
+                        text-slate-500
+                      "
                     >
-                      {copy.carpetOptionError}
-                    </p>
-                  ) : null}
-                </fieldset>
-              ) : null}
-            </div>
-          </div>
+                      {text.carpetCountOptional}
+                    </span>
+                  </div>
 
-          {/* أزرار ثابتة بأسفل النافذة */}
-          <footer
+                  <input
+                    id="carpet-quantity"
+                    type="number"
+                    min="1"
+                    inputMode="numeric"
+                    value={carpetQuantity}
+                    onChange={(event) => {
+                      const nextValue = event.target.value;
+
+                      if (nextValue === "" || Number(nextValue) >= 1) {
+                        setCarpetQuantity(nextValue);
+                      }
+                    }}
+                    className="
+                      mt-2
+                      h-12
+                      w-full
+                      rounded-xl
+                      border
+                      border-slate-200
+                      bg-white
+                      px-4
+                      text-sm
+                      font-bold
+                      text-slate-900
+                      outline-none
+                      transition
+                      focus:border-[var(--lumora-cyan)]
+                      focus:ring-2
+                      focus:ring-[rgba(16,148,192,0.12)]
+                    "
+                  />
+                </div>
+
+                <ChoiceSection
+                  icon={<Ruler className="h-4 w-4" />}
+                  label={text.carpetPriceLabel}
+                  error={
+                    showErrors && !carpetPriceOptionValid
+                      ? text.carpetOptionError
+                      : ""
+                  }
+                  columns="grid-cols-1"
+                  options={[
+                    {
+                      value: CARPET_PRICE_OPTIONS.MEASUREMENTS,
+                      label: text.carpetMeasurements,
+                      description: text.carpetMeasurementsHint,
+                    },
+                    {
+                      value: CARPET_PRICE_OPTIONS.METER_PRICE,
+                      label: text.carpetMeterPrice,
+                      description: text.carpetMeterPriceHint,
+                    },
+                    {
+                      value: CARPET_PRICE_OPTIONS.ON_SITE_MEASURE,
+                      label: text.carpetOnSite,
+                      description: text.carpetOnSiteHint,
+                    },
+                  ]}
+                  selectedValue={carpetPriceOption}
+                  onSelect={setCarpetPriceOption}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <footer
+          className="
+            shrink-0
+            border-t
+            border-slate-200
+            bg-white
+            px-4
+            pb-[max(16px,env(safe-area-inset-bottom))]
+            pt-4
+            sm:px-6
+            sm:pb-5
+          "
+        >
+          <p className="mb-3 text-center text-xs text-slate-500">
+            {text.orderSummary}
+          </p>
+
+          <button
+            type="button"
+            onClick={handleSubmit}
             className="
-              shrink-0 border-t border-slate-200
-              bg-white/95 px-4 pb-[max(14px,env(safe-area-inset-bottom))]
-              pt-3 backdrop-blur-xl sm:px-6 sm:pb-5
+              flex
+              h-12
+              w-full
+              items-center
+              justify-center
+              gap-2
+              rounded-xl
+              bg-[var(--lumora-lime)]
+              px-5
+              text-sm
+              font-black
+              text-[var(--lumora-navy-950)]
+              shadow-[0_10px_24px_rgba(79,168,37,0.20)]
+              transition
+              hover:brightness-105
+              active:scale-[0.99]
             "
           >
-            <div className="grid grid-cols-[auto_1fr] gap-2.5">
-              <button
-                type="button"
-                onClick={handleClose}
-                className="
-                  min-h-12 rounded-2xl border border-slate-200
-                  bg-white px-4 text-sm font-extrabold text-slate-700
-                  transition hover:bg-slate-50 active:scale-[0.98]
-                  focus-visible:outline-none
-                  focus-visible:ring-4 focus-visible:ring-slate-200
-                "
-              >
-                {copy.cancel}
-              </button>
+            <MessageCircle aria-hidden="true" className="h-5 w-5" />
 
-              <button
-                type="submit"
-                className="
-                  inline-flex min-h-12 items-center
-                  justify-center gap-2 rounded-2xl
-                  bg-emerald-600 px-4
-                  text-sm font-extrabold text-white
-                  shadow-[0_10px_28px_rgba(5,150,105,0.25)]
-                  transition hover:bg-emerald-700
-                  active:scale-[0.98]
-                  focus-visible:outline-none
-                  focus-visible:ring-4 focus-visible:ring-emerald-200
-                "
-              >
-                <MessageCircle className="h-5 w-5" aria-hidden="true" />
-
-                <span>{copy.submit}</span>
-              </button>
-            </div>
-
-            <p className="mt-2 text-center text-[11px] font-medium leading-4 text-slate-400">
-              {copy.submitHint}
-            </p>
-          </footer>
-        </form>
+            <span>{text.submit}</span>
+          </button>
+        </footer>
       </section>
+    </div>
+  );
+}
+
+function QuantityField({ label, hint, value, onChange }) {
+  const normalizedValue = normalizePositiveInteger(value);
+
+  const decrease = () => {
+    onChange(Math.max(1, normalizedValue - 1));
+  };
+
+  const increase = () => {
+    onChange(normalizedValue + 1);
+  };
+
+  return (
+    <div>
+      <div className="flex items-center justify-between gap-4">
+        <div className="min-w-0">
+          <p
+            className="
+              text-sm
+              font-black
+              text-[var(--lumora-navy-900)]
+            "
+          >
+            {label}
+          </p>
+
+          <p className="mt-1 text-xs leading-5 text-slate-500">{hint}</p>
+        </div>
+
+        <div
+          className="
+            flex
+            shrink-0
+            items-center
+            gap-2
+            rounded-xl
+            border
+            border-slate-200
+            bg-[#f7f9f5]
+            p-1
+          "
+        >
+          <button
+            type="button"
+            onClick={decrease}
+            disabled={normalizedValue <= 1}
+            className="
+              flex
+              h-9
+              w-9
+              items-center
+              justify-center
+              rounded-lg
+              bg-white
+              text-[var(--lumora-navy-900)]
+              shadow-sm
+              transition
+              hover:bg-slate-50
+              disabled:cursor-not-allowed
+              disabled:opacity-35
+              active:scale-95
+            "
+          >
+            <Minus aria-hidden="true" className="h-4 w-4" />
+          </button>
+
+          <input
+            type="number"
+            min="1"
+            inputMode="numeric"
+            value={value}
+            onChange={(event) => {
+              const nextValue = event.target.value;
+
+              if (nextValue === "") {
+                onChange("");
+                return;
+              }
+
+              onChange(normalizePositiveInteger(nextValue));
+            }}
+            className="
+              h-9
+              w-11
+              bg-transparent
+              text-center
+              text-base
+              font-black
+              text-[var(--lumora-navy-900)]
+              outline-none
+            "
+          />
+
+          <button
+            type="button"
+            onClick={increase}
+            className="
+              flex
+              h-9
+              w-9
+              items-center
+              justify-center
+              rounded-lg
+              bg-[var(--lumora-navy-900)]
+              text-white
+              transition
+              hover:bg-[var(--lumora-navy-800)]
+              active:scale-95
+            "
+          >
+            <Plus aria-hidden="true" className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ChoiceSection({
+  icon = null,
+  label,
+  hint = "",
+  error = "",
+  options,
+  selectedValue,
+  onSelect,
+  columns = "grid-cols-2",
+}) {
+  return (
+    <div>
+      <div
+        className="
+          flex
+          items-center
+          gap-2
+          text-sm
+          font-black
+          text-[var(--lumora-navy-900)]
+        "
+      >
+        {icon && <span className="text-[var(--lumora-cyan)]">{icon}</span>}
+
+        <span>{label}</span>
+      </div>
+
+      {hint && <p className="mt-1 text-xs leading-5 text-slate-500">{hint}</p>}
+
+      <div className={`mt-3 grid gap-2 ${columns}`}>
+        {options.map((option) => {
+          const active = selectedValue === option.value;
+
+          return (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => onSelect(option.value)}
+              aria-pressed={active}
+              className={[
+                "relative rounded-xl border",
+                "px-3 py-3 text-start",
+                "transition-all duration-150",
+                active
+                  ? [
+                      "border-[rgba(174,221,57,0.70)]",
+                      "bg-[rgba(174,221,57,0.11)]",
+                      "text-[var(--lumora-navy-900)]",
+                      "ring-2",
+                      "ring-[rgba(174,221,57,0.12)]",
+                    ].join(" ")
+                  : [
+                      "border-slate-200",
+                      "bg-white",
+                      "text-slate-700",
+                      "hover:border-[rgba(16,148,192,0.35)]",
+                      "hover:bg-slate-50",
+                    ].join(" "),
+              ].join(" ")}
+            >
+              <div className="flex items-center gap-2">
+                <span className="flex-1 text-sm font-black">
+                  {option.label}
+                </span>
+
+                {active && (
+                  <CheckCircle2
+                    aria-hidden="true"
+                    className="
+                      h-4
+                      w-4
+                      shrink-0
+                      text-[var(--lumora-green)]
+                    "
+                  />
+                )}
+              </div>
+
+              {option.description && (
+                <p
+                  className="
+                    mt-1
+                    text-xs
+                    font-medium
+                    leading-5
+                    text-slate-500
+                  "
+                >
+                  {option.description}
+                </p>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {error && <p className="mt-2 text-xs font-bold text-rose-600">{error}</p>}
     </div>
   );
 }

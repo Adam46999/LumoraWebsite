@@ -3,259 +3,453 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ===================== Global ===================== */
+/* =========================================================
+   LUMORA BRAND SYSTEM
+   الألوان مأخوذة من هوية اللوجو:
+   Navy + Lime + Green + Cyan + Soft White
+   ========================================================= */
 
-/* سلوك تمرير ناعم */
-html {
-  scroll-behavior: smooth;
+:root {
+  /* Main brand colors */
+  --lumora-navy-950: #080c1d;
+  --lumora-navy-900: #11152f;
+  --lumora-navy-850: #151a3a;
+  --lumora-navy-800: #1b2147;
+
+  --lumora-lime: #aedd39;
+  --lumora-lime-light: #c4ec5b;
+  --lumora-green: #4fa825;
+  --lumora-green-dark: #347c19;
+
+  --lumora-cyan: #1094c0;
+  --lumora-cyan-light: #42cce3;
+
+  /* Neutral colors */
+  --lumora-white: #ffffff;
+  --lumora-ice: #ecefe5;
+  --lumora-surface: #f5f7f2;
+  --lumora-surface-soft: #f9faf7;
+
+  --lumora-text: #11152f;
+  --lumora-text-soft: #5f6878;
+  --lumora-border: #dfe5dc;
+
+  /* Shadows */
+  --lumora-shadow-sm: 0 8px 24px rgba(17, 21, 47, 0.07);
+  --lumora-shadow-md: 0 18px 50px rgba(17, 21, 47, 0.12);
+  --lumora-shadow-dark: 0 24px 70px rgba(3, 7, 24, 0.34);
+
+  /* Layout */
+  --app-topbar-h: 64px;
 }
 
-/* خط افتراضي من Tailwind theme */
+/* ===================== Global reset ===================== */
+
+html {
+  scroll-behavior: smooth;
+  background: var(--lumora-surface);
+}
+
 body {
   @apply font-sans;
+
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+
+  color: var(--lumora-text);
+  background:
+    radial-gradient(
+      circle at 10% 0%,
+      rgba(16, 148, 192, 0.08),
+      transparent 28rem
+    ),
+    radial-gradient(
+      circle at 90% 15%,
+      rgba(174, 221, 57, 0.08),
+      transparent 25rem
+    ),
+    var(--lumora-surface);
+
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+img,
+svg,
+video {
+  display: block;
+  max-width: 100%;
+}
+
+button,
+a,
+input,
+textarea,
+select {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+a {
+  touch-action: manipulation;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 3px solid rgba(174, 221, 57, 0.48);
+  outline-offset: 3px;
+}
+
+::selection {
+  color: var(--lumora-navy-950);
+  background: var(--lumora-lime);
+}
+
+/* ===================== Scrollbar ===================== */
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--lumora-cyan) var(--lumora-navy-900);
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--lumora-navy-900);
+}
+
+*::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--lumora-cyan), var(--lumora-green));
+  border: 2px solid var(--lumora-navy-900);
+  border-radius: 999px;
+}
+
+/* =========================================================
+   Reusable Lumora components
+   سنستعمل هذه الكلاسات أثناء تعديل الأقسام واحدًا واحدًا
+   ========================================================= */
+
+@layer components {
+  /* Light section */
+  .lumora-section-light {
+    position: relative;
+    overflow: hidden;
+    color: var(--lumora-text);
+    background:
+      radial-gradient(
+        circle at 10% 10%,
+        rgba(16, 148, 192, 0.07),
+        transparent 24rem
+      ),
+      radial-gradient(
+        circle at 90% 90%,
+        rgba(174, 221, 57, 0.08),
+        transparent 26rem
+      ),
+      var(--lumora-surface-soft);
+  }
+
+  /* Dark branded section */
+  .lumora-section-dark {
+    position: relative;
+    overflow: hidden;
+    color: var(--lumora-white);
+    background:
+      radial-gradient(
+        circle at 12% 18%,
+        rgba(16, 148, 192, 0.2),
+        transparent 26rem
+      ),
+      radial-gradient(
+        circle at 88% 82%,
+        rgba(174, 221, 57, 0.14),
+        transparent 24rem
+      ),
+      linear-gradient(
+        145deg,
+        var(--lumora-navy-950),
+        var(--lumora-navy-900) 48%,
+        var(--lumora-navy-800)
+      );
+  }
+
+  /* White content card */
+  .lumora-card {
+    border: 1px solid var(--lumora-border);
+    border-radius: 1.5rem;
+    background: rgba(255, 255, 255, 0.94);
+    box-shadow: var(--lumora-shadow-sm);
+    backdrop-filter: blur(12px);
+  }
+
+  .lumora-card:hover {
+    border-color: rgba(16, 148, 192, 0.32);
+    box-shadow: var(--lumora-shadow-md);
+  }
+
+  /* Dark card */
+  .lumora-card-dark {
+    border: 1px solid rgba(255, 255, 255, 0.11);
+    border-radius: 1.5rem;
+    color: var(--lumora-white);
+    background: rgba(17, 21, 47, 0.76);
+    box-shadow: var(--lumora-shadow-dark);
+    backdrop-filter: blur(16px);
+  }
+
+  /* Main CTA */
+  .lumora-btn-primary {
+    display: inline-flex;
+    min-height: 48px;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 999px;
+    padding: 0.75rem 1.35rem;
+
+    color: var(--lumora-navy-950);
+    background: linear-gradient(
+      135deg,
+      var(--lumora-lime-light),
+      var(--lumora-lime) 50%,
+      #8fd020
+    );
+
+    font-weight: 800;
+    box-shadow:
+      0 12px 30px rgba(79, 168, 37, 0.25),
+      inset 0 1px 0 rgba(255, 255, 255, 0.5);
+
+    transition:
+      transform 180ms ease,
+      box-shadow 180ms ease,
+      filter 180ms ease;
+  }
+
+  .lumora-btn-primary:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.04);
+    box-shadow:
+      0 16px 36px rgba(79, 168, 37, 0.34),
+      inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  }
+
+  .lumora-btn-primary:active {
+    transform: translateY(0) scale(0.98);
+  }
+
+  /* Secondary CTA */
+  .lumora-btn-secondary {
+    display: inline-flex;
+    min-height: 48px;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    border: 1px solid rgba(16, 148, 192, 0.42);
+    border-radius: 999px;
+    padding: 0.75rem 1.35rem;
+
+    color: var(--lumora-navy-900);
+    background: rgba(255, 255, 255, 0.94);
+
+    font-weight: 800;
+    box-shadow: var(--lumora-shadow-sm);
+
+    transition:
+      transform 180ms ease,
+      border-color 180ms ease,
+      background-color 180ms ease;
+  }
+
+  .lumora-btn-secondary:hover {
+    transform: translateY(-2px);
+    border-color: var(--lumora-cyan);
+    background: var(--lumora-white);
+  }
+
+  /* Small branded label */
+  .lumora-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    border: 1px solid rgba(16, 148, 192, 0.22);
+    border-radius: 999px;
+    padding: 0.4rem 0.75rem;
+
+    color: var(--lumora-navy-900);
+    background: rgba(255, 255, 255, 0.88);
+
+    font-size: 0.75rem;
+    font-weight: 800;
+    box-shadow: var(--lumora-shadow-sm);
+    backdrop-filter: blur(10px);
+  }
+
+  .lumora-badge-dot {
+    width: 0.45rem;
+    height: 0.45rem;
+    flex: 0 0 auto;
+    border-radius: 999px;
+    background: var(--lumora-lime);
+    box-shadow: 0 0 0 5px rgba(174, 221, 57, 0.14);
+  }
+
+  /* Headings */
+  .lumora-heading {
+    color: var(--lumora-navy-900);
+    font-weight: 900;
+    letter-spacing: -0.025em;
+  }
+
+  .lumora-heading-light {
+    color: var(--lumora-white);
+    font-weight: 900;
+    letter-spacing: -0.025em;
+  }
+
+  .lumora-accent-text {
+    color: var(--lumora-green);
+  }
+
+  .lumora-muted-text {
+    color: var(--lumora-text-soft);
+  }
+
+  /* Logo watermark */
+  .lumora-logo-watermark {
+    position: absolute;
+    z-index: 0;
+    width: clamp(260px, 40vw, 620px);
+    aspect-ratio: 1;
+    object-fit: contain;
+
+    opacity: 0.07;
+    filter: saturate(1.15);
+    pointer-events: none;
+    user-select: none;
+  }
+}
+
+/* ===================== Decorative utilities ===================== */
+
+.lumora-glow-cyan {
+  box-shadow: 0 0 70px rgba(16, 148, 192, 0.22);
+}
+
+.lumora-glow-lime {
+  box-shadow: 0 0 70px rgba(174, 221, 57, 0.18);
+}
+
+.lumora-divider {
+  width: min(160px, 38vw);
+  height: 3px;
+  margin-inline: auto;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--lumora-cyan),
+    var(--lumora-lime),
+    transparent
+  );
 }
 
 /* ===================== Animations & Effects ===================== */
 
-/* ✅ اهتزاز */
 @keyframes shake {
   0%,
   100% {
     transform: translateX(0);
   }
+
   20%,
   60% {
     transform: translateX(-6px);
   }
+
   40%,
   80% {
     transform: translateX(6px);
   }
 }
+
 .animate-shake {
   animation: shake 0.6s ease-in-out;
 }
 
-/* ✅ إطار ذهبي احتياطي */
+@keyframes lumora-float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+
+  50% {
+    transform: translate3d(0, -10px, 0);
+  }
+}
+
+.animate-lumora-float {
+  animation: lumora-float 5s ease-in-out infinite;
+}
+
+@keyframes lumora-pulse-soft {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.85;
+    transform: scale(1.04);
+  }
+}
+
+.animate-lumora-pulse-soft {
+  animation: lumora-pulse-soft 4s ease-in-out infinite;
+}
+
+/* Brand gradient border */
 .border-gradient {
-  border-image: linear-gradient(135deg, #facc15, #fcd34d, #facc15) 1;
+  border-image: linear-gradient(
+      135deg,
+      var(--lumora-cyan),
+      var(--lumora-lime),
+      var(--lumora-green)
+    )
+    1;
 }
 
-/* ✨ ضوء ذهبي متدرّج */
-@keyframes shine {
-  0% {
-    box-shadow: 0 0 10px rgba(250, 204, 21, 0.3),
-      0 0 20px rgba(250, 204, 21, 0.15);
-    border-image: linear-gradient(90deg, #facc15, #fcd34d, #facc15) 1;
-  }
-  50% {
-    box-shadow: 0 0 25px rgba(250, 204, 21, 0.6),
-      0 0 35px rgba(250, 204, 21, 0.3);
-    border-image: linear-gradient(270deg, #fcd34d, #facc15, #fcd34d) 1;
-  }
-  100% {
-    box-shadow: 0 0 10px rgba(250, 204, 21, 0.3),
-      0 0 20px rgba(250, 204, 21, 0.15);
-    border-image: linear-gradient(90deg, #facc15, #fcd34d, #facc15) 1;
-  }
-}
-.animate-shine {
-  animation: shine 4s linear infinite;
-}
+/* ===================== Accessibility ===================== */
 
-/* ✨ وهج حلقي حول الأزرار */
-@keyframes glowRing {
-  0% {
-    box-shadow: 0 0 5px 2px rgba(250, 204, 21, 0.1),
-      inset 0 0 8px rgba(250, 204, 21, 0.2);
-    filter: hue-rotate(0deg);
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
   }
-  50% {
-    box-shadow: 0 0 15px 5px rgba(250, 204, 21, 0.4),
-      inset 0 0 10px rgba(250, 204, 21, 0.3);
-    filter: hue-rotate(90deg);
-  }
-  100% {
-    box-shadow: 0 0 5px 2px rgba(250, 204, 21, 0.1),
-      inset 0 0 8px rgba(250, 204, 21, 0.2);
-    filter: hue-rotate(360deg);
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
-.animate-glowRing {
-  animation: glowRing 4s linear infinite;
-  opacity: 0.8;
-}
-
-/* ✨ ظهور ناعم */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-.animate-fade-in {
-  animation: fadeIn 0.35s ease-out both;
-}
-
-/* ===================== Slider Buttons UX Fix ===================== */
-
-/* يطفي الأصفر فورًا ويكسر hover مؤقتًا بعد الضغط */
-.clicked {
-  background-color: rgba(250, 204, 21, 0.9) !important;
-  color: #000 !important;
-  transition: background-color 0.15s ease-out, color 0.15s ease-out;
-}
-
-/* تعطيل مؤقت للـ hover لجزء من الثانية */
-.no-hover {
-  pointer-events: none !important;
-}
-
-/* نفَس ارتفاع خفيف (إحساس زر فاخر) */
-.btn-elevated {
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35), inset 0 0 0 0 rgba(0, 0, 0, 0);
-}
-
-/* حالة تفعيل قصيرة لإحساس الضغط */
-.btn-active {
-  transform: translateY(0) scale(0.98);
-  transition: transform 120ms ease-out;
-}
-
-/* Ripple للضغط */
-.ripple {
-  position: absolute;
-  width: 12px;
-  height: 12px;
-  transform: translate(-50%, -50%);
-  border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.55);
-  animation: ripple-zoom 420ms ease-out forwards;
-  pointer-events: none;
-}
-@keyframes ripple-zoom {
-  0% {
-    opacity: 0.6;
-    transform: translate(-50%, -50%) scale(0.4);
-  }
-  70% {
-    opacity: 0.25;
-    transform: translate(-50%, -50%) scale(2.6);
-  }
-  100% {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(3.2);
-  }
-}
-
-/* ===================== Swiper Pagination (كبسولة أنيقة) ===================== */
-
-/* كبسولة خلف نقاط الـ Pagination لثبات التباين */
-.bullets-on-gradient {
-  position: absolute;
-  inset-inline: 0;
-  bottom: 10px;
-  display: flex;
-  justify-content: center;
-  z-index: 20;
-  pointer-events: none;
-}
-.bullets-on-gradient::before {
-  content: "";
-  display: inline-block;
-  min-width: 110px;
-  height: 28px;
-  padding: 0 8px;
-  border-radius: 9999px;
-  background: rgba(0, 0, 0, 0.3);
-  -webkit-backdrop-filter: blur(6px);
-  backdrop-filter: blur(6px);
-}
-
-/* ضبْط نقاط Swiper داخل الكبسولة */
-.swiper-pagination-bullets {
-  position: relative !important;
-  inset: auto !important;
-  transform: translateY(-1px);
-  display: inline-flex !important;
-  gap: 6px;
-  padding: 0 8px;
-}
-
-/* شكل النقاط */
-.swiper-pagination-bullet {
-  width: 7px;
-  height: 7px;
-  border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.6);
-  opacity: 1;
-  transition: transform 0.2s ease, background-color 0.2s ease,
-    box-shadow 0.2s ease;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
-}
-.swiper-pagination-bullet-active {
-  background: #fff;
-  transform: scale(1.12);
-}
-
-/* تكبير الهِت-إيريا بدون تكبير المرئي */
-.swiper-pagination-bullet::after {
-  content: "";
-  position: absolute;
-  inset: -8px;
-}
-
-/* ===================== Slide Progress (شريط أنحف ومتدرّج) ===================== */
-@keyframes slideProgress {
-  from {
-    transform: translateX(-100%);
-  }
-  to {
-    transform: translateX(0%);
-  }
-}
-.slide-progress {
-  animation: slideProgress linear forwards;
-}
-
-/* ===================== Skeleton خلف الصور ===================== */
-.skeleton-shimmer {
-  background: linear-gradient(
-      100deg,
-      rgba(255, 255, 255, 0.06) 20%,
-      rgba(255, 255, 255, 0.16) 28%,
-      rgba(255, 255, 255, 0.06) 36%
-    ),
-    linear-gradient(#0b1020, #0b1020);
-  background-size: 180% 100%, 100% 100%;
-  animation: shimmer 1.6s infinite linear;
-}
-@media (prefers-color-scheme: light) {
-  .skeleton-shimmer {
-    background: linear-gradient(
-        100deg,
-        rgba(0, 0, 0, 0.06) 20%,
-        rgba(0, 0, 0, 0.12) 28%,
-        rgba(0, 0, 0, 0.06) 36%
-      ),
-      linear-gradient(#f3f4f6, #f3f4f6);
-    background-size: 180% 100%, 100% 100%;
-  }
-}
-@keyframes shimmer {
-  0% {
-    background-position: 200% 0, 0 0;
-  }
-  100% {
-    background-position: -20% 0, 0 0;
-  }
-}
-
-/* ===================== ملاحظات ===================== */
-/* 1) تأكد أن هذا الملف يُحمَّل بعد استيراد "swiper/css" ليأخذ أولوية. */
-/* 2) أزلنا أي تعريف سابق لـ .swiper .bullets-on-gradient حتى لا يتعارض مع الكبسولة الجديدة. */
-/* 3) لا يوجد أي تعديل على منطق السلايدر — فقط تنسيق/جماليات. */

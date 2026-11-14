@@ -1,60 +1,39 @@
 // src/components/services/ServiceCard.jsx
-import { useEffect, useRef, useState } from "react";
+
+import React, { useEffect, useRef, useState } from "react";
+
 import {
   ArrowLeft,
   ArrowRight,
-  Car,
+  BedDouble,
   Check,
+  Clock3,
   Layers,
-  MessageCircle,
+  Plus,
   Sofa,
   Sparkles,
 } from "lucide-react";
 
 import { useLanguage } from "../../context/LanguageContext";
 
-const ICONS = {
+const iconMap = {
   couch: Sofa,
-  car: Car,
+  bed: BedDouble,
   "layer-group": Layers,
   sparkles: Sparkles,
 };
 
-function getCopy(lang) {
+const getText = (lang, values) => {
   if (lang === "he") {
-    return {
-      available: "השירות זמין",
-      popular: "מבוקש",
-      request: "הזמנת השירות",
-      details: "פרטים",
-      requestHint: "בחירת פרטים והמשך ב-WhatsApp",
-      imageAltPrefix: "תמונה של",
-      ariaOpen: "פתיחת פרטי השירות",
-    };
+    return values.he;
   }
 
   if (lang === "en") {
-    return {
-      available: "Service available",
-      popular: "Popular",
-      request: "Request service",
-      details: "Details",
-      requestHint: "Choose the details, then continue through WhatsApp",
-      imageAltPrefix: "Image of",
-      ariaOpen: "Open service details",
-    };
+    return values.en;
   }
 
-  return {
-    available: "الخدمة متاحة",
-    popular: "الأكثر طلبًا",
-    request: "اطلب الخدمة",
-    details: "التفاصيل",
-    requestHint: "حدد التفاصيل ثم تابع عبر واتساب",
-    imageAltPrefix: "صورة خدمة",
-    ariaOpen: "فتح تفاصيل الخدمة",
-  };
-}
+  return values.ar;
+};
 
 export default function ServiceCard({
   id,
@@ -64,46 +43,83 @@ export default function ServiceCard({
   image,
   priority = "secondary",
   onClick,
+  onBook,
 }) {
   const { t, lang, isRTL } = useLanguage();
 
-  const cardRef = useRef(null);
   const [visible, setVisible] = useState(false);
+  const cardRef = useRef(null);
 
-  const copy = getCopy(lang);
-
-  const Icon = ICONS[icon] || Sparkles;
+  const Icon = iconMap[icon] || Sparkles;
   const DirectionArrow = isRTL ? ArrowLeft : ArrowRight;
+
+  const isUnavailable = id === "glass";
+  const isPrimary = priority === "primary";
 
   const title = t?.[titleKey] || titleKey;
   const description = t?.[descriptionKey] || descriptionKey;
 
-  const isPrimary = priority === "primary";
+  const text = {
+    addToOrder: getText(lang, {
+      ar: "أضف للطلب",
+      en: "Add to order",
+      he: "הוספה להזמנה",
+    }),
+
+    available: getText(lang, {
+      ar: "متاح للطلب",
+      en: "Available",
+      he: "זמין להזמנה",
+    }),
+
+    unavailable: getText(lang, {
+      ar: "غير متاح حاليًا",
+      en: "Currently unavailable",
+      he: "לא זמין כרגע",
+    }),
+
+    unavailableDescription: getText(lang, {
+      ar: "هذه الخدمة متوقفة مؤقتًا ولا يمكن إضافتها إلى الطلب.",
+      en: "This service is temporarily paused and cannot be added to the order.",
+      he: "השירות מושהה זמנית ולא ניתן להוסיף אותו להזמנה.",
+    }),
+
+    flexibleOrder: getText(lang, {
+      ar: "يمكن دمجها مع خدمات أخرى",
+      en: "Can be combined with other services",
+      he: "ניתן לשלב עם שירותים נוספים",
+    }),
+
+    primary: getText(lang, {
+      ar: "خدمة أساسية",
+      en: "Main service",
+      he: "שירות מרכזי",
+    }),
+  };
 
   useEffect(() => {
     const element = cardRef.current;
 
-    if (!element) return undefined;
+    if (!element) {
+      return undefined;
+    }
 
-    const reduceMotion = window.matchMedia?.(
-      "(prefers-reduced-motion: reduce)",
-    )?.matches;
-
-    if (reduceMotion || !("IntersectionObserver" in window)) {
+    if (!("IntersectionObserver" in window)) {
       setVisible(true);
       return undefined;
     }
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (!entry.isIntersecting) return;
+        if (!entry.isIntersecting) {
+          return;
+        }
 
         setVisible(true);
         observer.unobserve(entry.target);
       },
       {
         threshold: 0.12,
-        rootMargin: "0px 0px -30px 0px",
       },
     );
 
@@ -114,213 +130,330 @@ export default function ServiceCard({
     };
   }, []);
 
-  const openDetails = () => {
+  const openService = () => {
+    if (isUnavailable) {
+      return;
+    }
+
     onClick?.();
+  };
+
+  const handleKeyboard = (event) => {
+    if (isUnavailable) {
+      return;
+    }
+
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      openService();
+    }
+  };
+
+  const handleAddToOrder = (event) => {
+    event.stopPropagation();
+
+    if (isUnavailable) {
+      return;
+    }
+
+    onBook?.();
   };
 
   return (
     <article
       ref={cardRef}
-      id={`service-${id}`}
-      data-service-id={id}
-      data-service-priority={priority}
-      data-service-available="true"
-      className={[
-        "group relative flex h-full scroll-mt-[calc(var(--app-topbar-h,64px)+18px)]",
-        "flex-col overflow-hidden rounded-[28px] border bg-white",
-        "text-start transition-[transform,opacity,box-shadow,border-color]",
-        "duration-500 ease-out",
-        visible ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0",
-        isPrimary
-          ? "border-blue-100 shadow-[0_16px_44px_rgba(15,23,42,0.10)]"
-          : "border-slate-200 shadow-[0_12px_34px_rgba(15,23,42,0.07)]",
-        "hover:-translate-y-1 hover:border-blue-200",
-        "hover:shadow-[0_22px_55px_rgba(15,23,42,0.13)]",
-      ].join(" ")}
+      id={id}
       dir={isRTL ? "rtl" : "ltr"}
+      role={isUnavailable ? undefined : "button"}
+      tabIndex={isUnavailable ? -1 : 0}
+      aria-disabled={isUnavailable}
+      aria-label={isUnavailable ? `${title} - ${text.unavailable}` : title}
+      onClick={openService}
+      onKeyDown={handleKeyboard}
+      className={[
+        "group relative flex h-full min-h-[390px]",
+        "flex-col overflow-hidden rounded-[26px]",
+        "border bg-white",
+        "transition-all duration-500 ease-out",
+
+        visible ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0",
+
+        isUnavailable
+          ? [
+              "cursor-not-allowed",
+              "border-slate-200",
+              "shadow-[0_12px_34px_rgba(8,12,29,0.06)]",
+            ].join(" ")
+          : [
+              "cursor-pointer",
+              "border-[rgba(17,21,47,0.10)]",
+              "shadow-[0_14px_38px_rgba(8,12,29,0.08)]",
+              "hover:-translate-y-1.5",
+              "hover:border-[rgba(16,148,192,0.28)]",
+              "hover:shadow-[0_24px_58px_rgba(8,12,29,0.14)]",
+              "focus:outline-none",
+              "focus:ring-4",
+              "focus:ring-[rgba(174,221,57,0.18)]",
+            ].join(" "),
+      ].join(" ")}
     >
-      {/* صورة الخدمة */}
-      <button
-        type="button"
-        onClick={openDetails}
+      {/* Brand top line */}
+      <div
+        aria-hidden="true"
+        className={[
+          "absolute inset-x-0 top-0 z-20 h-1",
+          isUnavailable
+            ? "bg-slate-300"
+            : [
+                "bg-gradient-to-r",
+                "from-[var(--lumora-cyan)]",
+                "via-[var(--lumora-lime)]",
+                "to-[var(--lumora-cyan-light)]",
+              ].join(" "),
+        ].join(" ")}
+      />
+
+      {/* Image */}
+      <div
         className="
-          relative block aspect-[16/10] w-full
-          overflow-hidden bg-slate-100 text-start
-          focus-visible:outline-none
-          focus-visible:ring-4 focus-visible:ring-inset
-          focus-visible:ring-blue-300
+          relative
+          h-[185px]
+          shrink-0
+          overflow-hidden
+          bg-[var(--lumora-navy-950)]
         "
-        aria-label={`${copy.ariaOpen}: ${title}`}
       >
         <img
           src={image}
-          alt={`${copy.imageAltPrefix} ${title}`}
-          draggable={false}
+          alt={title}
           loading="lazy"
           decoding="async"
-          className="
-            h-full w-full object-cover
-            transition-transform duration-500 ease-out
-            group-hover:scale-[1.035]
-          "
-          sizes="
-            (max-width: 640px) 100vw,
-            (max-width: 1280px) 50vw,
-            25vw
-          "
+          draggable={false}
+          className={[
+            "h-full w-full object-cover",
+            "transition-transform duration-700 ease-out",
+
+            isUnavailable
+              ? "scale-[1.02] grayscale-[35%] opacity-65"
+              : "group-hover:scale-[1.055]",
+          ].join(" ")}
         />
 
         <div
-          className="
-            pointer-events-none absolute inset-0
-            bg-gradient-to-t
-            from-slate-950/65
-            via-slate-950/5
-            to-transparent
-          "
           aria-hidden="true"
+          className={[
+            "absolute inset-0",
+            "bg-gradient-to-t",
+            "from-[rgba(8,12,29,0.88)]",
+            "via-[rgba(8,12,29,0.12)]",
+            "to-transparent",
+          ].join(" ")}
         />
 
-        {/* حالة الخدمة */}
+        {/* Icon */}
         <div
-          className="
-            absolute start-3 top-3
-            inline-flex items-center gap-1.5
-            rounded-full border border-white/25
-            bg-slate-950/55 px-3 py-1.5
-            text-[11px] font-extrabold text-white
-            shadow-sm backdrop-blur-md
-          "
-        >
-          <span
-            className="
-              flex h-4 w-4 items-center justify-center
-              rounded-full bg-emerald-500
-            "
-            aria-hidden="true"
-          >
-            <Check size={11} strokeWidth={3} />
-          </span>
+          className={[
+            "absolute bottom-4 start-4",
+            "flex h-12 w-12 items-center",
+            "justify-center rounded-2xl",
+            "border backdrop-blur-md",
 
-          <span>{copy.available}</span>
+            isUnavailable
+              ? ["border-white/15", "bg-slate-700/75", "text-white/70"].join(
+                  " ",
+                )
+              : [
+                  "border-[rgba(174,221,57,0.30)]",
+                  "bg-[rgba(8,12,29,0.78)]",
+                  "text-[var(--lumora-lime-light)]",
+                  "shadow-[0_10px_24px_rgba(0,0,0,0.18)]",
+                ].join(" "),
+          ].join(" ")}
+        >
+          <Icon aria-hidden="true" className="h-5 w-5" strokeWidth={2.2} />
         </div>
 
-        {isPrimary ? (
-          <div
-            className="
-              absolute end-3 top-3
-              rounded-full border border-blue-200/40
-              bg-blue-600/90 px-3 py-1.5
-              text-[11px] font-extrabold text-white
-              shadow-sm backdrop-blur-md
-            "
-          >
-            {copy.popular}
-          </div>
-        ) : null}
-
-        {/* أيقونة الخدمة */}
+        {/* Status badge */}
         <div
-          className="
-            absolute bottom-3 start-3
-            flex h-11 w-11 items-center justify-center
-            rounded-2xl border border-white/20
-            bg-white/90 text-slate-900
-            shadow-lg backdrop-blur-md
-          "
-          aria-hidden="true"
-        >
-          <Icon size={22} strokeWidth={2.3} />
-        </div>
-      </button>
+          className={[
+            "absolute end-3 top-3",
+            "inline-flex min-h-8 items-center",
+            "gap-1.5 rounded-full border",
+            "px-3 py-1",
+            "text-[11px] font-black",
+            "backdrop-blur-md",
 
-      {/* محتوى الكرت */}
+            isUnavailable
+              ? [
+                  "border-white/15",
+                  "bg-[rgba(15,23,42,0.82)]",
+                  "text-white",
+                ].join(" ")
+              : [
+                  "border-[rgba(174,221,57,0.30)]",
+                  "bg-[rgba(8,12,29,0.80)]",
+                  "text-[var(--lumora-lime-light)]",
+                ].join(" "),
+          ].join(" ")}
+        >
+          {isUnavailable ? (
+            <Clock3 aria-hidden="true" className="h-3.5 w-3.5" />
+          ) : (
+            <Check aria-hidden="true" className="h-3.5 w-3.5" />
+          )}
+
+          <span>{isUnavailable ? text.unavailable : text.available}</span>
+        </div>
+      </div>
+
+      {/* Content */}
       <div className="flex flex-1 flex-col p-5 sm:p-6">
-        <div className="flex-1">
-          <h3
-            className="
-              text-xl font-black leading-tight
-              tracking-tight text-slate-950
-            "
-          >
-            {title}
-          </h3>
+        <div className="flex items-start gap-3">
+          <div className="min-w-0 flex-1">
+            <h3
+              className={[
+                "text-xl font-black leading-tight",
+                "tracking-tight",
 
-          <p
-            className="
-              mt-2 min-h-[48px]
-              text-sm font-medium leading-6
-              text-slate-600
-            "
-          >
-            {description}
-          </p>
+                isUnavailable
+                  ? "text-slate-600"
+                  : "text-[var(--lumora-navy-900)]",
+              ].join(" ")}
+            >
+              {title}
+            </h3>
 
-          <div
-            className="
-              mt-4 flex items-start gap-2
-              rounded-2xl bg-slate-50
-              px-3.5 py-3
-              text-xs font-bold leading-5
-              text-slate-600
-            "
-          >
-            <MessageCircle
-              size={17}
-              className="mt-0.5 shrink-0 text-blue-600"
-              aria-hidden="true"
-            />
-
-            <span>{copy.requestHint}</span>
+            {isPrimary && !isUnavailable && (
+              <span
+                className="
+                  mt-2
+                  inline-flex
+                  rounded-full
+                  bg-[rgba(16,148,192,0.07)]
+                  px-2.5
+                  py-1
+                  text-[10px]
+                  font-black
+                  text-[var(--lumora-cyan)]
+                "
+              >
+                {text.primary}
+              </span>
+            )}
           </div>
         </div>
 
-        {/* الأزرار */}
-        <div className="mt-5 grid grid-cols-[1fr_auto] gap-2.5">
-          <button
-            type="button"
-            onClick={openDetails}
+        <p
+          className={[
+            "mt-3 text-sm font-medium leading-6",
+            isUnavailable ? "text-slate-500" : "text-slate-600",
+          ].join(" ")}
+        >
+          {description}
+        </p>
+
+        {isUnavailable && (
+          <div
             className="
-              inline-flex min-h-12 items-center
-              justify-center gap-2 rounded-2xl
-              bg-blue-600 px-4 py-3
-              text-sm font-extrabold text-white
-              shadow-[0_10px_25px_rgba(37,99,235,0.25)]
-              transition
-              hover:bg-blue-700
-              active:scale-[0.98]
-              focus-visible:outline-none
-              focus-visible:ring-4
-              focus-visible:ring-blue-200
+              mt-4
+              rounded-xl
+              border
+              border-slate-200
+              bg-slate-50
+              px-3.5
+              py-3
+              text-xs
+              font-bold
+              leading-5
+              text-slate-500
             "
           >
-            <span>{copy.request}</span>
+            {text.unavailableDescription}
+          </div>
+        )}
 
-            <DirectionArrow size={17} strokeWidth={2.5} aria-hidden="true" />
-          </button>
+        {!isUnavailable && (
+          <div
+            className="
+              mt-4
+              flex
+              items-center
+              gap-2
+              text-xs
+              font-bold
+              text-[var(--lumora-cyan)]
+            "
+          >
+            <Sparkles aria-hidden="true" className="h-3.5 w-3.5" />
 
+            <span>{text.flexibleOrder}</span>
+          </div>
+        )}
+
+        <div className="mt-auto pt-5">
           <button
             type="button"
-            onClick={openDetails}
-            className="
-              inline-flex min-h-12 items-center
-              justify-center rounded-2xl
-              border border-slate-200 bg-white
-              px-4 py-3
-              text-sm font-extrabold text-slate-700
-              transition
-              hover:border-slate-300 hover:bg-slate-50
-              active:scale-[0.98]
-              focus-visible:outline-none
-              focus-visible:ring-4
-              focus-visible:ring-slate-200
-            "
-            aria-label={`${copy.details}: ${title}`}
+            disabled={isUnavailable}
+            onClick={handleAddToOrder}
+            className={[
+              "flex h-12 w-full items-center",
+              "justify-center gap-2 rounded-xl",
+              "px-4 text-sm font-black",
+              "transition-all duration-200",
+
+              isUnavailable
+                ? [
+                    "cursor-not-allowed",
+                    "border border-slate-200",
+                    "bg-slate-100",
+                    "text-slate-400",
+                  ].join(" ")
+                : [
+                    "bg-[var(--lumora-lime)]",
+                    "text-[var(--lumora-navy-950)]",
+                    "shadow-[0_10px_24px_rgba(79,168,37,0.18)]",
+                    "hover:brightness-105",
+                    "active:scale-[0.985]",
+                  ].join(" "),
+            ].join(" ")}
           >
-            {copy.details}
+            {isUnavailable ? (
+              <Clock3 aria-hidden="true" className="h-4 w-4" />
+            ) : (
+              <Plus aria-hidden="true" className="h-4 w-4" />
+            )}
+
+            <span>{isUnavailable ? text.unavailable : text.addToOrder}</span>
+
+            {!isUnavailable && (
+              <DirectionArrow
+                aria-hidden="true"
+                className="
+                  h-4
+                  w-4
+                  transition-transform
+                  group-hover:-translate-x-0.5
+                  ltr:group-hover:translate-x-0.5
+                "
+              />
+            )}
           </button>
         </div>
       </div>
+
+      {/* Disabled overlay */}
+      {isUnavailable && (
+        <div
+          aria-hidden="true"
+          className="
+            pointer-events-none
+            absolute
+            inset-0
+            rounded-[26px]
+            bg-white/[0.06]
+          "
+        />
+      )}
     </article>
   );
 }

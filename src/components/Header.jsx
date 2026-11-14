@@ -1,140 +1,38 @@
 // src/components/Header.jsx
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+
 import {
-  CarFront,
+  BedDouble,
+  Check,
   ChevronDown,
   Layers as CarpetIcon,
   Menu,
+  MessageCircle,
   Sofa as SofaIcon,
 } from "lucide-react";
 
 import { useLanguage } from "../context/LanguageContext";
-import DesktopNav from "../header/DesktopNav";
 import SidebarMenu from "../header/SidebarMenu";
+import QuickContactSheet from "./quick-contact/QuickContactSheet";
+import { CONTACTS } from "./quick-contact/contacts";
 
 const LANGUAGES = [
   {
     code: "ar",
+    short: "AR",
     label: "العربية",
-    shortLabel: "AR",
-  },
-  {
-    code: "he",
-    label: "עברית",
-    shortLabel: "HE",
   },
   {
     code: "en",
+    short: "EN",
     label: "English",
-    shortLabel: "EN",
+  },
+  {
+    code: "he",
+    short: "HE",
+    label: "עברית",
   },
 ];
-
-const MAIN_SECTION_IDS = ["home", "services", "beforeafter", "faq", "contact"];
-
-function getServiceElement(id) {
-  if (!id) return null;
-
-  return (
-    document.querySelector(`[data-service-id="${id}"]`) ||
-    document.getElementById(`service-${id}`) ||
-    document.getElementById(id)
-  );
-}
-
-function LanguageMenu({
-  lang,
-  setLang,
-  isRTL,
-  open,
-  setOpen,
-  containerRef,
-  label,
-  mobile = false,
-}) {
-  const activeLanguage =
-    LANGUAGES.find((item) => item.code === lang) || LANGUAGES[0];
-
-  return (
-    <div ref={containerRef} className="relative">
-      <button
-        type="button"
-        onClick={() => setOpen((current) => !current)}
-        className={[
-          "inline-flex items-center justify-center gap-1.5",
-          "border border-slate-200 bg-white text-slate-800",
-          "font-bold transition",
-          "hover:border-slate-300 hover:bg-slate-50",
-          "focus-visible:outline-none focus-visible:ring-2",
-          "focus-visible:ring-blue-500/30",
-          mobile
-            ? "h-10 min-w-16 rounded-xl px-2.5 text-xs"
-            : "h-11 rounded-2xl px-4 text-sm",
-        ].join(" ")}
-        aria-label={label}
-        aria-haspopup="menu"
-        aria-expanded={open}
-      >
-        <span className={mobile ? "uppercase" : ""}>
-          {mobile ? activeLanguage.shortLabel : label}
-        </span>
-
-        <ChevronDown
-          className={[
-            "h-4 w-4 transition-transform duration-200",
-            open ? "rotate-180" : "",
-          ].join(" ")}
-          aria-hidden="true"
-        />
-      </button>
-
-      {open ? (
-        <div
-          role="menu"
-          className={[
-            "absolute top-full z-[10020] mt-2 min-w-[170px]",
-            "rounded-2xl border border-slate-200 bg-white p-2",
-            "shadow-[0_18px_50px_rgba(15,23,42,0.16)]",
-            isRTL ? "left-0" : "right-0",
-          ].join(" ")}
-        >
-          {LANGUAGES.map((item) => {
-            const selected = lang === item.code;
-
-            return (
-              <button
-                key={item.code}
-                type="button"
-                role="menuitem"
-                onClick={() => {
-                  setLang(item.code);
-                  setOpen(false);
-                }}
-                className={[
-                  "flex h-11 w-full items-center justify-between",
-                  "rounded-xl px-3 text-sm font-bold transition",
-                  isRTL ? "text-right" : "text-left",
-                  selected
-                    ? "bg-blue-50 text-blue-700"
-                    : "text-slate-700 hover:bg-slate-50",
-                ].join(" ")}
-              >
-                <span>{item.label}</span>
-
-                {selected ? (
-                  <span
-                    className="h-2 w-2 rounded-full bg-blue-600"
-                    aria-hidden="true"
-                  />
-                ) : null}
-              </button>
-            );
-          })}
-        </div>
-      ) : null}
-    </div>
-  );
-}
 
 export default function Header({ scrollToSection }) {
   const { lang, setLang } = useLanguage();
@@ -142,380 +40,765 @@ export default function Header({ scrollToSection }) {
   const isRTL = lang === "ar" || lang === "he";
 
   const [menuOpen, setMenuOpen] = useState(false);
-  const [langOpen, setLangOpen] = useState(false);
+  const [languageOpen, setLanguageOpen] = useState(false);
+  const [servicesOpen, setServicesOpen] = useState(false);
+  const [contactOpen, setContactOpen] = useState(false);
   const [activeId, setActiveId] = useState("home");
-  const [compact, setCompact] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
-  const fixedHeaderRef = useRef(null);
+  const headerRef = useRef(null);
   const desktopLanguageRef = useRef(null);
   const mobileLanguageRef = useRef(null);
-  const scrollFrameRef = useRef(null);
+  const servicesRef = useRef(null);
 
-  const labels = useMemo(() => {
+  const text = useMemo(() => {
     if (lang === "he") {
       return {
-        brand: "Lumora",
-        home: "ראשי",
+        brand: "LUMORA",
+        brandSub: "CLEANING",
+        results: "תוצאות",
         services: "שירותים",
-        sofa: "ניקוי ספות",
-        carpet: "ניקוי שטיחים",
-        carSeats: "ניקוי פנים הרכב",
-        gallery: "גלריה",
         faq: "שאלות נפוצות",
-        contact: "צור קשר",
-        cta: "הזמנת שירות",
-        ctaShort: "הזמנה",
+        allServices: "כל השירותים",
+        sofa: "ניקוי ספות",
+        mattress: "ניקוי מזרנים",
+        carpet: "ניקוי שטיחים",
+        request: "הזמנת שירות",
+        contact: "יצירת קשר",
         language: "שפה",
-        navigationHint: "בחר שירות או עבור ישירות לחלק הרצוי.",
-        skip: "דלג לשירותים",
-        homeAria: "חזרה לראש העמוד",
-        menuAria: "פתיחת התפריט",
-        primaryNavigation: "ניווט ראשי",
+        openMenu: "פתיחת תפריט",
+        home: "חזרה לראש הדף",
+        skip: "דלג לתוכן",
+        menuHint: "ניווט מהיר וברור באתר.",
       };
     }
 
     if (lang === "en") {
       return {
-        brand: "Lumora",
-        home: "Home",
+        brand: "LUMORA",
+        brandSub: "CLEANING",
+        results: "Results",
         services: "Services",
-        sofa: "Sofa cleaning",
-        carpet: "Carpet cleaning",
-        carSeats: "Car interior cleaning",
-        gallery: "Gallery",
         faq: "FAQ",
+        allServices: "All services",
+        sofa: "Sofa cleaning",
+        mattress: "Mattress cleaning",
+        carpet: "Carpet cleaning",
+        request: "Request service",
         contact: "Contact us",
-        cta: "Request service",
-        ctaShort: "Request",
         language: "Language",
-        navigationHint:
-          "Choose a service or go directly to the section you need.",
-        skip: "Skip to services",
-        homeAria: "Return to the top",
-        menuAria: "Open navigation menu",
-        primaryNavigation: "Primary navigation",
+        openMenu: "Open menu",
+        home: "Back to top",
+        skip: "Skip to content",
+        menuHint: "Fast and clear website navigation.",
       };
     }
 
     return {
-      brand: "Lumora",
-      home: "الرئيسية",
-      services: "خدماتنا",
-      sofa: "تنظيف الكنب",
-      carpet: "تنظيف السجاد",
-      carSeats: "تنظيف فرش السيارات",
-      gallery: "معرض النتائج",
+      brand: "LUMORA",
+      brandSub: "CLEANING",
+      results: "النتائج",
+      services: "الخدمات",
       faq: "الأسئلة الشائعة",
+      allServices: "كل الخدمات",
+      sofa: "تنظيف الكنب",
+      mattress: "تنظيف فرشات النوم",
+      carpet: "تنظيف السجاد",
+      request: "جهّز طلبك",
       contact: "تواصل معنا",
-      cta: "اطلب الخدمة",
-      ctaShort: "اطلب",
       language: "اللغة",
-      navigationHint: "اختر الخدمة أو انتقل مباشرة للقسم الذي تحتاجه.",
-      skip: "تجاوز إلى الخدمات",
-      homeAria: "العودة إلى أعلى الصفحة",
-      menuAria: "فتح قائمة التنقل",
-      primaryNavigation: "التنقل الرئيسي",
+      openMenu: "فتح القائمة",
+      home: "العودة للأعلى",
+      skip: "تجاوز إلى المحتوى",
+      menuHint: "تنقّل سريع وواضح داخل الموقع.",
     };
   }, [lang]);
 
   const navItems = useMemo(
     () => [
       {
+        id: "beforeafter",
+        label: text.results,
+      },
+      {
         id: "services",
-        label: labels.services,
+        label: text.services,
         subItems: [
           {
             id: "sofa",
-            label: labels.sofa,
+            label: text.sofa,
             icon: SofaIcon,
           },
           {
-            id: "carpet",
-            label: labels.carpet,
-            icon: CarpetIcon,
+            id: "mattress",
+            label: text.mattress,
+            icon: BedDouble,
           },
           {
-            id: "carSeats",
-            label: labels.carSeats,
-            icon: CarFront,
+            id: "carpet",
+            label: text.carpet,
+            icon: CarpetIcon,
           },
         ],
       },
       {
-        id: "beforeafter",
-        label: labels.gallery,
-      },
-      {
         id: "faq",
-        label: labels.faq,
-      },
-      {
-        id: "contact",
-        label: labels.contact,
+        label: text.faq,
       },
     ],
-    [labels],
+    [text],
   );
 
-  const fallbackScroll = useCallback((id) => {
-    if (!id) return false;
+  const currentLanguage = useMemo(
+    () => LANGUAGES.find((language) => language.code === lang) || LANGUAGES[0],
+    [lang],
+  );
 
-    let element = null;
+  const contactItems = useMemo(
+    () =>
+      (CONTACTS || []).map((contact) => ({
+        id: contact.id,
 
-    if (["sofa", "carpet", "carSeats", "glass"].includes(id)) {
-      element = getServiceElement(id);
-    } else {
-      element = document.getElementById(id);
-    }
+        name:
+          lang === "en"
+            ? contact.nameEn
+            : lang === "he"
+              ? contact.nameHe
+              : contact.nameAr,
 
-    if (!element) return false;
+        phoneDisplay: contact.phone,
+        phoneRaw: contact.tel,
+        whatsappRaw: contact.whatsapp,
 
-    const headerHeight = fixedHeaderRef.current?.offsetHeight || 64;
+        note:
+          lang === "en"
+            ? contact.noteEn
+            : lang === "he"
+              ? contact.noteHe
+              : contact.noteAr,
+      })),
+    [lang],
+  );
 
-    const top =
-      element.getBoundingClientRect().top + window.scrollY - headerHeight - 12;
-
-    window.scrollTo({
-      top: Math.max(0, top),
-      behavior: "smooth",
-    });
-
-    return true;
+  const closeDropdowns = useCallback(() => {
+    setLanguageOpen(false);
+    setServicesOpen(false);
   }, []);
 
-  const handleNavigation = useCallback(
+  const scrollToId = useCallback(
     (id) => {
-      if (!id) return;
+      if (id === "home") {
+        window.scrollTo({
+          top: 0,
+          behavior: "smooth",
+        });
 
-      setActiveId(id);
-      setMenuOpen(false);
-      setLangOpen(false);
-
-      if (typeof scrollToSection === "function") {
-        scrollToSection(id);
         return;
       }
 
-      fallbackScroll(id);
+      const serviceIds = ["sofa", "mattress", "carpet"];
+
+      let element = document.getElementById(id);
+
+      if (!element && serviceIds.includes(id)) {
+        element = document.getElementById("services");
+      }
+
+      if (element) {
+        const headerHeight = headerRef.current?.offsetHeight || 68;
+
+        const top =
+          element.getBoundingClientRect().top +
+          window.scrollY -
+          headerHeight -
+          10;
+
+        window.scrollTo({
+          top,
+          behavior: "smooth",
+        });
+
+        return;
+      }
+
+      scrollToSection?.(id);
     },
-    [fallbackScroll, scrollToSection],
+    [scrollToSection],
   );
 
-  const updateActiveSection = useCallback(() => {
-    const headerHeight = fixedHeaderRef.current?.offsetHeight || 64;
-    const readingLine = window.scrollY + headerHeight + 120;
+  const handleNavigation = useCallback(
+    (id) => {
+      setActiveId(id);
+      setMenuOpen(false);
+      closeDropdowns();
+      scrollToId(id);
+    },
+    [closeDropdowns, scrollToId],
+  );
 
-    let currentId = "home";
-
-    MAIN_SECTION_IDS.forEach((id) => {
-      const element = document.getElementById(id);
-
-      if (!element) return;
-
-      const top = element.getBoundingClientRect().top + window.scrollY;
-
-      if (top <= readingLine) {
-        currentId = id;
-      }
-    });
-
-    setActiveId((previous) => (previous === currentId ? previous : currentId));
-
-    setCompact(window.scrollY > 10);
-  }, []);
+  const openContactSheet = useCallback(() => {
+    setMenuOpen(false);
+    closeDropdowns();
+    setContactOpen(true);
+  }, [closeDropdowns]);
 
   useEffect(() => {
-    const handleScrollOrResize = () => {
-      if (scrollFrameRef.current) return;
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 10);
 
-      scrollFrameRef.current = window.requestAnimationFrame(() => {
-        scrollFrameRef.current = null;
-        updateActiveSection();
-      });
+      if (window.scrollY < 120) {
+        setActiveId("home");
+      }
     };
 
-    updateActiveSection();
+    handleScroll();
 
-    window.addEventListener("scroll", handleScrollOrResize, {
+    window.addEventListener("scroll", handleScroll, {
       passive: true,
     });
 
-    window.addEventListener("resize", handleScrollOrResize);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
+
+  useEffect(() => {
+    const sectionIds = ["beforeafter", "services", "faq"];
+
+    const sections = sectionIds
+      .map((id) => document.getElementById(id))
+      .filter(Boolean);
+
+    if (sections.length === 0 || !("IntersectionObserver" in window)) {
+      return undefined;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visibleEntry = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort(
+            (first, second) =>
+              second.intersectionRatio - first.intersectionRatio,
+          )[0];
+
+        if (visibleEntry?.target?.id) {
+          setActiveId(visibleEntry.target.id);
+        }
+      },
+      {
+        rootMargin: "-25% 0px -60% 0px",
+        threshold: [0.05, 0.2, 0.4],
+      },
+    );
+
+    sections.forEach((section) => {
+      observer.observe(section);
+    });
 
     return () => {
-      window.removeEventListener("scroll", handleScrollOrResize);
-      window.removeEventListener("resize", handleScrollOrResize);
-
-      if (scrollFrameRef.current) {
-        window.cancelAnimationFrame(scrollFrameRef.current);
-      }
+      observer.disconnect();
     };
-  }, [updateActiveSection]);
+  }, []);
 
   useEffect(() => {
     const handleOutsideClick = (event) => {
-      const clickedInsideDesktop = desktopLanguageRef.current?.contains(
+      const insideDesktopLanguage = desktopLanguageRef.current?.contains(
         event.target,
       );
 
-      const clickedInsideMobile = mobileLanguageRef.current?.contains(
+      const insideMobileLanguage = mobileLanguageRef.current?.contains(
         event.target,
       );
 
-      if (!clickedInsideDesktop && !clickedInsideMobile) {
-        setLangOpen(false);
+      const insideServices = servicesRef.current?.contains(event.target);
+
+      if (!insideDesktopLanguage && !insideMobileLanguage) {
+        setLanguageOpen(false);
+      }
+
+      if (!insideServices) {
+        setServicesOpen(false);
       }
     };
 
     const handleEscape = (event) => {
       if (event.key === "Escape") {
-        setLangOpen(false);
-        setMenuOpen(false);
+        closeDropdowns();
       }
     };
 
     document.addEventListener("mousedown", handleOutsideClick);
+
     window.addEventListener("keydown", handleEscape);
 
     return () => {
       document.removeEventListener("mousedown", handleOutsideClick);
+
       window.removeEventListener("keydown", handleEscape);
     };
-  }, []);
+  }, [closeDropdowns]);
+
+  const servicesActive = ["services", "sofa", "mattress", "carpet"].includes(
+    activeId,
+  );
+
+  const navButtonClasses = (active) =>
+    [
+      "relative inline-flex h-10 items-center justify-center gap-1.5",
+      "rounded-xl px-3.5 text-sm font-extrabold",
+      "transition-colors duration-200",
+
+      active
+        ? "bg-white/10 text-[var(--lumora-lime-light)]"
+        : "text-white/75 hover:bg-white/[0.06] hover:text-white",
+    ].join(" ");
 
   return (
     <>
       <a
-        href="#services"
-        onClick={(event) => {
-          event.preventDefault();
-          handleNavigation("services");
-        }}
+        href="#beforeafter"
         className="
           sr-only
           focus:not-sr-only
-          focus:fixed focus:start-3 focus:top-3 focus:z-[10050]
-          focus:rounded-xl focus:bg-white focus:px-4 focus:py-2
-          focus:font-bold focus:text-slate-900 focus:shadow-lg
+          focus:fixed
+          focus:start-3
+          focus:top-3
+          focus:z-[99999]
+          focus:rounded-xl
+          focus:bg-white
+          focus:px-4
+          focus:py-2
+          focus:text-slate-900
+          focus:shadow-xl
         "
       >
-        {labels.skip}
+        {text.skip}
       </a>
 
-      <div
-        ref={fixedHeaderRef}
-        className={[
-          "fixed inset-x-0 top-0 z-[9998] w-full",
-          "transition-[background-color,box-shadow,border-color]",
-          "duration-300",
-          compact
-            ? "border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur-xl"
-            : "border-b border-transparent bg-white/90 backdrop-blur-lg",
-        ].join(" ")}
+      <header
+        ref={headerRef}
         dir={isRTL ? "rtl" : "ltr"}
+        className={[
+          "sticky top-0 z-[9998] w-full border-b",
+          "transition-colors duration-200",
+
+          scrolled
+            ? [
+                "border-white/10",
+                "bg-[rgba(8,12,29,0.97)]",
+                "shadow-[0_10px_30px_rgba(3,7,24,0.22)]",
+                "backdrop-blur-xl",
+              ].join(" ")
+            : [
+                "border-white/[0.08]",
+                "bg-[rgba(8,12,29,0.94)]",
+                "backdrop-blur-lg",
+              ].join(" "),
+        ].join(" ")}
       >
         <div className="mx-auto max-w-7xl px-3 sm:px-6">
-          <div className="flex h-16 items-center justify-between gap-2 sm:h-[74px] sm:gap-4">
+          <div className="flex h-[66px] items-center justify-between gap-2 sm:h-[72px]">
+            {/* Logo */}
             <button
               type="button"
+              dir="ltr"
               onClick={() => handleNavigation("home")}
-              className={[
-                "flex shrink-0 items-center gap-2.5 rounded-2xl",
-                "select-none py-1 transition",
-                "hover:opacity-80",
-                "focus-visible:outline-none focus-visible:ring-2",
-                "focus-visible:ring-blue-500/30",
-                isRTL ? "flex-row-reverse" : "",
-              ].join(" ")}
-              aria-label={labels.homeAria}
+              aria-label={text.home}
+              className="
+                flex
+                min-w-0
+                shrink-0
+                items-center
+                gap-2.5
+                rounded-xl
+              "
             >
               <span
                 className="
-                  flex h-10 w-10 items-center justify-center
-                  rounded-2xl border border-blue-100 bg-blue-50
-                  text-xl shadow-sm
+                  flex
+                  h-11
+                  w-11
+                  shrink-0
+                  items-center
+                  justify-center
+                  overflow-hidden
+                  rounded-full
+                  border
+                  border-[rgba(174,221,57,0.32)]
+                  bg-[var(--lumora-navy-900)]
+                  sm:h-12
+                  sm:w-12
                 "
-                aria-hidden="true"
               >
-                🧼
+                <img
+                  src="/lumora-icon.png"
+                  alt=""
+                  aria-hidden="true"
+                  draggable={false}
+                  className="h-full w-full object-cover"
+                />
               </span>
 
-              <span className="hidden text-start min-[370px]:block">
-                <span className="block text-lg font-extrabold leading-none tracking-tight text-blue-600">
-                  {labels.brand}
+              <span className="hidden sm:block">
+                <span
+                  className="
+                    block
+                    text-[16px]
+                    font-black
+                    leading-none
+                    tracking-[0.08em]
+                    text-white
+                  "
+                >
+                  {text.brand}
                 </span>
 
-                <span className="mt-1 hidden text-[10px] font-semibold text-slate-500 sm:block">
-                  {labels.home}
+                <span
+                  className="
+                    mt-1
+                    block
+                    text-[8px]
+                    font-black
+                    leading-none
+                    tracking-[0.3em]
+                    text-[var(--lumora-lime)]
+                  "
+                >
+                  {text.brandSub}
                 </span>
               </span>
             </button>
 
-            <div aria-label={labels.primaryNavigation}>
-              <DesktopNav
-                navItems={navItems}
-                activeId={activeId}
-                scrollToSection={handleNavigation}
-              />
-            </div>
+            {/* Desktop navigation */}
+            <nav
+              aria-label="Primary navigation"
+              className="
+                hidden
+                items-center
+                gap-1
+                lg:flex
+              "
+            >
+              <button
+                type="button"
+                onClick={() => handleNavigation("beforeafter")}
+                className={navButtonClasses(activeId === "beforeafter")}
+              >
+                {text.results}
+              </button>
 
-            <div className="hidden shrink-0 items-center gap-2 md:flex">
-              <LanguageMenu
-                lang={lang}
-                setLang={setLang}
-                isRTL={isRTL}
-                open={langOpen}
-                setOpen={setLangOpen}
-                containerRef={desktopLanguageRef}
-                label={labels.language}
-              />
+              <div ref={servicesRef} className="relative">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setServicesOpen((current) => !current);
+
+                    setLanguageOpen(false);
+                  }}
+                  className={navButtonClasses(servicesActive)}
+                  aria-expanded={servicesOpen}
+                  aria-haspopup="menu"
+                >
+                  <span>{text.services}</span>
+
+                  <ChevronDown
+                    aria-hidden="true"
+                    className={[
+                      "h-4 w-4 transition-transform duration-200",
+
+                      servicesOpen ? "rotate-180" : "",
+                    ].join(" ")}
+                  />
+                </button>
+
+                {servicesOpen && (
+                  <div
+                    role="menu"
+                    className={[
+                      "absolute top-full mt-2 w-[260px]",
+                      "rounded-2xl border border-white/10",
+                      "bg-[rgba(8,12,29,0.98)] p-2",
+                      "shadow-[0_20px_55px_rgba(0,0,0,0.38)]",
+                      "backdrop-blur-xl",
+
+                      isRTL ? "right-0" : "left-0",
+                    ].join(" ")}
+                  >
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => handleNavigation("services")}
+                      className="
+                        mb-1
+                        flex
+                        w-full
+                        items-center
+                        justify-between
+                        rounded-xl
+                        px-3
+                        py-2.5
+                        text-start
+                        text-sm
+                        font-extrabold
+                        text-[var(--lumora-lime-light)]
+                        transition
+                        hover:bg-white/[0.06]
+                      "
+                    >
+                      <span>{text.allServices}</span>
+
+                      {activeId === "services" && (
+                        <Check aria-hidden="true" className="h-4 w-4" />
+                      )}
+                    </button>
+
+                    <div className="my-1 h-px bg-white/[0.08]" />
+
+                    {navItems
+                      .find((item) => item.id === "services")
+                      ?.subItems?.map((service) => {
+                        const Icon = service.icon;
+
+                        const active = activeId === service.id;
+
+                        return (
+                          <button
+                            key={service.id}
+                            type="button"
+                            role="menuitem"
+                            onClick={() => handleNavigation(service.id)}
+                            className={[
+                              "flex w-full items-center gap-3",
+                              "rounded-xl px-3 py-2.5",
+                              "text-start text-sm font-bold",
+                              "transition",
+
+                              active
+                                ? [
+                                    "bg-[rgba(174,221,57,0.10)]",
+                                    "text-[var(--lumora-lime-light)]",
+                                  ].join(" ")
+                                : [
+                                    "text-white/72",
+                                    "hover:bg-white/[0.06]",
+                                    "hover:text-white",
+                                  ].join(" "),
+                            ].join(" ")}
+                          >
+                            <span
+                              className="
+                                  flex
+                                  h-8
+                                  w-8
+                                  shrink-0
+                                  items-center
+                                  justify-center
+                                  rounded-lg
+                                  bg-[rgba(16,148,192,0.10)]
+                                  text-[var(--lumora-cyan-light)]
+                                "
+                            >
+                              <Icon aria-hidden="true" className="h-4 w-4" />
+                            </span>
+
+                            <span className="flex-1">{service.label}</span>
+
+                            {active && (
+                              <Check aria-hidden="true" className="h-4 w-4" />
+                            )}
+                          </button>
+                        );
+                      })}
+                  </div>
+                )}
+              </div>
 
               <button
                 type="button"
-                onClick={() => handleNavigation("services")}
+                onClick={() => handleNavigation("faq")}
+                className={navButtonClasses(activeId === "faq")}
+              >
+                {text.faq}
+              </button>
+            </nav>
+
+            {/* Desktop actions */}
+            <div className="hidden items-center gap-2 lg:flex">
+              <div ref={desktopLanguageRef} className="relative">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLanguageOpen((current) => !current);
+
+                    setServicesOpen(false);
+                  }}
+                  className="
+                    inline-flex
+                    h-10
+                    items-center
+                    gap-1.5
+                    rounded-xl
+                    border
+                    border-white/10
+                    bg-white/[0.04]
+                    px-3
+                    text-xs
+                    font-extrabold
+                    text-white/80
+                    transition
+                    hover:bg-white/[0.07]
+                    hover:text-white
+                  "
+                  aria-expanded={languageOpen}
+                >
+                  <span>{currentLanguage.short}</span>
+
+                  <ChevronDown
+                    aria-hidden="true"
+                    className={[
+                      "h-3.5 w-3.5 transition-transform",
+
+                      languageOpen ? "rotate-180" : "",
+                    ].join(" ")}
+                  />
+                </button>
+
+                {languageOpen && (
+                  <LanguageMenu
+                    lang={lang}
+                    isRTL={isRTL}
+                    onSelect={(languageCode) => {
+                      setLang(languageCode);
+
+                      setLanguageOpen(false);
+                    }}
+                  />
+                )}
+              </div>
+
+              <button
+                type="button"
+                onClick={openContactSheet}
                 className="
-                  h-11 rounded-2xl bg-slate-900 px-5
-                  text-sm font-extrabold text-white
-                  shadow-sm transition
-                  hover:bg-slate-800 active:scale-[0.98]
-                  focus-visible:outline-none focus-visible:ring-2
-                  focus-visible:ring-slate-500/40
+                  inline-flex
+                  h-10
+                  items-center
+                  justify-center
+                  gap-2
+                  rounded-xl
+                  bg-[var(--lumora-lime)]
+                  px-4
+                  text-sm
+                  font-black
+                  text-[var(--lumora-navy-950)]
+                  transition
+                  hover:brightness-105
+                  active:scale-[0.98]
                 "
               >
-                {labels.cta}
+                <MessageCircle aria-hidden="true" className="h-4 w-4" />
+
+                <span>{text.request}</span>
               </button>
             </div>
 
-            <div className="flex shrink-0 items-center gap-2 md:hidden">
-              <LanguageMenu
-                lang={lang}
-                setLang={setLang}
-                isRTL={isRTL}
-                open={langOpen}
-                setOpen={setLangOpen}
-                containerRef={mobileLanguageRef}
-                label={labels.language}
-                mobile
-              />
+            {/* Mobile actions */}
+            <div className="flex items-center gap-1.5 lg:hidden">
+              <div ref={mobileLanguageRef} className="relative">
+                <button
+                  type="button"
+                  onClick={() => setLanguageOpen((current) => !current)}
+                  aria-label={text.language}
+                  aria-expanded={languageOpen}
+                  className="
+                    flex
+                    h-10
+                    min-w-10
+                    items-center
+                    justify-center
+                    gap-1
+                    rounded-xl
+                    border
+                    border-white/10
+                    bg-white/[0.05]
+                    px-2
+                    text-[11px]
+                    font-black
+                    text-white
+                  "
+                >
+                  <span>{currentLanguage.short}</span>
+
+                  <ChevronDown
+                    aria-hidden="true"
+                    className={[
+                      "h-3 w-3 transition-transform",
+
+                      languageOpen ? "rotate-180" : "",
+                    ].join(" ")}
+                  />
+                </button>
+
+                {languageOpen && (
+                  <LanguageMenu
+                    lang={lang}
+                    isRTL={isRTL}
+                    onSelect={(languageCode) => {
+                      setLang(languageCode);
+
+                      setLanguageOpen(false);
+                    }}
+                  />
+                )}
+              </div>
+
+              <button
+                type="button"
+                onClick={openContactSheet}
+                aria-label={text.contact}
+                className="
+                  flex
+                  h-10
+                  w-10
+                  items-center
+                  justify-center
+                  rounded-xl
+                  border
+                  border-[rgba(174,221,57,0.26)]
+                  bg-[rgba(174,221,57,0.08)]
+                  text-[var(--lumora-lime-light)]
+                  active:scale-95
+                "
+              >
+                <MessageCircle
+                  aria-hidden="true"
+                  className="h-[18px] w-[18px]"
+                />
+              </button>
 
               <button
                 type="button"
                 onClick={() => {
-                  setLangOpen(false);
+                  closeDropdowns();
                   setMenuOpen(true);
                 }}
+                aria-label={text.openMenu}
                 className="
-                  flex h-10 w-10 items-center justify-center
-                  rounded-xl border border-slate-200 bg-white
-                  text-slate-800 transition
-                  hover:bg-slate-50 active:scale-95
-                  focus-visible:outline-none focus-visible:ring-2
-                  focus-visible:ring-blue-500/30
+                  flex
+                  h-10
+                  w-10
+                  items-center
+                  justify-center
+                  rounded-xl
+                  border
+                  border-white/10
+                  bg-white/[0.05]
+                  text-white
+                  active:scale-95
                 "
-                aria-label={labels.menuAria}
-                aria-expanded={menuOpen}
               >
-                <Menu className="h-5 w-5" aria-hidden="true" />
+                <Menu aria-hidden="true" className="h-5 w-5" />
               </button>
             </div>
           </div>
@@ -527,16 +810,105 @@ export default function Header({ scrollToSection }) {
           navItems={navItems}
           scrollToSection={handleNavigation}
           activeId={activeId}
-          hintText={labels.navigationHint}
-          labels={labels}
+          hintText={text.menuHint}
+          labels={text}
         />
-      </div>
+      </header>
 
-      {/*
-        الهيدر ثابت، لذلك هذا العنصر يحجز مكانه داخل الصفحة
-        ويمنع الهيرو من الاختباء خلفه.
-      */}
-      <div className="h-16 w-full shrink-0 sm:h-[74px]" aria-hidden="true" />
+      <QuickContactSheet
+        open={contactOpen}
+        onClose={() => setContactOpen(false)}
+        contacts={contactItems}
+        lang={lang}
+      />
+
+      <a
+        href="https://wa.me/972543075619?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%D8%8C%20%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%A7%D9%84%D8%A7%D8%B3%D8%AA%D9%81%D8%B3%D8%A7%D8%B1%20%D8%B9%D9%86%20%D8%AE%D8%AF%D9%85%D8%A7%D8%AA%20%D8%A7%D9%84%D8%AA%D9%86%D8%B8%D9%8A%D9%81."
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={
+          lang === "en" ? "WhatsApp" : lang === "he" ? "וואטסאפ" : "واتساب"
+        }
+        className={[
+          "fixed bottom-4 z-[9997]",
+          "flex h-14 w-14 items-center justify-center",
+          "rounded-full border border-white/25",
+          "bg-[#25D366] text-white",
+          "shadow-[0_12px_30px_rgba(0,0,0,0.24)]",
+          "transition-transform duration-200",
+          "hover:-translate-y-1",
+          "active:scale-95",
+
+          isRTL ? "left-4" : "right-4",
+        ].join(" ")}
+      >
+        <MessageCircle aria-hidden="true" className="h-6 w-6" />
+      </a>
     </>
+  );
+}
+
+function LanguageMenu({ lang, isRTL, onSelect }) {
+  return (
+    <div
+      className={[
+        "absolute top-full z-[9999] mt-2",
+        "w-[170px] rounded-2xl",
+        "border border-white/10",
+        "bg-[rgba(8,12,29,0.98)]",
+        "p-2 shadow-[0_18px_50px_rgba(0,0,0,0.38)]",
+        "backdrop-blur-xl",
+
+        isRTL ? "left-0" : "right-0",
+      ].join(" ")}
+    >
+      {LANGUAGES.map((language) => {
+        const active = lang === language.code;
+
+        return (
+          <button
+            key={language.code}
+            type="button"
+            onClick={() => onSelect(language.code)}
+            className={[
+              "flex h-10 w-full items-center gap-2.5",
+              "rounded-xl px-3 text-start",
+              "text-sm font-bold transition",
+
+              active
+                ? [
+                    "bg-[rgba(174,221,57,0.10)]",
+                    "text-[var(--lumora-lime-light)]",
+                  ].join(" ")
+                : [
+                    "text-white/72",
+                    "hover:bg-white/[0.06]",
+                    "hover:text-white",
+                  ].join(" "),
+            ].join(" ")}
+          >
+            <span
+              className="
+                flex
+                h-6
+                min-w-8
+                items-center
+                justify-center
+                rounded-md
+                bg-white/[0.05]
+                text-[10px]
+                font-black
+              "
+            >
+              {language.short}
+            </span>
+
+            <span className="flex-1">{language.label}</span>
+
+            {active && <Check aria-hidden="true" className="h-4 w-4" />}
+          </button>
+        );
+      })}
+    </div>
   );
 }

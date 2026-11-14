@@ -1,3 +1,5 @@
+// src/translations/he.js
+
 export default {
   __lang: "he",
 
@@ -11,53 +13,70 @@ export default {
   },
 
   // Hero
-  heroHighlight1: "ניקיון מקצועי",
-  heroHighlight2: "לספות, מזרנים, שטיחים, רכבים וזכוכית",
+  heroStatic: "ניקוי מקצועי של",
+  heroHighlight1: "ספות",
+  heroHighlight2: "מזרנים",
+  heroHighlight3: "שטיחים",
+
   heroSubtitle:
-    "שירותי ניקיון מקצועיים בבית הלקוח לספות, מזרנים, שטיחים, ריפודי רכב וזכוכית, באזורי הצפון והמרכז.",
+    "ניקוי מקצועי של ספות, מזרנים ושטיחים בבית הלקוח. ניתן לשלב מספר שירותים ופריטים שונים בהזמנה אחת ברורה. השירות זמין באזורי הצפון והמרכז.",
+
   heroButton: "הזמנת שירות",
-  heroAlt: "שירות ניקיון בבית הלקוח",
+  heroButtonPrimary: "בניית ההזמנה",
+  heroButtonSecondary: "צפייה בשירותים",
+  heroAlt: "שירות ניקיון מקצועי בבית הלקוח",
+
+  whatsappLink: "https://wa.me/972543075619",
+  callLink: "tel:+972543075619",
+  showCallButton: false,
+  callNow: "התקשרו",
+
+  // Trust pills
+  heroPill1: "שירות בבית הלקוח",
+  heroPill2: "צפון ומרכז",
+  heroPill3: "הזמנה אחת לכל השירותים",
+
+  // Scroll hint
+  scrollExplore: "גלו עוד",
 
   // Services
   servicesTitle1: "שירותי",
   servicesTitle2: "ניקיון",
+
   servicesDescription:
-    "בחרו את השירות המתאים, מלאו את הפרטים הבסיסיים והמשיכו את הבקשה ב-WhatsApp.",
+    "בחרו שירות אחד או שלבו ספות, שטיחים ומזרנים באותה הזמנה. ניתן להזין את הפרטים של כל פריט בנפרד.",
 
   sofaTitle: "ניקוי ספות",
   sofaDescription:
-    "ניקוי עמוק של ספות בביתכם, כולל גם ניקוי מזרנים, באמצעות ציוד וחומרים המתאימים לסוג הבד.",
+    "ניקוי עמוק של ספות בביתכם. ההזמנה מחושבת לפי מספר המושבים הכולל שתרצו לנקות.",
 
-  carTitle: "שטיפת רכבים",
-  carDescription: "ניקוי הרכב וטיפול בפרטים הפנימיים והחיצוניים במיקום הלקוח.",
+  mattressTitle: "ניקוי מזרנים",
+  mattressDescription:
+    "הוסיפו כל מזרן לפי גודלו: יחיד, מיטה וחצי או זוגי, ובחרו ניקוי צד אחד או שני צדדים.",
 
   carpetTitle: "ניקוי שטיחים",
   carpetDescription:
-    "ניקוי עמוק של השטיחים בבית הלקוח, ללא העברה או לקיחת השטיחים למקום אחר.",
-
-  carSeatsTitle: "ניקוי ריפודי רכב",
-  carSeatsDescription:
-    "ניקוי מושבים וריפודים פנימיים של הרכב במיקום הלקוח באמצעות ציוד מתאים.",
+    "הוסיפו כל שטיח בנפרד עם האורך והרוחב שלו, או סמנו שהמידות אינן ידועות.",
 
   glassTitle: "ניקוי זכוכית",
   glassDescription:
-    "ניקוי יסודי של חלונות וחזיתות זכוכית בבתים ובמשרדים במיקום הלקוח.",
+    "ניקוי חלונות וחזיתות זכוכית בבתים ובמשרדים. השירות אינו זמין כרגע להזמנה.",
 
-  // ======================
   // Before / After
-  // ======================
   beforeAlt: "לפני",
   afterAlt: "אחרי",
   beforeAfterTitle: "לפני / אחרי",
-  beforeAfterSubtitle: "השוואה ברורה של התוצאה לפני ואחרי הניקוי.",
-  beforeAfterAria: "לפני ואחרי",
 
-  // ======================
+  beforeAfterSubtitle: "השוואה ברורה בין המצב לפני הניקוי לבין התוצאה אחריו.",
+
+  beforeAfterAria: "לפני ואחרי",
+  enterFullscreen: "מסך מלא",
+  exitFullscreen: "יציאה ממסך מלא",
+
   // Contact – Header
-  // נשמר לשימוש עתידי
-  // ======================
   contactTitleSpan: "צרו",
   contactTitle: "קשר",
+
   contactSubtitle: "יש לכם שאלה או הערה? שלחו לנו הודעה ונחזור אליכם.",
 
   // Contact – Labels
@@ -69,48 +88,54 @@ export default {
   // Contact – Placeholders
   contactPhName: "שם מלא",
   contactPhPhone: "מספר טלפון",
+
   contactPhMessageInquiry: "כתבו את השאלה או הבקשה שלכם…",
-  contactPhMessageBooking: "כתבו את השירות והפרטים המתאימים…",
-  contactPhMessageComplaint: "כתבו את התלונה…",
+
+  contactPhMessageBooking: "כתבו את השירותים והפרטים המבוקשים…",
+
+  contactPhMessageComplaint: "כתבו את התלונה שלכם…",
+
   contactPhMessageOther: "כתבו את ההודעה שלכם…",
 
   // Contact – Buttons
   contactSend: "שליחה",
   contactSending: "שולח...",
   contactSent: "נשלח!",
-  contactNeedMore: "השלימו את השדות",
+  contactNeedMore: "יש להשלים את השדות",
 
   // Contact – Assist
-  contactAssistName: "כתבו את שמכם המלא כפי שיופיע בתקשורת.",
-  contactAssistPhone: "מומלץ להזין מספר שזמין ב-WhatsApp לצורך מענה נוח.",
-  contactAssistMsg: "כתבו את הבקשה במשפט ברור וקצר.",
+  contactAssistName: "הזינו את שמכם המלא כפי שיופיע ביצירת הקשר.",
+
+  contactAssistPhone: "מומלץ להזין מספר הזמין ב-WhatsApp לצורך מענה מהיר.",
+
+  contactAssistMsg: "כתבו את השירותים המבוקשים ואת הפרטים החשובים.",
 
   // Contact – Errors
-  contactErrSubject: "בחרו נושא",
-  contactErrName: "כתבו את שמכם",
-  contactErrPhoneEmpty: "הזינו מספר טלפון",
+  contactErrSubject: "יש לבחור נושא",
+  contactErrName: "יש להזין שם",
+  contactErrPhoneEmpty: "יש להזין מספר טלפון",
   contactErrPhoneInvalid: "מספר הטלפון אינו תקין",
-  contactErrMessage: "כתבו הודעה",
+  contactErrMessage: "יש להזין הודעה",
 
   // Contact – Preferences
   contactMoreOpts: "אפשרויות נוספות",
-  contactMoreOptsHide: "הסתרת האפשרויות",
-  contactPrefTitle: "דרך התקשרות מועדפת",
+  contactMoreOptsHide: "הסתרת אפשרויות",
+  contactPrefTitle: "דרך יצירת קשר מועדפת",
   contactPrefPhone: "שיחת טלפון",
   contactPrefWA: "WhatsApp",
   contactPrefEither: "אין העדפה",
-  contactPrefSummary: "העדפה:",
+  contactPrefSummary: "מועדף:",
   contactClearPrefA11y: "הסרת ההעדפה",
 
   // Contact – WhatsApp
   contactWAButton: "WhatsApp",
-  contactWAPreviewTitle: "תצוגה מקדימה של הודעת WhatsApp",
+  contactWAPreviewTitle: "תצוגה מקדימה של WhatsApp",
   contactWAOpenNow: "פתיחת WhatsApp עכשיו",
   contactWACopy: "העתקת הטקסט",
   contactWAPreviewClose: "סגירת התצוגה",
 
   // Contact – Saved
-  contactSavedHint: "הפרטים נשמרו במכשיר.",
+  contactSavedHint: "הפרטים שלכם נשמרו במכשיר.",
 
   // Common
   commonClose: "סגירה",
@@ -119,11 +144,14 @@ export default {
     brand: "Lumora",
     menu_title: "תפריט ראשי",
     services: "שירותים",
-    gallery: "גלריה",
+    gallery: "גלריית תוצאות",
     contact: "צור קשר",
-    carpet_clean: "ניקוי שטיחים",
+
     sofa_clean: "ניקוי ספות",
-    car_clean: "ניקוי ריפודי רכב",
+    mattress_clean: "ניקוי מזרנים",
+    carpet_clean: "ניקוי שטיחים",
+    glass_clean: "ניקוי זכוכית",
+
     choose_language: "בחירת שפה",
     ar: "ערבית",
     en: "אנגלית",
@@ -133,74 +161,123 @@ export default {
   contact: {
     titleSpan: "צרו",
     title: "קשר",
+
     subtitle: "יש לכם שאלה או הערה? שלחו לנו הודעה ונחזור אליכם.",
   },
 
-  heroStatic: "ניקיון מקצועי של",
-
-  // Rotating words
-  heroHighlight1: "ספות ומזרנים",
-  heroHighlight2: "ריפודי רכב",
-  heroHighlight3: "שטיחים",
-
-  // Description
-  heroSubtitle:
-    "אנחנו מגיעים אליכם ומעניקים שירותי ניקיון מקצועיים בבית או במיקום שלכם באזורי הצפון והמרכז. המחיר והמועד נקבעים לפי סוג השירות ופרטי הבקשה.",
-
-  // Hero buttons
-  heroButtonPrimary: "הזמנת שירות",
-  heroButtonSecondary: "לצפייה בשירותים",
-  whatsappLink: "https://wa.me/972543075619",
-  callLink: "tel:+972543075619",
-  showCallButton: false,
-  callNow: "התקשרות",
-
-  // Trust pills
-  heroPill1: "השירות במיקום שלכם",
-  heroPill2: "צפון ומרכז",
-  heroPill3: "ציוד וחומרים מתאימים",
-
-  // Scroll hint
-  scrollExplore: "גלו עוד",
-
   common: {
     close: "סגירה",
-    opening: "פותח…",
+    opening: "נפתח…",
   },
 
   services: {
     section: {
       badge: "שירותי ניקיון בבית הלקוח",
       title: "בחרו את",
-      titleAccent: "השירות המתאים",
+      titleAccent: "השירותים המתאימים",
+
       subtitle:
-        "בחרו את השירות המתאים, מלאו את הפרטים הבסיסיים והמשיכו את הבקשה ב-WhatsApp. השירותים שלנו זמינים באזורי הצפון והמרכז.",
+        "הוסיפו כל מספר של שירותי ספות, שטיחים ומזרנים. הזינו את הפרטים של כל פריט ושלחו את ההזמנה המלאה דרך WhatsApp.",
     },
 
     actions: {
-      details: "פרטים נוספים",
-      book: "הזמנת שירות",
+      details: "צפייה בשירות",
+      book: "הוספה להזמנה",
     },
 
     badges: {
       popular: "הכי מבוקש",
-      fast: "הזמנה מהירה",
+      fast: "הוספה מהירה",
     },
 
     modal: {
       includesTitle: "מה כולל השירות?",
+
       moreDetails:
-        "מלאו את היישוב ואת פרטי השירות הבסיסיים והמשיכו את הבקשה ב-WhatsApp.",
-      footerHint: "המשיכו את הבקשה בקלות דרך WhatsApp",
+        "הוסיפו את השירותים והפרטים המבוקשים ולאחר מכן המשיכו דרך WhatsApp.",
+
+      footerHint: "ניתן לשלב מספר שירותים באותה הזמנה",
+
       quickQuestion: "שאלה על השירות",
-      bookNow: "הזמנת שירות",
+      bookNow: "הוספה להזמנה",
+
+      sofaSeatsLabel: "מספר מושבי הספה",
+
+      sofaSeatsHint: "הזינו את מספר המושבים הכולל שתרצו לנקות.",
+
+      mattressCountLabel: "מספר המזרנים",
+      mattressSizeLabel: "גודל המזרן",
+      mattressSidesLabel: "צדדי ניקוי",
+
+      carpetLengthLabel: "אורך במטרים",
+      carpetWidthLabel: "רוחב במטרים",
+    },
+
+    order: {
+      title: "בניית ההזמנה",
+
+      subtitle: "הוסיפו כל שירות ופריט עם הפרטים שלו ושלחו הודעת WhatsApp אחת.",
+
+      addSofa: "הוספת ספה",
+      addCarpet: "הוספת שטיח",
+      addMattress: "הוספת מזרן",
+
+      viewOrder: "צפייה בהזמנה",
+      clearOrder: "ניקוי ההזמנה",
+      sendOrder: "שליחת ההזמנה דרך WhatsApp",
+
+      location: "יישוב",
+      locationPlaceholder: "הקלידו את שם היישוב",
+
+      notes: "הערות נוספות",
+
+      notesPlaceholder: "לדוגמה: מדרגות, קומה גבוהה או כתמים מסוימים…",
+
+      sofaSection: "ספות",
+      carpetSection: "שטיחים",
+      mattressSection: "מזרנים",
+
+      sofaSeats: "מספר מושבים",
+
+      carpetLength: "אורך במטרים",
+      carpetWidth: "רוחב במטרים",
+      carpetUnknown: "אינני יודע/ת את המידות",
+
+      mattressCount: "מספר מזרנים",
+      mattressSize: "גודל",
+      mattressSides: "צדדי ניקוי",
+
+      single: "יחיד",
+      singleAndHalf: "מיטה וחצי",
+      double: "זוגי",
+
+      oneSide: "צד אחד",
+      twoSides: "שני צדדים",
+
+      addAnotherSofa: "הוספת ספה נוספת",
+      addAnotherCarpet: "הוספת שטיח נוסף",
+
+      addAnotherMattress: "הוספת שילוב מזרנים נוסף",
+
+      removeItem: "הסרת הפריט",
     },
 
     whatsapp: {
       questionIntro: "שלום, אני מתעניין/ת בשירות {title}.",
+
       questionOutro: "אפשר לקבל פרטים נוספים?",
-      bookIntro: "שלום, אני רוצה להזמין שירות {title} במיקום שלי.",
-      bookOutro: "אשלח את הפרטים הדרושים דרך WhatsApp.",
+
+      bookIntro: "שלום, אני רוצה להזמין שירותי ניקיון במיקום שלי.",
+
+      bookOutro: "אשלח את התמונות הדרושות דרך WhatsApp.",
+
+      sofaSeats: "מספר מושבי הספה: {count}",
+
+      mattressDetails: "כמות: {count} | גודל: {size} | ניקוי: {sides}",
+
+      carpetMeasurements: "אורך: {length} מ׳ × רוחב: {width} מ׳",
+
+      carpetUnknown: "המידות אינן ידועות",
     },
   },
 };

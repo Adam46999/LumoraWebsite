@@ -1,6 +1,8 @@
+// src/components/services/servicesData.js
+
 import sofaImg from "../../assets/hero1.jpg";
+import mattressImg from "../../assets/hero2.jpg";
 import carpetImg from "../../assets/hero3.jpg";
-import seatsImg from "../../assets/hero5.jpg";
 import glassImg from "../../assets/glasscleaning.jpg";
 
 export const services = [
@@ -13,6 +15,17 @@ export const services = [
     image: sofaImg,
     priority: "primary",
   },
+
+  {
+    id: "mattress",
+    titleKey: "mattressTitle",
+    descriptionKey: "mattressDescription",
+    detailsKey: "mattressDetails",
+    icon: "bed",
+    image: mattressImg,
+    priority: "primary",
+  },
+
   {
     id: "carpet",
     titleKey: "carpetTitle",
@@ -22,15 +35,7 @@ export const services = [
     image: carpetImg,
     priority: "primary",
   },
-  {
-    id: "carSeats",
-    titleKey: "carSeatsTitle",
-    descriptionKey: "carSeatsDescription",
-    detailsKey: "carSeatsDetails",
-    icon: "car",
-    image: seatsImg,
-    priority: "secondary",
-  },
+
   {
     id: "glass",
     titleKey: "glassTitle",

@@ -1,504 +1,586 @@
 // src/header/SidebarMenu.jsx
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+
 import { createPortal } from "react-dom";
-import { ChevronDown, Home, Sparkles, X } from "lucide-react";
+
+import {
+  Check,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Globe2,
+  Sparkles,
+  X,
+} from "lucide-react";
 
 import { useLanguage } from "../context/LanguageContext";
 
-function getCopy(lang) {
-  if (lang === "he") {
-    return {
-      title: "תפריט",
-      close: "סגירת התפריט",
-      home: "ראשי",
-      allServices: "כל השירותים",
-      request: "הזמנת שירות",
-      current: "החלק הנוכחי",
-      navigation: "ניווט באתר",
-      defaultHint: "בחרו את החלק הרצוי או עברו ישירות לשירות מסוים.",
-    };
-  }
-
-  if (lang === "en") {
-    return {
-      title: "Menu",
-      close: "Close menu",
-      home: "Home",
-      allServices: "All services",
-      request: "Request service",
-      current: "Current section",
-      navigation: "Site navigation",
-      defaultHint: "Choose a section or go directly to a specific service.",
-    };
-  }
-
-  return {
-    title: "القائمة",
-    close: "إغلاق القائمة",
-    home: "الرئيسية",
-    allServices: "كل الخدمات",
-    request: "اطلب خدمة",
-    current: "القسم الحالي",
-    navigation: "التنقل في الموقع",
-    defaultHint: "اختار القسم المطلوب أو انتقل مباشرة لخدمة محددة.",
-  };
-}
+const LANGUAGE_OPTIONS = [
+  {
+    code: "ar",
+    short: "AR",
+    label: "العربية",
+  },
+  {
+    code: "en",
+    short: "EN",
+    label: "English",
+  },
+  {
+    code: "he",
+    short: "HE",
+    label: "עברית",
+  },
+];
 
 export default function SidebarMenu({
   menuOpen,
   setMenuOpen,
   navItems = [],
   scrollToSection,
-  activeId = "home",
+  activeId,
   hintText,
-  labels = {},
+  labels,
 }) {
-  const { lang, isRTL } = useLanguage();
+  const { lang, setLang } = useLanguage();
 
-  const copy = useMemo(() => getCopy(lang), [lang]);
-
-  const [mounted, setMounted] = useState(menuOpen);
-  const [visible, setVisible] = useState(false);
-  const [openParentId, setOpenParentId] = useState(null);
+  const isRTL = lang === "ar" || lang === "he";
+  const direction = isRTL ? "rtl" : "ltr";
 
   const panelRef = useRef(null);
-  const closeButtonRef = useRef(null);
-  const previousFocusRef = useRef(null);
+  const [openParentId, setOpenParentId] = useState(null);
 
-  const close = useCallback(() => {
-    setMenuOpen?.(false);
-  }, [setMenuOpen]);
-
-  const navigate = useCallback(
-    (id) => {
-      if (!id) return;
-
-      scrollToSection?.(id);
-      close();
-    },
-    [close, scrollToSection],
+  const ArrowIcon = useMemo(
+    () => (isRTL ? ChevronLeft : ChevronRight),
+    [isRTL],
   );
 
-  /*
-    فتح وإغلاق القائمة بحركة ناعمة.
-  */
-  useEffect(() => {
-    let frame;
-    let timer;
-
-    if (menuOpen) {
-      setMounted(true);
-
-      frame = window.requestAnimationFrame(() => {
-        setVisible(true);
-      });
-    } else {
-      setVisible(false);
-
-      timer = window.setTimeout(() => {
-        setMounted(false);
-        setOpenParentId(null);
-      }, 220);
+  const text = useMemo(() => {
+    if (lang === "he") {
+      return {
+        menuTitle: "תפריט ראשי",
+        menuSubtitle: "ניווט מהיר באתר",
+        languageTitle: "בחירת שפה",
+        allServices: "כל השירותים",
+        close: "סגירת התפריט",
+        active: "פעיל",
+        brandSub: "CLEANING",
+      };
     }
 
-    return () => {
-      if (frame) {
-        window.cancelAnimationFrame(frame);
+    if (lang === "en") {
+      return {
+        menuTitle: "Main menu",
+        menuSubtitle: "Quick website navigation",
+        languageTitle: "Choose language",
+        allServices: "All services",
+        close: "Close menu",
+        active: "Active",
+        brandSub: "CLEANING",
+      };
+    }
+
+    return {
+      menuTitle: "القائمة الرئيسية",
+      menuSubtitle: "تنقّل سريع داخل الموقع",
+      languageTitle: "اختر اللغة",
+      allServices: "كل الخدمات",
+      close: "إغلاق القائمة",
+      active: "محدد",
+      brandSub: "CLEANING",
+    };
+  }, [lang]);
+
+  const closeMenu = useCallback(() => {
+    setMenuOpen(false);
+    setOpenParentId(null);
+  }, [setMenuOpen]);
+
+  const goToSection = useCallback(
+    (id) => {
+      if (!id) {
+        return;
       }
 
-      if (timer) {
-        window.clearTimeout(timer);
+      try {
+        scrollToSection?.(id);
+      } finally {
+        closeMenu();
+      }
+    },
+    [closeMenu, scrollToSection],
+  );
+
+  useEffect(() => {
+    if (!menuOpen) {
+      setOpenParentId(null);
+      return undefined;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const handleEscape = (event) => {
+      if (event.key === "Escape") {
+        closeMenu();
       }
     };
-  }, [menuOpen]);
 
-  /*
-    إذا كان المستخدم داخل خدمة محددة،
-    نفتح مجموعة الخدمات تلقائيًا عند فتح القائمة.
-  */
+    window.addEventListener("keydown", handleEscape);
+
+    const focusTimer = window.setTimeout(() => {
+      panelRef.current?.focus();
+    }, 30);
+
+    return () => {
+      window.clearTimeout(focusTimer);
+      window.removeEventListener("keydown", handleEscape);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [closeMenu, menuOpen]);
+
   useEffect(() => {
-    if (!menuOpen) return;
+    if (!menuOpen) {
+      return;
+    }
 
     const activeParent = navItems.find((item) =>
       item?.subItems?.some((subItem) => subItem.id === activeId),
     );
 
-    if (activeParent) {
+    if (activeParent?.id) {
       setOpenParentId(activeParent.id);
     }
   }, [activeId, menuOpen, navItems]);
 
-  /*
-    منع تحريك الصفحة الخلفية، دعم Escape،
-    وحصر تنقل الكيبورد داخل القائمة.
-  */
-  useEffect(() => {
-    if (!menuOpen) return undefined;
-
-    previousFocusRef.current = document.activeElement;
-
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
-    const focusTimer = window.setTimeout(() => {
-      closeButtonRef.current?.focus();
-    }, 100);
-
-    const handleKeyDown = (event) => {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        close();
-        return;
-      }
-
-      if (event.key !== "Tab" || !panelRef.current) return;
-
-      const focusableElements = panelRef.current.querySelectorAll(
-        [
-          "button:not([disabled])",
-          "a[href]",
-          "input:not([disabled])",
-          "select:not([disabled])",
-          "textarea:not([disabled])",
-          '[tabindex]:not([tabindex="-1"])',
-        ].join(","),
-      );
-
-      if (!focusableElements.length) return;
-
-      const firstElement = focusableElements[0];
-      const lastElement = focusableElements[focusableElements.length - 1];
-
-      if (event.shiftKey && document.activeElement === firstElement) {
-        event.preventDefault();
-        lastElement.focus();
-      } else if (!event.shiftKey && document.activeElement === lastElement) {
-        event.preventDefault();
-        firstElement.focus();
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      window.clearTimeout(focusTimer);
-      window.removeEventListener("keydown", handleKeyDown);
-
-      document.body.style.overflow = previousOverflow;
-
-      if (
-        previousFocusRef.current &&
-        typeof previousFocusRef.current.focus === "function"
-      ) {
-        previousFocusRef.current.focus();
-      }
-    };
-  }, [close, menuOpen]);
-
-  if (!mounted || typeof document === "undefined") {
+  if (!menuOpen || typeof document === "undefined") {
     return null;
   }
 
-  const homeIsActive = activeId === "home";
-
-  return createPortal(
+  const content = (
     <div
-      className={[
-        "fixed inset-0 z-[10040] md:hidden",
-        "transition-opacity duration-200",
-        visible ? "opacity-100" : "pointer-events-none opacity-0",
-      ].join(" ")}
-      dir={isRTL ? "rtl" : "ltr"}
+      className="fixed inset-0 z-[10000]"
       role="presentation"
+      dir={direction}
     >
-      {/* الخلفية */}
+      {/* Backdrop */}
       <button
         type="button"
+        aria-label={text.close}
+        onClick={closeMenu}
         className="
-          absolute inset-0 h-full w-full
-          cursor-default bg-slate-950/45
-          backdrop-blur-[2px]
+          absolute
+          inset-0
+          h-full
+          w-full
+          cursor-default
+          bg-[rgba(3,7,24,0.76)]
+          backdrop-blur-sm
         "
-        onClick={close}
-        aria-label={copy.close}
-        tabIndex={-1}
       />
 
-      {/* القائمة */}
+      {/* Sidebar panel */}
       <aside
         ref={panelRef}
+        tabIndex={-1}
         role="dialog"
         aria-modal="true"
-        aria-label={copy.navigation}
+        aria-label={text.menuTitle}
         className={[
-          "absolute inset-y-0 flex w-[min(88vw,360px)]",
-          "flex-col bg-white",
-          "shadow-[0_0_60px_rgba(15,23,42,0.24)]",
-          "transition-transform duration-200 ease-out",
-          isRTL
-            ? "right-0 border-l border-slate-200"
-            : "left-0 border-r border-slate-200",
-          visible
-            ? "translate-x-0"
-            : isRTL
-              ? "translate-x-full"
-              : "-translate-x-full",
+          "absolute top-0 h-[100dvh]",
+          "w-[min(92vw,390px)]",
+          "overflow-hidden",
+          "border-white/10",
+          "bg-gradient-to-b",
+          "from-[var(--lumora-navy-900)]",
+          "via-[var(--lumora-navy-950)]",
+          "to-[#050817]",
+          "text-white",
+          "shadow-[0_0_80px_rgba(0,0,0,0.55)]",
+          "focus:outline-none",
+          isRTL ? "right-0 border-l" : "left-0 border-r",
         ].join(" ")}
       >
-        {/* رأس القائمة */}
-        <header
+        {/* Decorative logo watermark */}
+        <img
+          src="/lumora-icon.png"
+          alt=""
+          aria-hidden="true"
+          draggable={false}
+          className={[
+            "pointer-events-none",
+            "absolute -top-24",
+            "h-72 w-72",
+            "select-none object-contain",
+            "opacity-[0.055]",
+            isRTL ? "-left-24" : "-right-24",
+          ].join(" ")}
+        />
+
+        {/* Decorative glows */}
+        <div
+          aria-hidden="true"
           className="
-            flex shrink-0 items-center justify-between
-            border-b border-slate-200
-            px-4 py-4
+            pointer-events-none
+            absolute
+            -right-24
+            top-28
+            h-56
+            w-56
+            rounded-full
+            bg-[rgba(16,148,192,0.16)]
+            blur-3xl
           "
-        >
-          <button
-            type="button"
-            onClick={() => navigate("home")}
+        />
+
+        <div
+          aria-hidden="true"
+          className="
+            pointer-events-none
+            absolute
+            -bottom-24
+            -left-20
+            h-64
+            w-64
+            rounded-full
+            bg-[rgba(174,221,57,0.10)]
+            blur-3xl
+          "
+        />
+
+        <div className="relative z-10 flex h-full flex-col">
+          {/* Header */}
+          <div
             className="
-              flex min-w-0 items-center gap-3
-              rounded-xl text-start
-              focus-visible:outline-none
-              focus-visible:ring-2
-              focus-visible:ring-blue-300
+              shrink-0
+              border-b
+              border-white/[0.08]
+              px-4
+              pb-4
+              pt-[max(16px,env(safe-area-inset-top))]
             "
           >
-            <span
-              className="
-                flex h-10 w-10 shrink-0
-                items-center justify-center
-                rounded-2xl bg-blue-50
-                text-lg
-              "
-              aria-hidden="true"
-            >
-              🧼
-            </span>
-
-            <span className="min-w-0">
-              <span
+            <div className="flex items-center justify-between gap-3">
+              <button
+                type="button"
+                onClick={() => goToSection("home")}
                 className="
-                  block truncate text-lg font-black
-                  tracking-tight text-blue-600
+                  flex
+                  min-w-0
+                  items-center
+                  gap-3
+                  rounded-2xl
+                  text-start
                 "
               >
-                Lumora
-              </span>
-
-              <span className="block text-[11px] font-bold text-slate-500">
-                {copy.title}
-              </span>
-            </span>
-          </button>
-
-          <button
-            ref={closeButtonRef}
-            type="button"
-            onClick={close}
-            className="
-              flex h-10 w-10 shrink-0
-              items-center justify-center
-              rounded-xl border border-slate-200
-              bg-white text-slate-700
-              transition
-              hover:bg-slate-50
-              active:scale-95
-              focus-visible:outline-none
-              focus-visible:ring-2
-              focus-visible:ring-blue-300
-            "
-            aria-label={copy.close}
-          >
-            <X className="h-5 w-5" aria-hidden="true" />
-          </button>
-        </header>
-
-        {/* تلميح بسيط */}
-        <div className="shrink-0 px-4 pt-4">
-          <p
-            className="
-              rounded-2xl border border-blue-100
-              bg-blue-50/70 px-3.5 py-3
-              text-xs font-semibold leading-5
-              text-blue-800
-            "
-          >
-            {hintText || copy.defaultHint}
-          </p>
-        </div>
-
-        {/* روابط القائمة */}
-        <nav
-          aria-label={copy.navigation}
-          className="
-            min-h-0 flex-1 overflow-y-auto
-            overscroll-contain px-4 py-4
-          "
-        >
-          <div className="space-y-2">
-            {/* الرئيسية */}
-            <button
-              type="button"
-              onClick={() => navigate("home")}
-              aria-current={homeIsActive ? "page" : undefined}
-              className={[
-                "flex min-h-12 w-full items-center gap-3",
-                "rounded-2xl border px-4 py-3",
-                "text-start text-sm font-extrabold",
-                "transition",
-                homeIsActive
-                  ? "border-blue-200 bg-blue-50 text-blue-800"
-                  : "border-transparent text-slate-700 hover:border-slate-200 hover:bg-slate-50",
-              ].join(" ")}
-            >
-              <Home
-                className={[
-                  "h-5 w-5 shrink-0",
-                  homeIsActive ? "text-blue-600" : "text-slate-500",
-                ].join(" ")}
-                aria-hidden="true"
-              />
-
-              <span className="flex-1">{labels.home || copy.home}</span>
-
-              {homeIsActive ? (
                 <span
-                  className="h-2 w-2 rounded-full bg-blue-600"
-                  aria-label={copy.current}
-                />
-              ) : null}
-            </button>
-
-            {navItems.map((item) => {
-              const hasSubItems =
-                Array.isArray(item?.subItems) && item.subItems.length > 0;
-
-              const subItemIsActive = item?.subItems?.some(
-                (subItem) => subItem.id === activeId,
-              );
-
-              const itemIsActive = activeId === item.id || subItemIsActive;
-
-              const isExpanded = openParentId === item.id;
-
-              if (!hasSubItems) {
-                return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => navigate(item.id)}
-                    aria-current={itemIsActive ? "page" : undefined}
-                    className={[
-                      "flex min-h-12 w-full items-center",
-                      "gap-3 rounded-2xl border",
-                      "px-4 py-3 text-start",
-                      "text-sm font-extrabold transition",
-                      itemIsActive
-                        ? "border-blue-200 bg-blue-50 text-blue-800"
-                        : "border-transparent text-slate-700 hover:border-slate-200 hover:bg-slate-50",
-                    ].join(" ")}
-                  >
-                    <span className="flex-1">{item.label}</span>
-
-                    {itemIsActive ? (
-                      <span
-                        className="h-2 w-2 rounded-full bg-blue-600"
-                        aria-label={copy.current}
-                      />
-                    ) : null}
-                  </button>
-                );
-              }
-
-              return (
-                <div
-                  key={item.id}
-                  className={[
-                    "overflow-hidden rounded-2xl border",
-                    itemIsActive
-                      ? "border-blue-200 bg-blue-50/50"
-                      : "border-slate-200 bg-white",
-                  ].join(" ")}
+                  className="
+                    flex
+                    h-14
+                    w-14
+                    shrink-0
+                    items-center
+                    justify-center
+                    overflow-hidden
+                    rounded-full
+                    border
+                    border-[rgba(174,221,57,0.38)]
+                    bg-[var(--lumora-navy-900)]
+                    shadow-[0_0_28px_rgba(16,148,192,0.18)]
+                  "
                 >
-                  {/* رأس مجموعة الخدمات */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setOpenParentId((currentId) =>
-                        currentId === item.id ? null : item.id,
-                      );
-                    }}
-                    aria-expanded={isExpanded}
-                    aria-controls={`mobile-submenu-${item.id}`}
-                    className={[
-                      "flex min-h-12 w-full items-center",
-                      "gap-3 px-4 py-3 text-start",
-                      "text-sm font-extrabold transition",
-                      itemIsActive
-                        ? "text-blue-800"
-                        : "text-slate-700 hover:bg-slate-50",
-                    ].join(" ")}
+                  <img
+                    src="/lumora-icon.png"
+                    alt="Lumora"
+                    draggable={false}
+                    className="h-full w-full object-cover"
+                  />
+                </span>
+
+                <span className="min-w-0">
+                  <span
+                    className="
+                      block
+                      truncate
+                      text-lg
+                      font-black
+                      leading-none
+                      tracking-[0.08em]
+                      text-white
+                    "
                   >
-                    <Sparkles
+                    LUMORA
+                  </span>
+
+                  <span
+                    className="
+                      mt-1.5
+                      block
+                      text-[9px]
+                      font-black
+                      leading-none
+                      tracking-[0.32em]
+                      text-[var(--lumora-lime)]
+                    "
+                  >
+                    {text.brandSub}
+                  </span>
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={closeMenu}
+                aria-label={text.close}
+                className="
+                  flex
+                  h-11
+                  w-11
+                  shrink-0
+                  items-center
+                  justify-center
+                  rounded-2xl
+                  border
+                  border-white/10
+                  bg-white/[0.06]
+                  text-white
+                  transition
+                  hover:border-[rgba(66,204,227,0.28)]
+                  hover:bg-white/[0.10]
+                  active:scale-95
+                "
+              >
+                <X aria-hidden="true" className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="mt-4">
+              <div
+                className="
+                  inline-flex
+                  items-center
+                  gap-2
+                  rounded-full
+                  border
+                  border-[rgba(174,221,57,0.18)]
+                  bg-[rgba(174,221,57,0.07)]
+                  px-3
+                  py-1.5
+                "
+              >
+                <Sparkles
+                  aria-hidden="true"
+                  className="h-3.5 w-3.5 text-[var(--lumora-lime)]"
+                />
+
+                <span
+                  className="
+                    text-[11px]
+                    font-extrabold
+                    text-[var(--lumora-lime-light)]
+                  "
+                >
+                  {text.menuTitle}
+                </span>
+              </div>
+
+              <p className="mt-2 text-xs leading-5 text-white/55">
+                {hintText || text.menuSubtitle}
+              </p>
+            </div>
+          </div>
+
+          {/* Navigation */}
+          <div
+            className="
+              min-h-0
+              flex-1
+              overflow-y-auto
+              overscroll-contain
+              px-3
+              py-4
+            "
+          >
+            <nav aria-label={text.menuTitle} className="space-y-2">
+              {navItems.map((item) => {
+                const hasSubItems =
+                  Array.isArray(item.subItems) && item.subItems.length > 0;
+
+                const childIsActive = hasSubItems
+                  ? item.subItems.some((subItem) => subItem.id === activeId)
+                  : false;
+
+                const isActive = activeId === item.id || childIsActive;
+
+                const isExpanded = openParentId === item.id;
+
+                if (!hasSubItems) {
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => goToSection(item.id)}
+                      aria-current={isActive ? "page" : undefined}
                       className={[
-                        "h-5 w-5 shrink-0",
-                        itemIsActive ? "text-blue-600" : "text-slate-500",
+                        "group flex w-full items-center gap-3",
+                        "rounded-2xl border px-4 py-3.5",
+                        "text-start text-sm font-extrabold",
+                        "transition-all duration-200",
+                        isActive
+                          ? [
+                              "border-[rgba(174,221,57,0.28)]",
+                              "bg-[rgba(174,221,57,0.10)]",
+                              "text-[var(--lumora-lime-light)]",
+                              "shadow-[inset_0_0_22px_rgba(174,221,57,0.035)]",
+                            ].join(" ")
+                          : [
+                              "border-white/[0.07]",
+                              "bg-white/[0.035]",
+                              "text-white/78",
+                              "hover:border-[rgba(66,204,227,0.22)]",
+                              "hover:bg-white/[0.07]",
+                              "hover:text-white",
+                            ].join(" "),
                       ].join(" ")}
-                      aria-hidden="true"
-                    />
+                    >
+                      <span
+                        className={[
+                          "h-2 w-2 shrink-0 rounded-full",
+                          "transition",
+                          isActive
+                            ? [
+                                "bg-[var(--lumora-lime)]",
+                                "shadow-[0_0_0_5px_rgba(174,221,57,0.10)]",
+                              ].join(" ")
+                            : "bg-white/20 group-hover:bg-[var(--lumora-cyan-light)]",
+                        ].join(" ")}
+                      />
 
-                    <span className="flex-1">{item.label}</span>
+                      <span className="flex-1">{item.label}</span>
 
-                    <ChevronDown
-                      className={[
-                        "h-4 w-4 shrink-0",
-                        "transition-transform duration-200",
-                        isExpanded ? "rotate-180" : "",
-                      ].join(" ")}
-                      aria-hidden="true"
-                    />
-                  </button>
+                      {isActive ? (
+                        <Check
+                          aria-hidden="true"
+                          className="h-4 w-4 shrink-0"
+                        />
+                      ) : (
+                        <ArrowIcon
+                          aria-hidden="true"
+                          className="
+                            h-4
+                            w-4
+                            shrink-0
+                            text-white/28
+                            transition
+                            group-hover:text-[var(--lumora-cyan-light)]
+                          "
+                        />
+                      )}
+                    </button>
+                  );
+                }
 
-                  {/* الخدمات الفرعية */}
+                return (
                   <div
-                    id={`mobile-submenu-${item.id}`}
+                    key={item.id}
                     className={[
-                      "grid transition-[grid-template-rows,opacity]",
-                      "duration-200 ease-out",
-                      isExpanded
-                        ? "grid-rows-[1fr] opacity-100"
-                        : "grid-rows-[0fr] opacity-0",
+                      "overflow-hidden rounded-[22px] border",
+                      isActive
+                        ? [
+                            "border-[rgba(174,221,57,0.24)]",
+                            "bg-[rgba(174,221,57,0.055)]",
+                          ].join(" ")
+                        : ["border-white/[0.07]", "bg-white/[0.03]"].join(" "),
                     ].join(" ")}
                   >
-                    <div className="overflow-hidden">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setOpenParentId((currentId) =>
+                          currentId === item.id ? null : item.id,
+                        );
+                      }}
+                      aria-expanded={isExpanded}
+                      className={[
+                        "flex w-full items-center gap-3",
+                        "px-4 py-3.5",
+                        "text-start text-sm font-extrabold",
+                        "transition",
+                        isActive
+                          ? "text-[var(--lumora-lime-light)]"
+                          : "text-white/80 hover:bg-white/[0.04] hover:text-white",
+                      ].join(" ")}
+                    >
+                      <span
+                        className={[
+                          "h-2 w-2 shrink-0 rounded-full",
+                          isActive
+                            ? [
+                                "bg-[var(--lumora-lime)]",
+                                "shadow-[0_0_0_5px_rgba(174,221,57,0.10)]",
+                              ].join(" ")
+                            : "bg-white/20",
+                        ].join(" ")}
+                      />
+
+                      <span className="flex-1">{item.label}</span>
+
+                      <ChevronDown
+                        aria-hidden="true"
+                        className={[
+                          "h-4 w-4 shrink-0 transition-transform duration-200",
+                          isExpanded
+                            ? "rotate-180 text-[var(--lumora-lime)]"
+                            : "text-white/35",
+                        ].join(" ")}
+                      />
+                    </button>
+
+                    {isExpanded && (
                       <div
                         className="
-                          border-t border-slate-200
-                          bg-white p-2
+                          border-t
+                          border-white/[0.07]
+                          px-2
+                          pb-2
+                          pt-2
                         "
                       >
                         <button
                           type="button"
-                          onClick={() => navigate(item.id)}
+                          onClick={() => goToSection(item.id)}
                           className={[
-                            "flex min-h-11 w-full items-center",
-                            "rounded-xl px-3 py-2.5",
+                            "mb-1 flex w-full items-center gap-3",
+                            "rounded-xl px-3 py-3",
                             "text-start text-sm font-bold",
                             "transition",
                             activeId === item.id
-                              ? "bg-blue-50 text-blue-800"
-                              : "text-slate-600 hover:bg-slate-50 hover:text-slate-900",
+                              ? [
+                                  "bg-[rgba(174,221,57,0.10)]",
+                                  "text-[var(--lumora-lime-light)]",
+                                ].join(" ")
+                              : [
+                                  "text-white/64",
+                                  "hover:bg-white/[0.055]",
+                                  "hover:text-white",
+                                ].join(" "),
                           ].join(" ")}
                         >
-                          <span className="flex-1">{copy.allServices}</span>
+                          <span
+                            className="
+                              h-1.5
+                              w-1.5
+                              shrink-0
+                              rounded-full
+                              bg-[var(--lumora-cyan)]
+                            "
+                          />
 
-                          {activeId === item.id ? (
-                            <span
-                              className="h-2 w-2 rounded-full bg-blue-600"
-                              aria-hidden="true"
-                            />
-                          ) : null}
+                          <span className="flex-1">{text.allServices}</span>
+
+                          {activeId === item.id && (
+                            <Check aria-hidden="true" className="h-4 w-4" />
+                          )}
                         </button>
 
                         {item.subItems.map((subItem) => {
@@ -509,84 +591,161 @@ export default function SidebarMenu({
                             <button
                               key={subItem.id}
                               type="button"
-                              onClick={() => navigate(subItem.id)}
-                              aria-current={isSubActive ? "page" : undefined}
+                              onClick={() => goToSection(subItem.id)}
                               className={[
-                                "mt-1 flex min-h-11 w-full",
-                                "items-center gap-3 rounded-xl",
-                                "px-3 py-2.5 text-start",
-                                "text-sm font-bold transition",
+                                "flex w-full items-center gap-3",
+                                "rounded-xl px-3 py-2.5",
+                                "text-start text-sm font-bold",
+                                "transition",
                                 isSubActive
-                                  ? "bg-blue-50 text-blue-800"
-                                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-900",
+                                  ? [
+                                      "bg-[rgba(16,148,192,0.13)]",
+                                      "text-[var(--lumora-cyan-light)]",
+                                    ].join(" ")
+                                  : [
+                                      "text-white/68",
+                                      "hover:bg-white/[0.055]",
+                                      "hover:text-white",
+                                    ].join(" "),
                               ].join(" ")}
                             >
-                              {Icon ? (
-                                <Icon
-                                  className={[
-                                    "h-4 w-4 shrink-0",
-                                    isSubActive
-                                      ? "text-blue-600"
-                                      : "text-slate-400",
-                                  ].join(" ")}
-                                  aria-hidden="true"
-                                />
-                              ) : null}
+                              <span
+                                className={[
+                                  "flex h-9 w-9 shrink-0",
+                                  "items-center justify-center",
+                                  "rounded-xl border",
+                                  isSubActive
+                                    ? [
+                                        "border-[rgba(66,204,227,0.28)]",
+                                        "bg-[rgba(16,148,192,0.13)]",
+                                        "text-[var(--lumora-cyan-light)]",
+                                      ].join(" ")
+                                    : [
+                                        "border-white/[0.07]",
+                                        "bg-white/[0.04]",
+                                        "text-white/48",
+                                      ].join(" "),
+                                ].join(" ")}
+                              >
+                                {Icon ? (
+                                  <Icon
+                                    aria-hidden="true"
+                                    className="h-[18px] w-[18px]"
+                                  />
+                                ) : (
+                                  <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                                )}
+                              </span>
 
                               <span className="flex-1">{subItem.label}</span>
 
                               {isSubActive ? (
-                                <span
-                                  className="h-2 w-2 rounded-full bg-blue-600"
+                                <Check aria-hidden="true" className="h-4 w-4" />
+                              ) : (
+                                <ArrowIcon
                                   aria-hidden="true"
+                                  className="h-4 w-4 text-white/22"
                                 />
-                              ) : null}
+                              )}
                             </button>
                           );
                         })}
                       </div>
-                    </div>
+                    )}
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </nav>
           </div>
-        </nav>
 
-        {/* الإجراء الأساسي */}
-        <footer
-          className="
-            shrink-0 border-t border-slate-200
-            bg-white px-4
-            pb-[max(16px,env(safe-area-inset-bottom))]
-            pt-4
-          "
-        >
-          <button
-            type="button"
-            onClick={() => navigate("services")}
+          {/* Language selector */}
+          <div
             className="
-              inline-flex min-h-12 w-full
-              items-center justify-center gap-2
-              rounded-2xl bg-blue-600
-              px-5 text-sm font-extrabold
-              text-white
-              shadow-[0_10px_28px_rgba(37,99,235,0.24)]
-              transition
-              hover:bg-blue-700
-              active:scale-[0.98]
-              focus-visible:outline-none
-              focus-visible:ring-4
-              focus-visible:ring-blue-200
+              shrink-0
+              border-t
+              border-white/[0.08]
+              bg-black/10
+              px-4
+              pb-[max(18px,env(safe-area-inset-bottom))]
+              pt-4
             "
           >
-            <Sparkles className="h-4 w-4" aria-hidden="true" />
+            <div className="mb-3 flex items-center gap-2">
+              <Globe2
+                aria-hidden="true"
+                className="h-4 w-4 text-[var(--lumora-cyan-light)]"
+              />
 
-            <span>{labels.cta || copy.request}</span>
-          </button>
-        </footer>
+              <span className="text-xs font-extrabold text-white/65">
+                {text.languageTitle}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2">
+              {LANGUAGE_OPTIONS.map((language) => {
+                const isSelected = language.code === lang;
+
+                return (
+                  <button
+                    key={language.code}
+                    type="button"
+                    onClick={() => setLang(language.code)}
+                    aria-pressed={isSelected}
+                    className={[
+                      "relative flex min-h-12 flex-col",
+                      "items-center justify-center",
+                      "rounded-2xl border px-2 py-2",
+                      "transition-all duration-200",
+                      isSelected
+                        ? [
+                            "border-[rgba(174,221,57,0.32)]",
+                            "bg-[rgba(174,221,57,0.10)]",
+                            "text-[var(--lumora-lime-light)]",
+                          ].join(" ")
+                        : [
+                            "border-white/[0.08]",
+                            "bg-white/[0.035]",
+                            "text-white/62",
+                            "hover:border-[rgba(66,204,227,0.24)]",
+                            "hover:bg-white/[0.065]",
+                            "hover:text-white",
+                          ].join(" "),
+                    ].join(" ")}
+                  >
+                    <span className="text-xs font-black">{language.short}</span>
+
+                    <span className="mt-0.5 text-[9px] font-bold opacity-70">
+                      {language.label}
+                    </span>
+
+                    {isSelected && (
+                      <span
+                        className="
+                          absolute
+                          right-1.5
+                          top-1.5
+                          flex
+                          h-4
+                          w-4
+                          items-center
+                          justify-center
+                          rounded-full
+                          bg-[var(--lumora-lime)]
+                          text-[var(--lumora-navy-950)]
+                        "
+                      >
+                        <Check aria-hidden="true" className="h-2.5 w-2.5" />
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
       </aside>
-    </div>,
-    document.body,
+    </div>
   );
+
+  return createPortal(content, document.body);
 }

@@ -1,3 +1,5 @@
+// src/translations/en.js
+
 export default {
   __lang: "en",
 
@@ -11,57 +13,73 @@ export default {
   },
 
   // Hero
-  heroHighlight1: "Professional cleaning",
-  heroHighlight2: "for sofas, mattresses, carpets, cars and glass",
+  heroStatic: "Professional cleaning for",
+  heroHighlight1: "sofas",
+  heroHighlight2: "mattresses",
+  heroHighlight3: "carpets",
+
   heroSubtitle:
-    "Professional on-site cleaning services for sofas, mattresses, carpets, car interiors and glass, available across northern and central areas.",
+    "Professional sofa, mattress, and carpet cleaning at your home. Combine several services and different items in one clear order. Available across northern and central areas.",
+
   heroButton: "Request Service",
-  heroAlt: "On-site cleaning service",
+  heroButtonPrimary: "Build Your Order",
+  heroButtonSecondary: "View Our Services",
+  heroAlt: "Professional cleaning service at the customer’s home",
+
+  whatsappLink: "https://wa.me/972543075619",
+  callLink: "tel:+972543075619",
+  showCallButton: false,
+  callNow: "Call",
+
+  // Trust pills
+  heroPill1: "Service at your home",
+  heroPill2: "North and center",
+  heroPill3: "One order for all services",
+
+  // Scroll hint
+  scrollExplore: "Explore",
 
   // Services
   servicesTitle1: "Cleaning",
   servicesTitle2: "Services",
+
   servicesDescription:
-    "Choose the service you need, enter the basic details, then continue your request through WhatsApp.",
+    "Choose one service or combine sofas, carpets, and mattresses in the same order. Add the details of every item separately.",
 
   sofaTitle: "Sofa Cleaning",
   sofaDescription:
-    "Deep sofa cleaning inside your home, including mattress cleaning, using suitable equipment and materials for each fabric type.",
+    "Deep sofa cleaning at your home. The order is calculated according to the total number of sofa seats you want cleaned.",
 
-  carTitle: "Car Washing",
-  carDescription:
-    "Car cleaning and detailed interior and exterior care at the customer's location.",
+  mattressTitle: "Mattress Cleaning",
+  mattressDescription:
+    "Add each mattress according to its size: single, single-and-a-half, or double, and choose cleaning for one side or both sides.",
 
   carpetTitle: "Carpet Cleaning",
   carpetDescription:
-    "Deep carpet cleaning inside the customer's home, without moving or taking the carpets elsewhere.",
-
-  carSeatsTitle: "Car Interior Cleaning",
-  carSeatsDescription:
-    "Cleaning car seats and interior upholstery at the customer's location using suitable equipment.",
+    "Add each carpet separately with its length and width, or mark its measurements as unknown.",
 
   glassTitle: "Glass Cleaning",
   glassDescription:
-    "Careful cleaning of windows and glass façades for homes and offices at the customer's location.",
+    "Window and glass-front cleaning for homes and offices. This service is currently unavailable for booking.",
 
-  // ======================
   // Before / After
-  // ======================
   beforeAlt: "Before",
   afterAlt: "After",
   beforeAfterTitle: "Before / After",
-  beforeAfterSubtitle:
-    "A clear comparison of the results before and after cleaning.",
-  beforeAfterAria: "Before and after",
 
-  // ======================
+  beforeAfterSubtitle:
+    "A clear comparison of the result before and after cleaning.",
+
+  beforeAfterAria: "Before and after",
+  enterFullscreen: "Enter fullscreen",
+  exitFullscreen: "Exit fullscreen",
+
   // Contact – Header
-  // Saved for future use
-  // ======================
   contactTitleSpan: "Contact",
   contactTitle: "Us",
+
   contactSubtitle:
-    "Have a question or comment? Send us a message and we will get back to you.",
+    "Have a question or note? Send us a message and we will get back to you.",
 
   // Contact – Labels
   contactSubjectLabel: "Subject",
@@ -73,8 +91,11 @@ export default {
   contactPhName: "Full name",
   contactPhPhone: "Phone number",
   contactPhMessageInquiry: "Write your question or request…",
-  contactPhMessageBooking: "Write the service and relevant details…",
+
+  contactPhMessageBooking: "Write the requested services and details…",
+
   contactPhMessageComplaint: "Write your complaint…",
+
   contactPhMessageOther: "Write your message…",
 
   // Contact – Buttons
@@ -85,17 +106,19 @@ export default {
 
   // Contact – Assist
   contactAssistName:
-    "Enter your full name as you would like it to appear in communication.",
+    "Enter your full name as it should appear when we contact you.",
+
   contactAssistPhone:
-    "A phone number connected to WhatsApp is preferred for an easier response.",
-  contactAssistMsg: "Summarize your request in one clear sentence.",
+    "A number available on WhatsApp is preferred for an easier response.",
+
+  contactAssistMsg: "Write the requested services and the important details.",
 
   // Contact – Errors
   contactErrSubject: "Choose a subject",
   contactErrName: "Enter your name",
   contactErrPhoneEmpty: "Enter your phone number",
   contactErrPhoneInvalid: "Invalid phone number",
-  contactErrMessage: "Enter a message",
+  contactErrMessage: "Enter your message",
 
   // Contact – Preferences
   contactMoreOpts: "Additional options",
@@ -103,9 +126,9 @@ export default {
   contactPrefTitle: "Preferred contact method",
   contactPrefPhone: "Phone call",
   contactPrefWA: "WhatsApp",
-  contactPrefEither: "No preference",
+  contactPrefEither: "Either",
   contactPrefSummary: "Preferred:",
-  contactClearPrefA11y: "Remove preference",
+  contactClearPrefA11y: "Clear preference",
 
   // Contact – WhatsApp
   contactWAButton: "WhatsApp",
@@ -115,7 +138,7 @@ export default {
   contactWAPreviewClose: "Close Preview",
 
   // Contact – Saved
-  contactSavedHint: "Your information was saved locally.",
+  contactSavedHint: "Your information has been saved locally.",
 
   // Common
   commonClose: "Close",
@@ -124,11 +147,14 @@ export default {
     brand: "Lumora",
     menu_title: "Main Menu",
     services: "Services",
-    gallery: "Gallery",
+    gallery: "Results Gallery",
     contact: "Contact Us",
-    carpet_clean: "Carpet Cleaning",
+
     sofa_clean: "Sofa Cleaning",
-    car_clean: "Car Interior Cleaning",
+    mattress_clean: "Mattress Cleaning",
+    carpet_clean: "Carpet Cleaning",
+    glass_clean: "Glass Cleaning",
+
     choose_language: "Choose Language",
     ar: "Arabic",
     en: "English",
@@ -138,36 +164,10 @@ export default {
   contact: {
     titleSpan: "Contact",
     title: "Us",
+
     subtitle:
-      "Have a question or comment? Send us a message and we will get back to you.",
+      "Have a question or note? Send us a message and we will get back to you.",
   },
-
-  heroStatic: "Professional cleaning for",
-
-  // Rotating words
-  heroHighlight1: "sofas and mattresses",
-  heroHighlight2: "car interiors",
-  heroHighlight3: "carpets",
-
-  // Description
-  heroSubtitle:
-    "We come to you and provide professional cleaning at your home or location across northern and central areas. The price and appointment are confirmed according to the service and request details.",
-
-  // Hero buttons
-  heroButtonPrimary: "Request Service",
-  heroButtonSecondary: "View Our Services",
-  whatsappLink: "https://wa.me/972543075619",
-  callLink: "tel:+972543075619",
-  showCallButton: false,
-  callNow: "Call",
-
-  // Trust pills
-  heroPill1: "Service at your location",
-  heroPill2: "North and center",
-  heroPill3: "Suitable equipment and materials",
-
-  // Scroll hint
-  scrollExplore: "Explore",
 
   common: {
     close: "Close",
@@ -176,37 +176,114 @@ export default {
 
   services: {
     section: {
-      badge: "On-site cleaning services",
+      badge: "Cleaning services at your home",
       title: "Choose the",
-      titleAccent: "right service",
+      titleAccent: "services you need",
+
       subtitle:
-        "Choose the service you need, enter the basic details, then continue your request through WhatsApp. Our services are available across northern and central areas.",
+        "Add any number of sofa, carpet, and mattress services. Enter the details of every item, then send the complete order through WhatsApp.",
     },
 
     actions: {
-      details: "Learn More",
-      book: "Request Service",
+      details: "View Service",
+      book: "Add to Order",
     },
 
     badges: {
       popular: "Most Popular",
-      fast: "Quick Request",
+      fast: "Quick Add",
     },
 
     modal: {
       includesTitle: "What does the service include?",
+
       moreDetails:
-        "Enter your town and the basic service details, then continue your request through WhatsApp.",
-      footerHint: "Continue your request easily through WhatsApp",
+        "Add the requested services and basic details, then continue through WhatsApp.",
+
+      footerHint: "You can combine several services in the same order",
+
       quickQuestion: "Ask About the Service",
-      bookNow: "Request Service",
+      bookNow: "Add to Order",
+
+      sofaSeatsLabel: "Number of Sofa Seats",
+
+      sofaSeatsHint: "Enter the total number of seats you want cleaned.",
+
+      mattressCountLabel: "Number of Mattresses",
+      mattressSizeLabel: "Mattress Size",
+      mattressSidesLabel: "Cleaning Sides",
+
+      carpetLengthLabel: "Length in Meters",
+      carpetWidthLabel: "Width in Meters",
+    },
+
+    order: {
+      title: "Build Your Order",
+
+      subtitle:
+        "Add every service and item with its own details, then send one WhatsApp message.",
+
+      addSofa: "Add Sofa",
+      addCarpet: "Add Carpet",
+      addMattress: "Add Mattress",
+
+      viewOrder: "View Order",
+      clearOrder: "Clear Order",
+      sendOrder: "Send Order Through WhatsApp",
+
+      location: "Town",
+      locationPlaceholder: "Enter your town",
+
+      notes: "Additional Notes",
+
+      notesPlaceholder: "Example: stairs, high floor, or specific stains…",
+
+      sofaSection: "Sofas",
+      carpetSection: "Carpets",
+      mattressSection: "Mattresses",
+
+      sofaSeats: "Number of Seats",
+
+      carpetLength: "Length in Meters",
+      carpetWidth: "Width in Meters",
+      carpetUnknown: "I do not know the measurements",
+
+      mattressCount: "Number of Mattresses",
+      mattressSize: "Size",
+      mattressSides: "Cleaning Sides",
+
+      single: "Single",
+      singleAndHalf: "Single and a Half",
+      double: "Double",
+
+      oneSide: "One Side",
+      twoSides: "Both Sides",
+
+      addAnotherSofa: "Add Another Sofa",
+      addAnotherCarpet: "Add Another Carpet",
+
+      addAnotherMattress: "Add Another Mattress Combination",
+
+      removeItem: "Remove Item",
     },
 
     whatsapp: {
       questionIntro: "Hello, I am interested in {title}.",
+
       questionOutro: "Could you provide more details?",
-      bookIntro: "Hello, I would like to request {title} at my location.",
-      bookOutro: "I will send the necessary details through WhatsApp.",
+
+      bookIntro:
+        "Hello, I would like to request cleaning services at my location.",
+
+      bookOutro: "I will send the necessary photos through WhatsApp.",
+
+      sofaSeats: "Number of sofa seats: {count}",
+
+      mattressDetails: "Quantity: {count} | Size: {size} | Cleaning: {sides}",
+
+      carpetMeasurements: "Length: {length} m × Width: {width} m",
+
+      carpetUnknown: "Measurements are unknown",
     },
   },
 };

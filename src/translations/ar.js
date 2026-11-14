@@ -1,3 +1,5 @@
+// src/translations/ar.js
+
 export default {
   __lang: "ar",
 
@@ -11,54 +13,66 @@ export default {
   },
 
   // Hero
-  heroHighlight1: "تنظيف احترافي",
-  heroHighlight2: "للكنـب وفرشات النوم والسجاد والسيارات والزجاج",
+  heroStatic: "تنظيف احترافي لـ",
+  heroHighlight1: "الكنب",
+  heroHighlight2: "فرشات النوم",
+  heroHighlight3: "السجاد",
+
   heroSubtitle:
-    "خدمات تنظيف احترافية في بيت الزبون للكنب وفرشات النوم والسجاد وفرش السيارات والزجاج، متاحة في مناطق الشمال والمركز.",
+    "تنظيف احترافي في بيتك للكنب وفرشات النوم والسجاد، مع إمكانية جمع أكثر من خدمة في طلب واحد. نخدم مناطق الشمال والمركز.",
+
   heroButton: "اطلب الخدمة",
-  heroAlt: "خدمة تنظيف في بيت الزبون",
+  heroButtonPrimary: "جهّز طلبك",
+  heroButtonSecondary: "شاهد خدماتنا",
+  heroAlt: "خدمات تنظيف في بيت الزبون",
+
+  whatsappLink: "https://wa.me/972543075619",
+  callLink: "tel:+972543075619",
+  showCallButton: false,
+  callNow: "اتصال",
+
+  // Trust pills
+  heroPill1: "الخدمة في بيتك",
+  heroPill2: "الشمال والمركز",
+  heroPill3: "طلب واحد لكل الخدمات",
+
+  // Scroll hint
+  scrollExplore: "استكشف",
 
   // Services
   servicesTitle1: "خدمات",
   servicesTitle2: "التنظيف",
+
   servicesDescription:
-    "اختر الخدمة المناسبة لك، ثم أرسل التفاصيل عبر واتساب لتحديد السعر والموعد.",
+    "اختر خدمة واحدة أو اجمع الكنب والسجاد وفرشات النوم في نفس الطلب، وأدخل تفاصيل كل عنصر لحاله.",
 
   sofaTitle: "تنظيف الكنب",
   sofaDescription:
-    "تنظيف عميق للكنب داخل بيتك، ويشمل أيضًا تنظيف فرشات النوم باستخدام معدات ومواد مناسبة لنوع القماش.",
+    "تنظيف عميق للكنب داخل بيتك. يتم تحديد الطلب حسب عدد المقاعد التي تريد تنظيفها.",
 
-  carTitle: "غسيل السيارات",
-  carDescription:
-    "تنظيف السيارة والعناية بتفاصيلها الداخلية والخارجية في موقع الزبون.",
+  mattressTitle: "تنظيف فرشات النوم",
+  mattressDescription:
+    "أضف كل فرشة حسب حجمها: مفرد، مفرد ونص أو مزدوج، وحدد تنظيف وجه واحد أو وجهين.",
 
   carpetTitle: "تنظيف السجاد",
   carpetDescription:
-    "تنظيف عميق للسجاد داخل بيت الزبون، بدون نقل السجاد أو أخذه إلى مكان آخر.",
-
-  carSeatsTitle: "تنظيف فرش السيارات",
-  carSeatsDescription:
-    "تنظيف المقاعد والفرش الداخلي للسيارة في موقع الزبون باستخدام معدات مناسبة.",
+    "أضف كل سجادة لحالها مع الطول والعرض، أو اختر أن القياسات غير معروفة.",
 
   glassTitle: "تنظيف الزجاج",
   glassDescription:
-    "تنظيف شبابيك وواجهات زجاجية للمنازل والمكاتب في موقع الزبون بعناية ووضوح.",
+    "تنظيف الشبابيك والواجهات الزجاجية للمنازل والمكاتب. الخدمة غير متاحة للحجز حاليًا.",
 
-  // ======================
   // Before / After
-  // ======================
   beforeAlt: "قبل",
   afterAlt: "بعد",
   beforeAfterTitle: "قبل / بعد",
   beforeAfterSubtitle: "مقارنة واضحة للنتيجة قبل وبعد التنظيف.",
   beforeAfterAria: "قبل وبعد",
 
-  // ======================
   // Contact – Header
-  // محفوظ للمستقبل
-  // ======================
   contactTitleSpan: "تواصل",
   contactTitle: "معنا",
+
   contactSubtitle: "عندك استفسار أو ملاحظة؟ أرسل لنا رسالة وسنرد عليك.",
 
   // Contact – Labels
@@ -71,7 +85,7 @@ export default {
   contactPhName: "الاسم الكامل",
   contactPhPhone: "رقم الهاتف",
   contactPhMessageInquiry: "اكتب سؤالك أو طلبك…",
-  contactPhMessageBooking: "اكتب الخدمة والتفاصيل المناسبة…",
+  contactPhMessageBooking: "اكتب الخدمات والتفاصيل المناسبة…",
   contactPhMessageComplaint: "اكتب الشكوى…",
   contactPhMessageOther: "اكتب رسالتك…",
 
@@ -83,8 +97,10 @@ export default {
 
   // Contact – Assist
   contactAssistName: "اكتب اسمك الكامل كما سيظهر بالتواصل.",
+
   contactAssistPhone: "يفضّل رقم متاح على واتساب لسهولة الرد.",
-  contactAssistMsg: "اختصر الفكرة بجملة واضحة.",
+
+  contactAssistMsg: "اكتب الخدمات المطلوبة والتفاصيل المهمة.",
 
   // Contact – Errors
   contactErrSubject: "اختر الموضوع",
@@ -120,11 +136,14 @@ export default {
     brand: "Lumora",
     menu_title: "القائمة الرئيسية",
     services: "الخدمات",
-    gallery: "معرض الصور",
+    gallery: "معرض النتائج",
     contact: "تواصل معنا",
-    carpet_clean: "تنظيف سجاد",
-    sofa_clean: "تنظيف كنب",
-    car_clean: "تنظيف فرش سيارات",
+
+    sofa_clean: "تنظيف الكنب",
+    mattress_clean: "تنظيف فرشات النوم",
+    carpet_clean: "تنظيف السجاد",
+    glass_clean: "تنظيف الزجاج",
+
     choose_language: "اختر اللغة",
     ar: "العربية",
     en: "الإنجليزية",
@@ -134,35 +153,9 @@ export default {
   contact: {
     titleSpan: "تواصل",
     title: "معنا",
+
     subtitle: "عندك استفسار أو ملاحظة؟ أرسل لنا رسالة وسنرد عليك.",
   },
-
-  heroStatic: "تنظيف احترافي لـ",
-
-  // الكلمات المتبدلة
-  heroHighlight1: "الكنب وفرشات النوم",
-  heroHighlight2: "فرش السيارات",
-  heroHighlight3: "السجاد",
-
-  // الوصف
-  heroSubtitle:
-    "نصل إليك ونقدّم خدمات تنظيف احترافية في بيتك أو موقعك، في مناطق الشمال والمركز. السعر والموعد يتحددان حسب نوع الخدمة والتفاصيل.",
-
-  // أزرار الهيرو
-  heroButtonPrimary: "اطلب الخدمة",
-  heroButtonSecondary: "شاهد خدماتنا",
-  whatsappLink: "https://wa.me/972543075619",
-  callLink: "tel:+972543075619",
-  showCallButton: false,
-  callNow: "اتصال",
-
-  // Trust pills
-  heroPill1: "الخدمة في موقعك",
-  heroPill2: "الشمال والمركز",
-  heroPill3: "معدات ومواد مناسبة",
-
-  // Scroll hint
-  scrollExplore: "استكشف",
 
   common: {
     close: "إغلاق",
@@ -172,35 +165,73 @@ export default {
   services: {
     section: {
       badge: "خدمات تنظيف في بيت الزبون",
-      title: "اختر الخدمة",
+      title: "اختر الخدمات",
       titleAccent: "المناسبة لك",
+
       subtitle:
-        "اختر الخدمة المناسبة وأدخل التفاصيل الأساسية، ثم تابع الطلب عبر واتساب. خدماتنا متاحة في الشمال والمركز.",
+        "أضف أي عدد من خدمات الكنب والسجاد وفرشات النوم، وحدد تفاصيل كل عنصر، ثم أرسل الطلب كاملًا عبر واتساب.",
     },
 
     actions: {
-      details: "اعرف أكثر",
-      book: "اطلب الخدمة",
+      details: "عرض الخدمة",
+      book: "أضف للطلب",
     },
 
     badges: {
       popular: "الأكثر طلبًا",
-      fast: "طلب سريع",
+      fast: "إضافة سريعة",
     },
 
     modal: {
       includesTitle: "ماذا تشمل الخدمة؟",
-      moreDetails: "أدخل البلدة والتفاصيل الأساسية، ثم تابع الطلب عبر واتساب.",
-      footerHint: "تابع الطلب بسهولة عبر واتساب",
+
+      moreDetails: "أضف الخدمات والتفاصيل الأساسية، ثم تابع الطلب عبر واتساب.",
+
+      footerHint: "يمكنك جمع أكثر من خدمة في نفس الطلب",
+
       quickQuestion: "اسأل عن الخدمة",
-      bookNow: "اطلب الخدمة",
+      bookNow: "أضف للطلب",
+
+      sofaSeatsLabel: "عدد مقاعد الكنب",
+
+      sofaSeatsHint: "احسب مجموع المقاعد التي تريد تنظيفها.",
+
+      mattressCountLabel: "عدد فرشات النوم",
+      mattressSizeLabel: "حجم الفرشة",
+      mattressSidesLabel: "عدد الأوجه",
+
+      carpetLengthLabel: "الطول بالمتر",
+      carpetWidthLabel: "العرض بالمتر",
+    },
+
+    order: {
+      title: "جهّز طلبك",
+
+      subtitle: "أضف كل خدمة وكل عنصر بتفاصيله، ثم أرسل رسالة واتساب واحدة.",
+
+      addSofa: "إضافة كنب",
+      addCarpet: "إضافة سجادة",
+      addMattress: "إضافة فرشة نوم",
+
+      viewOrder: "عرض الطلب",
+      clearOrder: "مسح الطلب",
+      sendOrder: "إرسال الطلب عبر واتساب",
     },
 
     whatsapp: {
       questionIntro: "مرحبًا، أنا مهتم بخدمة {title}.",
+
       questionOutro: "ممكن تفاصيل أكثر؟",
-      bookIntro: "مرحبًا، أريد طلب خدمة {title} في موقعي.",
-      bookOutro: "سأرسل التفاصيل اللازمة عبر واتساب.",
+
+      bookIntro: "مرحبًا، أريد طلب خدمات تنظيف في موقعي.",
+
+      bookOutro: "سأرسل الصور اللازمة عبر واتساب.",
+
+      sofaSeats: "عدد مقاعد الكنب: {count}",
+
+      mattressDetails: "العدد: {count} | الحجم: {size} | التنظيف: {sides}",
+
+      carpetMeasurements: "الطول: {length} متر × العرض: {width} متر",
     },
   },
 };
