@@ -31,7 +31,7 @@ import {
 import { n, uid } from "./lib/format";
 import { ToastProvider, useToast } from "./lib/toast";
 
-const ADMIN_EMAIL = String(import.meta.env.VITE_ADMIN_EMAIL || "")
+const ADMIN_EMAIL = (String(import.meta.env.VITE_ADMIN_EMAIL || "").trim() || "amir@lumora.example")
   .trim()
   .toLowerCase();
 
