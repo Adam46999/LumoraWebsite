@@ -22,7 +22,17 @@ function mergePairs(originals, records) {
     }
   }
 
-  return [...pairs.values()];
+  const order = records.find(record => record.id === "display-order")?.ids;
+  const ordered = [];
+
+  for (const id of Array.isArray(order) ? order : []) {
+    if (pairs.has(id)) {
+      ordered.push(pairs.get(id));
+      pairs.delete(id);
+    }
+  }
+
+  return [...ordered, ...pairs.values()];
 }
 
 export function useGallery(originals) {
@@ -45,9 +55,22 @@ export function useGallery(originals) {
 
   return {
     pairs: mergePairs(originals, records),
+    orderVersion: records.find(record => record.id === "display-order")?.rev || 0,
     status,
     retry: () => setAttempt(value => value + 1)
   };
+}
+
+export async function saveGalleryOrder(ids, expectedVersion) {
+  const ref = doc(galleryRef, "display-order");
+
+  await runTransaction(db, async transaction => {
+    const previous = (await transaction.get(ref)).data();
+    const version = previous?.rev || 0;
+
+    if (version !== expectedVersion) throw new Error("ORDER_CONFLICT");
+    transaction.set(ref, { ids, rev: version + 1 });
+  });
 }
 
 export async function savePair(pair, changes) {

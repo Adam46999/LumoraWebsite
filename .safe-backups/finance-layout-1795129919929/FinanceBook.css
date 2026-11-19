@@ -1,0 +1,146 @@
+.finance-mobile-v2 {
+  --ink: #142d39;
+  --accent: #126457;
+  --line: #d3deda;
+  color: var(--ink);
+  background: #fbfcfb;
+  text-align: start;
+  scroll-padding-block: 5rem;
+  padding-top: max(.75rem, env(safe-area-inset-top));
+}
+.finance-mobile-v2 header {
+  min-height: 56px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+.finance-mobile-v2 header h2 { font-size: 1.22rem; }
+.finance-mobile-v2 button,
+.finance-mobile-v2 summary {
+  min-height: 44px;
+  touch-action: manipulation;
+}
+.finance-mobile-v2 button { border-color: var(--line); }
+.finance-mobile-v2 button:active:not(:disabled) { transform: translateY(1px); }
+.finance-mobile-v2 :is(button,summary,input,select):focus-visible {
+  outline: 3px solid #198a7a;
+  outline-offset: 2px;
+}
+.finance-mobile-v2 :is(input:not([type="checkbox"]),select) {
+  min-height: 48px;
+  min-width: 0;
+  max-width: 100%;
+  font-size: 16px;
+  border-color: #aebfba;
+  color: var(--ink);
+  background-color: white;
+}
+.finance-mobile-v2 input[type="checkbox"] { accent-color: var(--accent); }
+.finance-mobile-v2 fieldset { min-inline-size: 0; }
+
+.finance-mobile-v2 .fb-actions { margin-top: .75rem; }
+.finance-mobile-v2 .fb-actions button { min-height: 52px; }
+.finance-mobile-v2 .fb-actions button:first-child,
+.finance-mobile-v2 .fb-save button:first-child {
+  background: var(--accent) !important;
+  color: white;
+}
+.finance-mobile-v2 .fb-actions button:last-child {
+  color: #793e15;
+  background: #fff5e9;
+  border-color: #e5c9ac;
+}
+.finance-mobile-v2 [aria-pressed="true"] {
+  background: var(--ink) !important;
+  color: white;
+}
+.finance-mobile-v2 summary { cursor: pointer; padding-block: .65rem; }
+
+.finance-mobile-v2 .fb-net {
+  color: white;
+  background: #173b46;
+  border-inline-start: 5px solid #85c7af;
+}
+.finance-mobile-v2 .fb-net.fb-loss {
+  background: #66332e;
+  border-color: #e8af8a;
+}
+.finance-mobile-v2 .fb-net strong {
+  line-height: 1.35;
+  font-variant-numeric: tabular-nums;
+}
+.finance-mobile-v2 .fb-tile {
+  min-width: 0;
+  border: 1px solid var(--line);
+  background: white;
+}
+.finance-mobile-v2 .fb-tile small { color: #4b605e; }
+.finance-mobile-v2 .fb-tile bdi {
+  display: block;
+  font-size: 1.05rem;
+  font-weight: 750;
+}
+.finance-mobile-v2 bdi {
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.finance-mobile-v2 .fb-record {
+  margin-block: .6rem;
+  border: 1px solid var(--line);
+  border-radius: .9rem;
+  background: white;
+  overflow-wrap: anywhere;
+}
+.finance-mobile-v2 .fb-record[open] { padding-bottom: .75rem; }
+.finance-mobile-v2 .fb-record > :not(summary) { margin-inline: .8rem; }
+.finance-mobile-v2 .fb-record > summary {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) auto;
+  gap: .35rem .65rem;
+  align-items: center;
+  padding: .8rem;
+  border-radius: inherit;
+  list-style: none;
+}
+.finance-mobile-v2 .fb-record > summary::-webkit-details-marker { display: none; }
+.finance-mobile-v2 .fb-record[open] > summary {
+  border-bottom: 1px solid var(--line);
+  margin-bottom: .5rem;
+}
+.finance-mobile-v2 .fb-kind { font-size: .8rem; font-weight: 700; color: var(--accent); }
+.finance-mobile-v2 .fb-record[data-kind="cost"] .fb-kind { color: #8b491a; }
+.finance-mobile-v2 .fb-record[data-kind="move"] .fb-kind,
+.finance-mobile-v2 .fb-record[data-kind="draw"] .fb-kind { color: #4f5381; }
+.finance-mobile-v2 .fb-title { grid-column: 1; grid-row: 2; min-width: 0; }
+.finance-mobile-v2 .fb-amount {
+  grid-column: 2;
+  grid-row: 2;
+  justify-self: end;
+  max-width: 15ch;
+  font-weight: 800;
+}
+.finance-mobile-v2 .fb-state {
+  justify-self: start;
+  border-radius: .5rem;
+  padding: .15rem .45rem;
+  font-size: .78rem;
+  font-weight: 700;
+}
+.finance-mobile-v2 .fb-state.due { color: #783d0a; background: #fff0d9; }
+.finance-mobile-v2 .fb-state.paid { color: #135d46; background: #e6f4ed; }
+.finance-mobile-v2 .fb-state.void { color: #53565b; background: #eef0f1; }
+.finance-mobile-v2 .fb-arrow {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: end;
+  color: #53696b;
+}
+.finance-mobile-v2 .fb-record[open] .fb-arrow { transform: rotate(180deg); }
+.finance-mobile-v2 .fb-save { box-shadow: 0 -5px 14px #182c3610; }
+.finance-mobile-v2 .fb-save button { min-height: 48px; }
+
+@media (max-width: 374px) {
+  .finance-mobile-v2 { padding-inline: .65rem; }
+  .finance-mobile-v2 fieldset button { padding-inline: .45rem; }
+  .finance-mobile-v2 .fb-amount { max-width: 12ch; }
+}

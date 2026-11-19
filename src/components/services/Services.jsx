@@ -10,8 +10,8 @@ import { useLanguage } from "../../context/LanguageContext";
 
 const WHATSAPP_NUMBERS = {
   upholstery: "972502727724",
-  carpet: "972543075619",
-  mixed: "972543075619",
+  carpet: "972502727724",
+  mixed: "972502727724",
 };
 
 const EMPTY_SUMMARY = {
@@ -60,6 +60,18 @@ export default function Services() {
   const [titleVisible, setTitleVisible] = useState(false);
 
   const [orderBuilderOpen, setOrderBuilderOpen] = useState(false);
+
+  useEffect(() => {
+    const handleOpenOrder = () => {
+      setInitialServiceId(null);
+      setOrderBuilderOpen(true);
+    };
+
+    window.addEventListener("lumora:open-order", handleOpenOrder);
+    return () => {
+      window.removeEventListener("lumora:open-order", handleOpenOrder);
+    };
+  }, []);
 
   const [initialServiceId, setInitialServiceId] = useState(null);
 

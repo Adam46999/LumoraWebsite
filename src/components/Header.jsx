@@ -679,7 +679,7 @@ export default function Header({ scrollToSection }) {
 
               <button
                 type="button"
-                onClick={openContactSheet}
+                onClick={() => window.dispatchEvent(new Event("lumora:open-order"))}
                 className="
                   inline-flex
                   h-10

@@ -1,0 +1,415 @@
+.finance-mobile-v2 {
+  --ink: #142d39;
+  --accent: #126457;
+  --line: #d3deda;
+  color: var(--ink);
+  background: #fbfcfb;
+  text-align: start;
+  scroll-padding-block: 5rem;
+  padding-top: max(.75rem, env(safe-area-inset-top));
+}
+.finance-mobile-v2 header {
+  min-height: 56px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+.finance-mobile-v2 header h2 { font-size: 1.22rem; }
+.finance-mobile-v2 button,
+.finance-mobile-v2 summary {
+  min-height: 44px;
+  touch-action: manipulation;
+}
+.finance-mobile-v2 button { border-color: var(--line); }
+.finance-mobile-v2 button:active:not(:disabled) { transform: translateY(1px); }
+.finance-mobile-v2 :is(button,summary,input,select):focus-visible {
+  outline: 3px solid #198a7a;
+  outline-offset: 2px;
+}
+.finance-mobile-v2 :is(input:not([type="checkbox"]),select) {
+  min-height: 48px;
+  min-width: 0;
+  max-width: 100%;
+  font-size: 16px;
+  border-color: #aebfba;
+  color: var(--ink);
+  background-color: white;
+}
+.finance-mobile-v2 input[type="checkbox"] { accent-color: var(--accent); }
+.finance-mobile-v2 fieldset { min-inline-size: 0; }
+
+.finance-mobile-v2 .fb-actions { margin-top: .75rem; }
+.finance-mobile-v2 .fb-actions button { min-height: 52px; }
+.finance-mobile-v2 .fb-actions button:first-child,
+.finance-mobile-v2 .fb-save button:first-child {
+  background: var(--accent) !important;
+  color: white;
+}
+.finance-mobile-v2 .fb-actions button:last-child {
+  color: #793e15;
+  background: #fff5e9;
+  border-color: #e5c9ac;
+}
+.finance-mobile-v2 [aria-pressed="true"] {
+  background: var(--ink) !important;
+  color: white;
+}
+.finance-mobile-v2 summary { cursor: pointer; padding-block: .65rem; }
+
+.finance-mobile-v2 .fb-net {
+  color: white;
+  background: #173b46;
+  border-inline-start: 5px solid #85c7af;
+}
+.finance-mobile-v2 .fb-net.fb-loss {
+  background: #66332e;
+  border-color: #e8af8a;
+}
+.finance-mobile-v2 .fb-net strong {
+  line-height: 1.35;
+  font-variant-numeric: tabular-nums;
+}
+.finance-mobile-v2 .fb-tile {
+  min-width: 0;
+  border: 1px solid var(--line);
+  background: white;
+}
+.finance-mobile-v2 .fb-tile small { color: #4b605e; }
+.finance-mobile-v2 .fb-tile bdi {
+  display: block;
+  font-size: 1.05rem;
+  font-weight: 750;
+}
+.finance-mobile-v2 bdi {
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.finance-mobile-v2 .fb-record {
+  margin-block: .6rem;
+  border: 1px solid var(--line);
+  border-radius: .9rem;
+  background: white;
+  overflow-wrap: anywhere;
+}
+.finance-mobile-v2 .fb-record[open] { padding-bottom: .75rem; }
+.finance-mobile-v2 .fb-record > :not(summary) { margin-inline: .8rem; }
+.finance-mobile-v2 .fb-record > summary {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) auto;
+  gap: .35rem .65rem;
+  align-items: center;
+  padding: .8rem;
+  border-radius: inherit;
+  list-style: none;
+}
+.finance-mobile-v2 .fb-record > summary::-webkit-details-marker { display: none; }
+.finance-mobile-v2 .fb-record[open] > summary {
+  border-bottom: 1px solid var(--line);
+  margin-bottom: .5rem;
+}
+.finance-mobile-v2 .fb-kind { font-size: .8rem; font-weight: 700; color: var(--accent); }
+.finance-mobile-v2 .fb-record[data-kind="cost"] .fb-kind { color: #8b491a; }
+.finance-mobile-v2 .fb-record[data-kind="move"] .fb-kind,
+.finance-mobile-v2 .fb-record[data-kind="draw"] .fb-kind { color: #4f5381; }
+.finance-mobile-v2 .fb-title { grid-column: 1; grid-row: 2; min-width: 0; }
+.finance-mobile-v2 .fb-amount {
+  grid-column: 2;
+  grid-row: 2;
+  justify-self: end;
+  max-width: 15ch;
+  font-weight: 800;
+}
+.finance-mobile-v2 .fb-state {
+  justify-self: start;
+  border-radius: .5rem;
+  padding: .15rem .45rem;
+  font-size: .78rem;
+  font-weight: 700;
+}
+.finance-mobile-v2 .fb-state.due { color: #783d0a; background: #fff0d9; }
+.finance-mobile-v2 .fb-state.paid { color: #135d46; background: #e6f4ed; }
+.finance-mobile-v2 .fb-state.void { color: #53565b; background: #eef0f1; }
+.finance-mobile-v2 .fb-arrow {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: end;
+  color: #53696b;
+}
+.finance-mobile-v2 .fb-record[open] .fb-arrow { transform: rotate(180deg); }
+.finance-mobile-v2 .fb-save { box-shadow: 0 -5px 14px #182c3610; }
+.finance-mobile-v2 .fb-save button { min-height: 48px; }
+
+@media (max-width: 374px) {
+  .finance-mobile-v2 { padding-inline: .65rem; }
+  .finance-mobile-v2 fieldset button { padding-inline: .45rem; }
+  .finance-mobile-v2 .fb-amount { max-width: 12ch; }
+}
+
+
+/* fb-layout-3 */
+.fb-layout-3 {
+  --book-line: #d6e1dc;
+  font-family: "IBM Plex Sans Arabic", system-ui, sans-serif;
+  color: #183332;
+  background: #f6f8f7;
+  line-height: 1.5;
+}
+.fb-layout-3 header { margin-bottom: 12px; align-items: center; }
+.fb-layout-3 header h2 {
+  font-size: clamp(19px,4.8vw,24px);
+  line-height: 1.35;
+  font-weight: 700;
+}
+.fb-layout-3 header button { font-size: 14px; background: white; }
+.fb-layout-3 .fb-actions { margin-block: 0 4px; }
+.fb-layout-3 .fb-actions button { font-size: 16px; font-weight: 700; }
+.fb-layout-3 .fb-actions + details > summary,
+.fb-layout-3 .fb-settings > summary { color: #46605b; font-size: 14px; }
+
+.fb-layout-3 nav[aria-label="فترة العرض"] {
+  border: 1px solid var(--book-line);
+  background: #eaf0ed;
+}
+.fb-layout-3 nav[aria-label="فترة العرض"] button {
+  border: 0;
+  background: transparent;
+}
+.fb-layout-3 nav[aria-label="فترة العرض"] button[aria-pressed=true] {
+  background: #204b44 !important;
+}
+
+.fb-layout-3 .fb-net {
+  border: 0;
+  border-radius: 16px;
+  padding: 16px;
+  background: #183f39;
+}
+.fb-layout-3 .fb-net.fb-loss { background: #603a33; }
+.fb-layout-3 .fb-net > strong {
+  display: block;
+  width: fit-content;
+  direction: ltr;
+  unicode-bidi: isolate;
+  font-size: clamp(28px,7vw,38px);
+}
+.fb-layout-3 .fb-net span {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 0;
+  font-size: 14px;
+}
+.fb-layout-3 .fb-net b {
+  width: fit-content;
+  max-width: 100%;
+  direction: ltr;
+  unicode-bidi: isolate;
+  font-size: 18px;
+  overflow-wrap: anywhere;
+}
+.fb-layout-3 .fb-net > div:last-child { border-color: #ffffff48; }
+
+/* الرقم تحت عنوانه على يمين البطاقة، مع ترتيب صحيح للأرقام والشيكل */
+.fb-layout-3 .fb-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  direction: rtl;
+  text-align: right;
+  gap: 3px;
+  padding: 10px 12px;
+  border-color: var(--book-line);
+}
+.fb-layout-3 .fb-tile small { font-size: 13px; font-weight: 600; color: #48605b; }
+.fb-layout-3 .fb-tile bdi {
+  width: fit-content;
+  max-width: 100%;
+  font-size: clamp(18px,4.7vw,22px);
+  line-height: 1.25;
+}
+
+.fb-layout-3 .fb-sections {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-block: 18px 10px;
+  border-bottom: 1px solid var(--book-line);
+}
+.fb-layout-3 .fb-sections button {
+  min-height: 46px;
+  background: transparent !important;
+  color: #4d635f;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  font-weight: 700;
+}
+.fb-layout-3 .fb-sections button[aria-pressed=true] {
+  background: transparent !important;
+  color: #10564b;
+  border-bottom-color: #17695c;
+}
+.fb-layout-3 .fb-search {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--book-line);
+  border-radius: 12px;
+}
+.fb-layout-3 .fb-record { box-shadow: 0 1px 3px #183f3909; }
+.fb-layout-3 .fb-record > summary { align-items: baseline; column-gap: 12px; }
+.fb-layout-3 .fb-record .fb-title { font-size: 16px; color: #182f2c; }
+.fb-layout-3 .fb-record .fb-amount { font-size: 17px; }
+.fb-layout-3 .fb-record > p { font-size: 14px; margin-block: 6px; }
+
+.fb-layout-3 .fb-reports { display: grid; gap: 8px; }
+.fb-layout-3 .fb-reports > details {
+  margin: 0;
+  background: white;
+  border: 1px solid var(--book-line);
+  border-radius: 12px;
+  padding-inline: 12px;
+}
+.fb-layout-3 .fb-reports > details > summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  font-weight: 700;
+  list-style: none;
+}
+.fb-layout-3 .fb-reports summary::-webkit-details-marker { display: none; }
+.fb-layout-3 .fb-reports summary::after {
+  content: "";
+  width: 9px;
+  height: 9px;
+  border-inline-end: 2px solid #607772;
+  border-bottom: 2px solid #607772;
+  transform: rotate(-45deg);
+  flex: none;
+}
+.fb-layout-3 .fb-reports details[open] > summary::after { transform: rotate(135deg); }
+.fb-layout-3 .fb-reports details[open] { padding-bottom: 12px; }
+.fb-layout-3 .fb-reports details > .fb-tile { margin-block: 5px; }
+.fb-layout-3 .fb-settings { margin-top: 22px; border-top: 1px solid var(--book-line); }
+
+.fb-layout-3 fieldset.space-y-3 {
+  border: 1px solid var(--book-line);
+  border-radius: 16px;
+  padding: 14px;
+  background: white;
+}
+.fb-layout-3 .fb-form-title {
+  font-size: 19px;
+  font-weight: 700;
+  border-bottom: 1px solid var(--book-line);
+  padding-bottom: 10px;
+}
+.fb-layout-3 fieldset label { color: #263e39; }
+.fb-layout-3 .fb-save { border-color: var(--book-line); }
+
+@media (max-width: 360px) {
+  .fb-layout-3 fieldset.space-y-3 { padding: 10px; }
+  .fb-layout-3 .fb-tile { padding-inline: 9px; }
+}
+
+
+/* finance-statement-v1 */
+.fb-layout-3 .fb-statement {
+  --statement-accent: #155b4b;
+  --statement-tint: #edf6f1;
+  margin-block: 10px 0;
+  overflow: hidden;
+  border: 1px solid #cedbd5;
+  border-radius: 16px;
+  background: #fff;
+  color: #19352e;
+}
+.fb-layout-3 .fb-statement[data-loss="true"] {
+  --statement-accent: #853e34;
+  --statement-tint: #faf1ee;
+}
+.fb-layout-3 .fb-total-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+  padding: 14px 16px;
+  border-inline-start: 4px solid var(--statement-accent);
+  background: var(--statement-tint);
+}
+.fb-layout-3 .fb-total-line h3 {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.5;
+  font-weight: 700;
+  color: var(--statement-accent);
+}
+.fb-layout-3 .fb-total-line bdi {
+  max-width: 100%;
+  color: var(--statement-accent);
+  font-size: clamp(26px, 6.4vw, 34px);
+  font-weight: 700;
+  line-height: 1.25;
+  font-variant-numeric: tabular-nums;
+}
+.fb-layout-3 .fb-statement dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 0;
+}
+.fb-layout-3 .fb-statement dl > div {
+  min-width: 0;
+  padding: 10px 14px;
+}
+.fb-layout-3 .fb-statement dl > div + div {
+  border-inline-start: 1px solid #e0e8e3;
+}
+.fb-layout-3 .fb-statement dt {
+  margin: 0;
+  color: #4d6259;
+  font-size: 13px;
+  line-height: 1.4;
+}
+.fb-layout-3 .fb-statement dd {
+  margin: 3px 0 0;
+  text-align: start;
+  font-weight: 700;
+  line-height: 1.3;
+}
+.fb-layout-3 .fb-statement dd bdi {
+  display: inline-block;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+.fb-layout-3 .fb-shares dd { font-size: 19px; }
+.fb-layout-3 .fb-flow {
+  border-top: 1px solid #e0e8e3;
+  background: #f8faf9;
+}
+.fb-layout-3 .fb-flow dd { font-size: 16px; }
+.fb-layout-3 .fb-sections { margin-block: 12px 9px; }
+.fb-layout-3 .fb-search::placeholder { color: #62736d; opacity: 1; }
+
+.fb-layout-3 .fb-record > summary {
+  grid-template-areas: "kind arrow" "name amount" "state amount";
+  row-gap: 3px;
+  padding: 11px 14px;
+}
+.fb-layout-3 .fb-record .fb-kind { grid-area: kind; font-size: 12px; }
+.fb-layout-3 .fb-record .fb-title { grid-area: name; font-size: 17px; line-height: 1.45; }
+.fb-layout-3 .fb-record .fb-amount {
+  grid-area: amount;
+  align-self: center;
+  font-size: 19px;
+}
+.fb-layout-3 .fb-record .fb-state { grid-area: state; }
+.fb-layout-3 .fb-record .fb-arrow { grid-area: arrow; }
+
+@media (max-width: 360px) {
+  .fb-layout-3 .fb-total-line { padding: 12px; }
+  .fb-layout-3 .fb-statement dl > div { padding: 9px 11px; }
+}

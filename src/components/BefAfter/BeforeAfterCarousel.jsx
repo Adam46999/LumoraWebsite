@@ -142,7 +142,7 @@ export default function BeforeAfterCarousel({
         ) : null}
 
         <Swiper
-          key={lang}
+          key={lang + ":" + list.map(item => item.id || "").join("|")}
           modules={[Pagination, A11y, Keyboard]}
           onSwiper={(swiper) => {
             swiperRef.current = swiper;

@@ -1,6 +1,6 @@
 import React, { useRef, useState } from "react";
 import { auth } from "../../firebase";
-import { preparePhoto, savePair } from "./gallery";
+import { preparePhoto, savePair, saveGalleryOrder } from "./gallery";
 
 const button = "min-h-12 rounded-xl border px-4 py-2 font-bold disabled:opacity-50";
 const primary = button + " bg-slate-900 text-white";
@@ -24,6 +24,17 @@ function galleryRules(uid) {
     "  allow read: if true;",
     "  allow create: if manager() && validPair() && request.resource.data.rev == 1;",
     "  allow update: if manager() && validPair() && request.resource.data.rev == resource.data.rev + 1;",
+    "}",
+    "match /lumora_gallery/display-order {",
+    '  function canOrder() { return request.auth != null && request.auth.uid == "' + uid + '"; }',
+    "  function validOrder() {",
+    "    let d = request.resource.data;",
+    '    return d.keys().hasAll(["ids", "rev"]) && d.keys().hasOnly(["ids", "rev"])',
+    "      && d.rev is int && d.ids is list && d.ids.size() > 0",
+    "      && d.ids.size() == d.ids.toSet().size();",
+    "  }",
+    "  allow create: if canOrder() && validOrder() && request.resource.data.rev == 1;",
+    "  allow update: if canOrder() && validOrder() && request.resource.data.rev == resource.data.rev + 1;",
     "}"
   ].join("\n");
 }
@@ -36,9 +47,39 @@ export default function GalleryManager({ gallery }) {
   const [busy, setBusy] = useState("");
   const [message, setMessage] = useState("");
   const ready = gallery.status === "ready";
-  const dirty = Object.keys(changes).length > 0;
+  const [order, setOrder] = useState(null);
+  const orderChanged = !!order && order.ids.some((id, index) => id !== order.initial[index]);
+  const dirty = orderChanged || Object.keys(changes).length > 0;
+
+  function startOrdering() {
+    const ids = gallery.pairs.map(item => item.id);
+    setOrder({ ids, initial: ids, version: gallery.orderVersion });
+    setMessage("");
+    dialog.current.scrollTop = 0;
+  }
+
+  function move(id, step) {
+    setOrder(current => {
+      if (!current) return current;
+      const ids = [...current.ids];
+      const index = ids.indexOf(id);
+      const target = index + step;
+      if (index < 0 || target < 0 || target >= ids.length) return current;
+      [ids[index], ids[target]] = [ids[target], ids[index]];
+      return { ...current, ids };
+    });
+  }
+
+  function publishOrder() {
+    run("جارٍ حفظ الترتيب…", async () => {
+      await saveGalleryOrder(order.ids, order.version);
+      edit(null);
+      setMessage("تم حفظ ترتيب الصور.");
+    });
+  }
 
   function edit(item) {
+    setOrder(null);
     setPair(item);
     setChanges({});
     setMessage("");
@@ -48,7 +89,7 @@ export default function GalleryManager({ gallery }) {
   function back() {
     if (locked.current) return;
     if (dirty && !window.confirm("ترك التغييرات بدون حفظ؟")) return;
-    if (pair) edit(null);
+    if (pair || order) edit(null);
     else dialog.current.close();
   }
 
@@ -61,7 +102,9 @@ export default function GalleryManager({ gallery }) {
     try {
       await work();
     } catch (error) {
-      if (error.message === "CONFLICT") {
+      if (error.message === "ORDER_CONFLICT") {
+        setMessage("انحفظ ترتيب أحدث من جهاز ثاني. ارجع للقائمة وافتح ترتيب الصور من جديد.");
+      } else if (error.message === "CONFLICT") {
         setMessage("تغيّرت المقارنة من جهاز آخر. ارجع للقائمة وافتحها من جديد.");
       } else if (error.code === "permission-denied") {
         setMessage("حسابك ما معه صلاحية للحفظ. افحص قواعد المعرض.");
@@ -123,9 +166,9 @@ export default function GalleryManager({ gallery }) {
       className="fixed inset-0 m-auto max-h-[92dvh] w-[96vw] max-w-2xl overflow-auto overscroll-contain rounded-2xl bg-white p-4 backdrop:bg-black/50">
 
       <header className="mb-4 flex items-center justify-between gap-2">
-        <h2 className="text-lg font-bold">{pair ? "معاينة المقارنة" : "صور قبل وبعد"}</h2>
+        <h2 className="text-lg font-bold">{order ? "ترتيب الصور" : pair ? "معاينة المقارنة" : "صور قبل وبعد"}</h2>
         <button type="button" disabled={!!busy} className={button} onClick={back}>
-          {pair ? "رجوع" : "إغلاق"}
+          {pair || order ? "رجوع" : "إغلاق"}
         </button>
       </header>
 
@@ -137,14 +180,43 @@ export default function GalleryManager({ gallery }) {
           </>}
       </div>}
 
-      {!pair && <details className="mb-3 text-sm">
+      {!pair && !order && <details className="mb-3 text-sm">
         <summary className="cursor-pointer py-2">إعداد صلاحيات المعرض</summary>
         <button type="button" className={button} onClick={copyRules}>نسخ قواعد المعرض</button>
       </details>}
 
       <p aria-live="polite" className="mb-2 font-bold">{busy || message}</p>
 
-      {pair ? <>
+      {order ? <>
+        <ol className="space-y-2">
+          {order.ids.map((id, index) => {
+            const item = gallery.pairs.find(photo => photo.id === id);
+            if (!item) return null;
+            return <li key={id} className="flex items-center gap-2 rounded-xl border p-2">
+              <span className="w-6 shrink-0 text-center font-bold">{index + 1}</span>
+              <div className="grid min-w-0 flex-1 grid-cols-2 gap-1">
+                {sides.map(([side, label]) => <div key={side}>
+                  <img src={item[side]} alt={label} loading="lazy"
+                    className="aspect-square max-h-20 w-full rounded-lg object-cover" />
+                  <span className="text-xs">{label}</span>
+                </div>)}
+              </div>
+              <div className="flex shrink-0 flex-col gap-1">
+                <button type="button" className={button}
+                  aria-label={"تقديم المقارنة رقم " + (index + 1)}
+                  disabled={!!busy || index === 0} onClick={() => move(id, -1)}>↑</button>
+                <button type="button" className={button}
+                  aria-label={"تأخير المقارنة رقم " + (index + 1)}
+                  disabled={!!busy || index === order.ids.length - 1} onClick={() => move(id, 1)}>↓</button>
+              </div>
+            </li>;
+          })}
+        </ol>
+        <div className="sticky bottom-0 bg-white py-2">
+          <button type="button" className={primary + " w-full"}
+            disabled={!ready || !!busy || !orderChanged} onClick={publishOrder}>حفظ الترتيب</button>
+        </div>
+      </> : pair ? <>
         <div className="grid grid-cols-2 gap-2">
           {sides.map(([side, label]) => <div key={side} className="min-w-0">
             <strong>{label}</strong>
@@ -175,6 +247,10 @@ export default function GalleryManager({ gallery }) {
           إضافة مقارنة
         </button>
 
+        <button type="button" className={button + " mb-3 w-full"}
+          disabled={!ready || gallery.pairs.length < 2} onClick={startOrdering}>
+          ترتيب الصور
+        </button>
         <div className="grid gap-3 sm:grid-cols-2">
           {gallery.pairs.map((item, index) => <button type="button" key={item.id}
             disabled={!ready} onClick={() => edit(item)} className="rounded-xl border p-2 text-start">
