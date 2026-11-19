@@ -4,7 +4,7 @@ import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAWv-Lv7ZYWCuHSN_xYQV71y4k6TF7Ol_0",
+  apiKey: "AIzaSyAWV-Lv7ZYWCUhSN_xYQV71y4k6TF7oI_0",
   authDomain: "lumorabase.firebaseapp.com",
   projectId: "lumorabase",
   storageBucket: "lumorabase.appspot.com",

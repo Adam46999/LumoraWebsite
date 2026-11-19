@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Header from "./components/Header";
 import Hero from "./components/hero/Hero";
 import Services from "./components/services/Services";
+import { useGallery } from "./components/BefAfter/gallery";
 import CleaningShowcase from "./components/BefAfter/CleaningShowcase";
 import FAQSection from "./components/faq/FAQSection";
 import AdminPanel from "./components/admin/AdminPanel";
@@ -88,8 +89,10 @@ function App() {
     { before: before10, after: after10 },
   ];
 
+  const gallery = useGallery(sofaPairs);
+
   if (adminMode) {
-    return <AdminPanel onExit={() => setAdminMode(false)} />;
+    return <AdminPanel gallery={gallery} onExit={() => setAdminMode(false)} />;
   }
 
   return (
@@ -131,7 +134,7 @@ function App() {
           />
 
           <div className="relative z-10">
-            <CleaningShowcase sofaPairs={sofaPairs} />
+            <CleaningShowcase sofaPairs={gallery.pairs} />
           </div>
         </section>
 

@@ -13,6 +13,7 @@ import { onAuthStateChanged, signOut } from "firebase/auth";
 import { auth } from "../../firebase";
 
 import AdminAuthGate from "./AdminAuthGate";
+import GalleryManager from "../BefAfter/GalleryManager";
 import AdminHeader from "./AdminHeader";
 import SaveBar from "./SaveBar";
 
@@ -202,7 +203,7 @@ function AuthErrorNotice({ message }) {
   );
 }
 
-function AdminPanelInner({ onExit }) {
+function AdminPanelInner({ onExit, gallery }) {
   const toast = useToast();
 
   /*
@@ -820,6 +821,7 @@ function AdminPanelInner({ onExit }) {
           space-y-4 px-4 py-5
         "
       >
+        <GalleryManager gallery={gallery} />
         {err ? (
           <div
             className="

@@ -37,7 +37,7 @@ function getFriendlyError(error) {
     case "auth/invalid-credential":
     case "auth/user-not-found":
     case "auth/wrong-password":
-      return "البريد الإلكتروني أو كلمة المرور غير صحيحة.";
+      return "اسم المستخدم أو كلمة المرور غير صحيحة.";
 
     case "auth/user-disabled":
       return "تم تعطيل هذا الحساب. راجع إعدادات Firebase.";
@@ -57,7 +57,7 @@ function getFriendlyError(error) {
 }
 
 export default function AdminAuthGate({ onAuthorized, onExit }) {
-  const [email, setEmail] = useState(ADMIN_EMAIL || "");
+  const [username, setUsername] = useState("");
 
   const [password, setPassword] = useState("");
   const [rememberDevice, setRememberDevice] = useState(true);
@@ -73,15 +73,15 @@ export default function AdminAuthGate({ onAuthorized, onExit }) {
 
     if (loading) return;
 
-    const normalizedEmail = email.trim().toLowerCase();
+    const loginName = username.trim().toLowerCase();
 
     if (configurationMissing) {
       setError("لازم تضيف بريد الأدمن داخل ملف .env.local أولًا.");
       return;
     }
 
-    if (!normalizedEmail) {
-      setError("اكتب البريد الإلكتروني.");
+    if (loginName !== "amir") {
+      setError("تأكد من اسم المستخدم.");
       return;
     }
 
@@ -101,7 +101,7 @@ export default function AdminAuthGate({ onAuthorized, onExit }) {
 
       const credential = await signInWithEmailAndPassword(
         auth,
-        normalizedEmail,
+        ADMIN_EMAIL,
         password,
       );
 
@@ -224,7 +224,7 @@ export default function AdminAuthGate({ onAuthorized, onExit }) {
                   text-slate-800
                 "
               >
-                البريد الإلكتروني
+                اسم المستخدم
               </label>
 
               <div className="relative mt-2">
@@ -239,15 +239,15 @@ export default function AdminAuthGate({ onAuthorized, onExit }) {
 
                 <input
                   id="admin-email"
-                  type="email"
-                  value={email}
+                  type="text"
+                  value={username}
                   onChange={(event) => {
-                    setEmail(event.target.value);
+                    setUsername(event.target.value);
                     setError("");
                   }}
                   autoComplete="username"
-                  inputMode="email"
-                  placeholder="admin@example.com"
+                  autoCapitalize="none"
+                  placeholder="amir"
                   disabled={loading}
                   className="
                     h-13 w-full rounded-2xl
