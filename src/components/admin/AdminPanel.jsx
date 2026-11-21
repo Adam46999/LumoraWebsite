@@ -13,6 +13,7 @@ import { onAuthStateChanged, signOut } from "firebase/auth";
 import { auth } from "../../firebase";
 
 import AdminAuthGate from "./AdminAuthGate";
+import WorkCalendar from "./WorkCalendar";
 import FinanceBook from "./FinanceBook";
 import GalleryManager from "../BefAfter/GalleryManager";
 import AdminHeader from "./AdminHeader";
@@ -822,6 +823,7 @@ function AdminPanelInner({ onExit, gallery }) {
           space-y-4 px-4 py-5
         "
       >
+        <WorkCalendar />
         <FinanceBook />
         <GalleryManager gallery={gallery} />
         {err ? (
