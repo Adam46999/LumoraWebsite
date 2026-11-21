@@ -779,3 +779,139 @@
     flex:0 0 auto;align-self:center;padding:0 6px;
   }
 }
+
+
+/* calendar-button-hierarchy-v1 */
+.wc {
+  --action-radius: 12px;
+  --action-shadow: 0 2px 5px rgb(17 21 47 / 10%);
+}
+
+/* إضافة موعد والبحث */
+.wc .wc-tools { gap: 8px; }
+.wc .wc-tools > .wc-primary {
+  min-height: 48px;
+  padding-inline: 18px;
+  border-radius: var(--action-radius);
+  border: 1px solid var(--cal-navy);
+  background: var(--cal-navy);
+  color: var(--wc-paper);
+  font-weight: 750;
+  box-shadow: var(--action-shadow);
+}
+.wc .wc-tools > button:not(.wc-primary) {
+  min-width: 48px;
+  min-height: 48px;
+  border-radius: var(--action-radius);
+  color: var(--cal-navy);
+  background: var(--wc-paper);
+  border-color: var(--wc-border);
+}
+.wc .wc-tools > button[aria-expanded=true] {
+  background: var(--wc-soft);
+  border-color: var(--cal-navy);
+}
+
+/* التنقّل */
+.wc nav {
+  padding: 3px;
+  border-radius: var(--action-radius);
+}
+.wc nav button {
+  min-height: 44px;
+  border-radius: 9px;
+  color: var(--wc-secondary);
+}
+.wc nav button[aria-pressed=true] {
+  color: var(--cal-navy);
+  background: var(--wc-paper);
+  border: 1px solid var(--wc-border);
+  box-shadow: inset 0 -3px var(--cal-navy);
+}
+.wc .wc-period-nav > button {
+  min-height: 46px;
+  border-radius: var(--action-radius);
+  background: var(--wc-paper);
+  color: var(--cal-navy);
+  border-color: var(--wc-border);
+  box-shadow: none;
+}
+.wc header > button,
+.wc .wc-period-reset {
+  min-height: 44px;
+  color: var(--wc-secondary);
+  font-size: 14px;
+}
+.wc .wc-card-options button {
+  min-height: 44px;
+  font-size: 14px;
+}
+.wc .wc-card-options button[aria-pressed=true] {
+  color: var(--cal-navy);
+  background: var(--wc-paper);
+  box-shadow: inset 0 0 0 1px var(--wc-border);
+}
+
+/* التواصل وإنهاء الشغل */
+.wc .wc-card[data-next=true] .wc-quick-contact a.wc-icon-link.wc-primary {
+  background: #e6f8ff;
+  box-shadow: inset 0 0 0 1px #b8e7f6;
+  border-radius: 12px;
+}
+.wc .wc-work > button {
+  min-height: 46px;
+  padding-inline: 17px;
+  border-radius: var(--action-radius);
+  color: var(--wc-paper);
+  background: var(--cal-navy);
+  border-color: var(--cal-navy);
+}
+.wc .wc-manage summary {
+  display: list-item;
+  min-height: 44px;
+  padding-block: 11px;
+  color: var(--wc-secondary);
+  font-weight: 600;
+}
+.wc .wc-manage button.wc-cancel {
+  min-height: 44px;
+  color: #8d332f;
+  background: #fff5f3;
+  border-color: #e9c9c5;
+}
+
+/* الحفظ وتأكيد القبض */
+.wc .wc-submit button.wc-primary {
+  min-height: 50px;
+  border-radius: var(--action-radius);
+  background: var(--cal-action);
+  color: var(--cal-deep);
+  border: 1px solid var(--cal-lime);
+  font-size: 16px;
+  font-weight: 750;
+  box-shadow: var(--action-shadow);
+}
+.wc .wc-submit button.wc-primary:disabled,
+.wc .wc-work > button:disabled,
+.wc .wc-tools > .wc-primary:disabled {
+  background: var(--wc-soft);
+  border-color: var(--wc-border);
+  color: var(--wc-secondary);
+  opacity: 1;
+  box-shadow: none;
+}
+
+/* رد فعل فوري للمس، وتركيز واضح عند استخدام الكيبورد */
+.wc .wc-tools button:enabled:active,
+.wc .wc-period-nav button:enabled:active,
+.wc .wc-submit button:enabled:active,
+.wc .wc-work > button:enabled:active,
+.wc .wc-quick-contact a:active {
+  filter: brightness(.93);
+}
+.wc button:focus-visible,
+.wc a:focus-visible,
+.wc summary:focus-visible {
+  outline: 3px solid var(--cal-cyan);
+  outline-offset: 2px;
+}
