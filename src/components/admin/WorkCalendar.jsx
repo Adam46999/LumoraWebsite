@@ -145,6 +145,8 @@ function CalendarBody({ uid, close, embedded=false, leaveGuard, schedulePosition
   const focusAfterReturn = useRef(null);
   const focusDayHeader = useRef(false);
   const [customerQuery,setCustomerQuery] = useState("");
+  const [contactOpen,setContactOpen] = useState(false);
+  const [jobOpen,setJobOpen] = useState(false);
   const cardsOpen = false;
   const [cardExceptions,setCardExceptions] = useState(() => new Set());
 
@@ -183,6 +185,7 @@ function CalendarBody({ uid, close, embedded=false, leaveGuard, schedulePosition
   }
   const initialDraft = useRef("");
   const contactFocus = useRef(null);
+  const arrivalInput = useRef(null);
   const locationInput = useRef(null);
   const phoneInput = useRef(null);
   React.useLayoutEffect(() => {
@@ -265,6 +268,8 @@ function CalendarBody({ uid, close, embedded=false, leaveGuard, schedulePosition
     } else close();
   }
   function edit(r, focusField = null) {
+    setContactOpen(Boolean(focusField || r.phone || r.location));
+    setJobOpen(Boolean(r.note || Object.keys(r.items || {}).length));
     contactFocus.current = focusField;
     setCustomerQuery("");
     const draft={...r,items:{...r.items}};
@@ -497,7 +502,7 @@ function CalendarBody({ uid, close, embedded=false, leaveGuard, schedulePosition
       {(!embedded || form || checkout || (view==="اليوم" && returnDay)) && <button disabled={busy} onClick={leave}>{form || checkout ? "رجوع" : view==="اليوم" && returnDay ? "رجوع للتقويم" : "إغلاق"}</button>}</header>}
     {loadError ? <p role="alert">{loadError} <button onClick={()=>setRetry(v=>v+1)}>إعادة المحاولة</button></p>
       : !ready && <p role="status">بانتظار الاتصال لعرض آخر التحديثات والحفظ.</p>}
-    {form ? <form onSubmit={e=>{e.preventDefault();save();}}>
+    {form ? <form className="wc-fast-booking" onSubmit={e=>{e.preventDefault();save();}}>
       <fieldset className="wc-form-scroll" disabled={busy}>
       <section className="wc-booking-section" aria-label="الزبون">
         <h3>الزبون</h3>
@@ -523,6 +528,7 @@ function CalendarBody({ uid, close, embedded=false, leaveGuard, schedulePosition
                 section.querySelector("summary")?.focus();
               }
               setForm(f=>({...f,town:p.town,number:p.number,phone:p.phone || "",location:p.location || ""}));
+              setContactOpen(Boolean(p.phone || p.location));
               setCustomerQuery(""); say("");
             }}><bdi dir="auto">{name}</bdi><bdi dir="ltr">{p.phone}</bdi></button>;
           })}
@@ -531,35 +537,51 @@ function CalendarBody({ uid, close, embedded=false, leaveGuard, schedulePosition
         </div>}
         </div>
       </details>}
-      <div className="wc-grid">{field("town","البلد","text",{list:"wc-towns",required:true,dir:"auto",placeholder:"اختار أو اكتب أي بلد"})}
-        {field("number","رقم الزبون بالبلد","text",{inputMode:"numeric",placeholder:"0",required:true})}</div>
+      <div className="wc-grid wc-customer-identifiers">{field("town","البلد","text",{list:"wc-towns",required:true,dir:"auto",placeholder:"اختار أو اكتب أي بلد"})}
+        {field("number","رقم الزبون بالبلد","text",{
+          inputMode:"numeric",placeholder:"0",required:true,enterKeyHint:"next",
+          onKeyDown:e=>{
+            if (e.key!=="Enter" || e.nativeEvent.isComposing) return;
+            e.preventDefault();
+            if (e.currentTarget.reportValidity()) arrivalInput.current?.focus();
+          }
+        })}</div>
       <datalist id="wc-towns">{[...new Set([...towns,...rows.map(r=>r.town)])].map(t=><option key={t}>{t}</option>)}</datalist>
       </section>
       <section className="wc-booking-section" aria-label="الموعد والسعر">
         <h3>الموعد والسعر</h3>
       {field("date","يوم الزيارة","date",{required:true})}
       <div className="wc-grid">
-        {field("start","الوصول من","time",{required:true})}
+        {field("start","الوصول من","time",{required:true,ref:arrivalInput})}
         {field("end","لغاية · اختياري","time")}
       </div>
       {field("price","السعر المتفق عليه ₪","text",{inputMode:"decimal"})}
       </section>
-      <section className="wc-booking-section" aria-label="الموقع والتواصل">
-        <h3>الموقع والتواصل</h3>
+      <section className="wc-booking-section wc-extra-section" aria-label="الموقع والتواصل">
+        <button type="button" className="wc-extra-toggle" aria-expanded={contactOpen}
+          aria-controls="wc-book-contact" onClick={()=>setContactOpen(v=>!v)}>
+          <span>{form.location || form.phone ? "الموقع والتلفون" : "إضافة موقع أو تلفون"}</span>
+          <span aria-hidden="true">{contactOpen ? "−" : "+"}</span>
+        </button>
+        <div id="wc-book-contact" hidden={!contactOpen}>
       {field("location","رابط ويز · اختياري","text",{dir:"ltr",ref:locationInput,placeholder:"https://www.waze.com/…"})}
       {field("phone","تلفون الزبون · اختياري","tel",{dir:"ltr",ref:phoneInput,inputMode:"tel"})}
+        </div>
       </section>
-      <section className="wc-booking-section" aria-label="تفاصيل الشغل">
-        <h3>تفاصيل الشغل</h3>
-      <details open={Object.keys(form.items).length>0 || undefined}><summary>نوع الشغل والكمية · اختياري</summary>
+      <section className="wc-booking-section wc-extra-section" aria-label="تفاصيل الشغل">
+        <button type="button" className="wc-extra-toggle" aria-expanded={jobOpen}
+          aria-controls="wc-book-job" onClick={()=>setJobOpen(v=>!v)}>
+          <span>تفاصيل الشغل وملاحظة</span><span aria-hidden="true">{jobOpen ? "−" : "+"}</span>
+        </button>
+        <div id="wc-book-job" hidden={!jobOpen}>
         {services.map(type=><div className="wc-service" key={type}><label>
           <input type="checkbox" checked={type in form.items} onChange={e=>{
             const items={...form.items};if(e.target.checked)items[type]="";else delete items[type];set("items",items);
           }}/> {type}</label>
           {type in form.items && <input aria-label={"كمية "+type} inputMode="numeric" placeholder="الكمية"
             value={form.items[type]} onChange={e=>set("items",{...form.items,[type]:e.target.value})}/>}</div>)}
-      </details>
       {field("note","ملاحظة · اختياري")}
+        </div>
       </section>
       </fieldset>
       <div className="wc-submit">
@@ -567,8 +589,11 @@ function CalendarBody({ uid, close, embedded=false, leaveGuard, schedulePosition
           <span>الموعد تغيّر من وقت ما فتحته.</span>
           <button type="button" onClick={reloadVisit}>تحميل آخر نسخة</button>
         </div>}
-        <button className="wc-primary wc-wide" disabled={!ready || busy || outdated}>
-        {busy ? "جارٍ الحفظ…" : loadError ? "تعذّر الاتصال بالسجل" : !ready ? "بانتظار الاتصال…" : "حفظ الموعد"}</button></div>
+        <div className="wc-booking-actions">
+          <button type="submit" className="wc-primary wc-wide" disabled={!ready || busy || outdated}>
+        {busy ? "جارٍ الحفظ…" : loadError ? "تعذّر الاتصال بالسجل" : !ready ? "بانتظار الاتصال…" : "حفظ الموعد"}</button>
+          <button type="button" className="wc-booking-back" disabled={busy} onClick={leave}>رجوع</button>
+        </div></div>
     </form> : checkout ? <form onSubmit={e=>{e.preventDefault();finish();}}>
       <fieldset className="wc-form-scroll" disabled={busy}><h3 dir="auto">{jobName(checkout.r)}</h3>
       <Field title="سعر الشغلة النهائي ₪"><input required inputMode="decimal" value={checkout.price}

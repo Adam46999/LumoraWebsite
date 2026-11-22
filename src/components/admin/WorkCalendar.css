@@ -1510,3 +1510,125 @@
   .wc .wc-day-strip button {padding-inline:4px;font-size:12px}
   .wc .wc-selected-date {font-size:13px}
 }
+
+
+/* calendar-fast-booking-v1 */
+.wc .wc-fast-booking,
+.wc .wc-fast-booking .wc-form-scroll,
+.wc .wc-fast-booking .wc-booking-section,
+.wc .wc-fast-booking .wc-grid,
+.wc .wc-fast-booking .wc-field,
+.wc .wc-fast-booking .wc-customer-picker {
+  box-sizing:border-box;min-width:0;max-width:100%;
+}
+.wc .wc-fast-booking {width:100%}
+.wc .wc-fast-booking .wc-form-scroll {
+  width:100%;overflow-y:auto;overflow-x:hidden;
+  overscroll-behavior-x:none;touch-action:pan-y pinch-zoom;
+  padding:3px 2px 12px;
+}
+.wc .wc-fast-booking .wc-grid {
+  grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;
+}
+.wc .wc-fast-booking .wc-booking-section[aria-label="الزبون"] {
+  grid-template-columns:minmax(0,1fr) auto;
+}
+.wc .wc-fast-booking .wc-field {grid-template-columns:minmax(0,1fr)}
+.wc .wc-fast-booking input:not([type=checkbox]),
+.wc .wc-fast-booking select {
+  display:block;width:100%;min-width:0;max-width:100%;
+  box-sizing:border-box;font-size:16px;
+}
+.wc .wc-fast-booking input[type=date],
+.wc .wc-fast-booking input[type=time] {
+  min-inline-size:0;max-inline-size:100%;text-align:start;
+}
+.wc .wc-fast-booking .wc-service input:not([type=checkbox]) {width:84px}
+.wc .wc-fast-booking .wc-booking-section {
+  margin-bottom:8px;padding:11px;border-radius:13px;
+}
+.wc .wc-fast-booking .wc-booking-section>h3 {
+  margin:0 0 8px;font-size:15px;
+}
+.wc .wc-fast-booking .wc-extra-section {padding:0 11px}
+.wc .wc-fast-booking .wc-extra-toggle {
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  width:100%;min-height:46px;padding:4px 0;
+  background:transparent;border:0;text-align:start;
+  color:var(--wc-text);font-size:14px;font-weight:650;
+}
+.wc .wc-extra-toggle>span:last-child {
+  display:grid;place-items:center;width:24px;height:24px;flex:none;
+  border-radius:7px;background:var(--wc-soft);color:var(--cal-navy);
+}
+.wc .wc-fast-booking .wc-extra-section>div:not([hidden]) {padding-bottom:8px}
+.wc .wc-fast-booking .wc-extra-section>div[hidden] {display:none}
+.wc .wc-fast-booking .wc-customer-results button {flex-wrap:wrap;overflow-wrap:anywhere}
+.wc .wc-fast-booking .wc-submit {flex:none;margin:0}
+@media(max-width:340px) {
+  .wc .wc-fast-booking .wc-booking-section[aria-label="الموعد والسعر"] .wc-grid {
+    grid-template-columns:minmax(0,1fr);
+  }
+  .wc .wc-fast-booking .wc-booking-section {padding-inline:8px}
+}
+
+
+/* calendar-thumb-form-v1 */
+.wc .wc-fast-booking .wc-customer-identifiers {
+  grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);
+}
+.wc .wc-fast-booking .wc-booking-actions {
+  display:grid;
+  direction:rtl;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:stretch;
+  gap:10px;
+}
+.wc .wc-fast-booking .wc-booking-actions button {
+  min-height:48px;
+  touch-action:manipulation;
+}
+.wc .wc-fast-booking .wc-booking-back {
+  min-width:66px;
+  padding-inline:12px;
+  background:var(--wc-paper);
+  border:1px solid var(--wc-border);
+  color:var(--cal-navy);
+}
+.wc .wc-fast-booking .wc-service {
+  min-height:48px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.wc .wc-fast-booking .wc-service label {
+  flex:1 1 auto;
+  min-width:0;
+  min-height:48px;
+  display:flex;
+  align-items:center;
+  gap:9px;
+  cursor:pointer;
+}
+.wc .wc-fast-booking .wc-service input[type=checkbox] {
+  width:19px;height:19px;
+  flex:none;margin:0;
+}
+.wc .wc-fast-booking .wc-service input:not([type=checkbox]) {
+  flex:0 1 84px;
+  min-width:0;
+}
+.wc .wc-fast-booking .wc-extra-toggle {min-height:48px}
+.wc .wc-fast-booking :is(input,select) {scroll-margin-block:12px}
+.wc .wc-fast-booking .wc-submit {padding-inline:2px}
+
+/* في نموذج الموعد، الرجوع موجود بجانب الحفظ. */
+.wc:has(>form.wc-fast-booking) > header button {display:none}
+
+@media(max-height:540px){
+  .wc .wc-fast-booking .wc-submit {
+    padding-top:4px;
+    padding-bottom:max(4px,env(safe-area-inset-bottom));
+  }
+  .wc .wc-fast-booking .wc-booking-actions button {min-height:44px}
+}
