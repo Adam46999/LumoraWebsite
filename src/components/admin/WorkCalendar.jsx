@@ -218,10 +218,223 @@ function QuickContactIcon({kind}) {
     <g transform="translate(4 4)" color="white">{receiver}</g>
   </svg>;
 }
+function BookingTown({value, names, onChange}) {
+  const [manual,setManual] = useState(false);
+  const other = manual || (!!value && !names.includes(value));
+  return <div className="wc-town-field">
+    <Field title="البلد">
+      <select required value={other ? "__other__" : value} onChange={e=>{
+        const custom = e.target.value === "__other__";
+        setManual(custom);
+        onChange(custom ? "" : e.target.value);
+      }}>
+        <option value="" disabled>اختار البلد</option>
+        {names.map(name=><option key={name} value={name}>{name}</option>)}
+        <option value="__other__">بلد ثانية…</option>
+      </select>
+    </Field>
+    {other && <Field title="اسم البلد">
+      <input type="text" required dir="auto" autoFocus={manual}
+        value={value} placeholder="اكتب اسم البلد" onChange={e=>onChange(e.target.value)}/>
+      <small className="wc-town-hint">لهالموعد بس</small>
+    </Field>}
+  </div>;
+}
+
+function CalendarTownSettings({uid,names,available,onClose}) {
+  const modal = useRef(null);
+  const saving = useRef(false);
+  const input = useRef(null);
+  const [editing,setEditing] = useState(null);
+  const [value,setValue] = useState("");
+  const [pending,setPending] = useState(false);
+  const [adding,setAdding] = useState(false);
+  const [failed,setFailed] = useState(false);
+  const addButton = useRef(null);
+  const editButtons = useRef(new Map());
+
+  useEffect(()=>{
+    if (adding || editing !== null) {
+      const field=input.current;
+      if (!field) return;
+      field.focus({preventScroll:true});
+      field.select();
+      field.closest("form")?.scrollIntoView({block:"nearest"});
+    }
+  },[adding,editing]);
+
+  function focusAction(name) {
+    requestAnimationFrame(()=>{
+      (editButtons.current.get(name) || addButton.current)?.focus({preventScroll:true});
+    });
+  }
+
+  const inEditor = adding || editing !== null;
+  const backdropStart = useRef(false);
+
+  function stopEdit() {
+    if (saving.current) return;
+    const changed = clean(value) !== (editing ?? "");
+    if (changed && !window.confirm("ترجع لقائمة البلاد وتترك التغيير بدون حفظ؟")) return;
+    setAdding(false);
+    setEditing(null);
+    setValue("");
+    setFeedback("");
+    setFailed(false);
+    focusAction(editing);
+  }
+
+  const [feedback,setFeedback] = useState("");
+  useEffect(()=>{
+    const node = modal.current;
+    const opener = document.activeElement;
+    node.showModal();
+    return ()=>{
+      node.close();
+      if (opener instanceof HTMLElement && opener.isConnected)
+        opener.focus({preventScroll:true});
+    };
+  },[]);
+
+  function leaveTownSheet() {
+    if (saving.current) return;
+    if (inEditor) stopEdit();
+    else onClose();
+  }
+
+  function outsideSheet(event) {
+    if (event.target !== event.currentTarget) return false;
+    const box = event.currentTarget.getBoundingClientRect();
+    return event.clientX < box.left || event.clientX > box.right ||
+      event.clientY < box.top || event.clientY > box.bottom;
+  }
+
+  async function apply(action,oldName) {
+    if (saving.current || !available) return;
+    const nextName = clean(value);
+    if (action !== "remove" && (!nextName || nextName === "__other__")) {
+      setFailed(true); setFeedback("اكتب اسم بلد صالح."); input.current?.focus(); return;
+    }
+    if (action === "remove" && !window.confirm("تشيل " + oldName + " من خيارات الحجز؟ المواعيد القديمة بتضل محفوظة.")) return;
+    saving.current = true;
+    setPending(true); setFailed(false);
+    setFeedback("");
+    try {
+      const ref = doc(db,"lumora_calendar",uid,"settings","towns");
+      await runTransaction(db,async tx=>{
+        const snapshot = await tx.get(ref);
+        const list = snapshot.exists() ? snapshot.data().names : towns;
+        if (!Array.isArray(list)) throw Error("تعذّر قراءة قائمة البلاد.");
+        if (oldName !== null && !list.includes(oldName))
+          throw Error("القائمة تغيّرت من جهاز ثاني. اختار البلد من جديد.");
+        if (action !== "remove" && list.some(name=>name !== oldName && clean(name) === nextName))
+          throw Error("هالبلد موجودة بالقائمة.");
+        const updated = action === "remove" ? list.filter(name=>name !== oldName) :
+          action === "rename" ? list.map(name=>name === oldName ? nextName : name) :
+          [...list,nextName];
+        tx.set(ref,{names:updated});
+      });
+      setAdding(false); setEditing(null); setValue("");
+      focusAction(action === "remove" ? null : nextName);
+      setFeedback(action === "remove" ? "انشالت البلد من الخيارات." :
+        action === "rename" ? "تم تعديل اسم البلد." : "انضافت البلد للخيارات.");
+    } catch (e) {
+      setFailed(true); setFeedback(e.code ? "تعذّر حفظ إعدادات البلاد. افحص الاتصال وصلاحية الإعدادات." : e.message);
+    } finally { saving.current=false; setPending(false); }
+  }
+
+  function editor(name) {
+    const isNew = name === null;
+    return <form className="wc-town-editor" onSubmit={e=>{
+      e.preventDefault();
+      apply(isNew ? "add" : "rename",name);
+    }}>
+      <label htmlFor="wc-town-edit-input">{isNew ? "اسم البلد الجديدة" : "تعديل اسم البلد"}</label>
+      <input id="wc-town-edit-input" ref={input} type="text" dir="auto" required
+        value={value} disabled={pending} onChange={e=>setValue(e.target.value)}
+        placeholder="اكتب اسم البلد" enterKeyHint="done"/>
+      <div className="wc-town-edit-actions">
+        <button className="wc-town-save" type="submit"
+          disabled={!available || pending || !value.trim()}>
+          {pending ? "جارٍ الحفظ…" : isNew ? "إضافة" : "حفظ"}
+        </button>
+        <button type="button" disabled={pending} onClick={stopEdit}>إلغاء</button>
+        {!isNew && <button type="button" className="wc-town-delete"
+          disabled={!available || pending} onClick={()=>apply("remove",name)}>إزالة من الخيارات</button>}
+      </div>
+    </form>;
+  }
+
+  return <dialog ref={modal} className="wc-town-settings wc-town-sheet" dir="rtl"
+    aria-labelledby="wc-settings-title"
+    onCancel={e=>{e.preventDefault(); leaveTownSheet();}}
+    onPointerDown={e=>{backdropStart.current=outsideSheet(e);}}
+    onPointerCancel={()=>{backdropStart.current=false;}}
+    onClick={e=>{
+      const dismiss = backdropStart.current && outsideSheet(e);
+      backdropStart.current=false;
+      if (dismiss) leaveTownSheet();
+    }}>
+    <header>
+      <h2 id="wc-settings-title">إعدادات المواعيد</h2>
+      <button type="button" className="wc-town-close" disabled={pending}
+        aria-label={inEditor ? "رجوع لقائمة البلاد" : "إغلاق إعدادات المواعيد"}
+        onClick={leaveTownSheet}>{inEditor ? "رجوع" : "إغلاق"}</button>
+    </header>
+
+    <div className="wc-town-list-heading">
+      <h3>بلاد الحجز <small>{names.length}</small></h3>
+      {!adding && editing === null && <button type="button" ref={addButton}
+        className="wc-town-add" disabled={!available} onClick={()=>{
+          setValue(""); setFeedback(""); setFailed(false); setAdding(true);
+        }}>+ إضافة بلد</button>}
+    </div>
+
+    {adding && editor(null)}
+    {!available && <p role="status">بانتظار الاتصال بإعدادات البلاد.</p>}
+    <p className="wc-town-feedback" role="status" data-error={failed}>{feedback}</p>
+
+    <ul className="wc-town-list">{names.map(name=><li key={name}>
+      {editing === name ? editor(name) : <>
+        <bdi dir="auto">{name}</bdi>
+        <button type="button" className="wc-town-pencil"
+          ref={node=>{if(node) editButtons.current.set(name,node); else editButtons.current.delete(name);}}
+          title={"تعديل "+name} aria-label={"تعديل "+name}
+          disabled={!available || pending || adding || editing !== null}
+          onClick={()=>{setValue(name);setFeedback("");setFailed(false);setEditing(name);}}>
+          <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18"
+            fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round">
+            <path d="m15 5 4 4M4 20l4-1 12-12a2.8 2.8 0 0 0-4-4L4 15z"/>
+          </svg>
+        </button>
+      </>}
+    </li>)}</ul>
+    {editing !== null && !names.includes(editing) && <div role="status">
+      تغيّرت هالبلد من جهاز ثاني.
+      <button type="button" disabled={pending} onClick={stopEdit}>رجوع للقائمة</button>
+    </div>}
+    {!names.length && !adding && available && <p>القائمة فاضية. فيك تضيف أول بلد.</p>}
+  </dialog>;
+}
+
 function CalendarBody({ uid, close, embedded=false, leaveGuard, schedulePosition, actionHost }) {
   const Surface=embedded ? "section" : "dialog";
+  const [bookingTowns,setBookingTowns] = useState(towns);
+  const [townsReady,setTownsReady] = useState(false);
+  const [settingsOpen,setSettingsOpen] = useState(false);
   const [rows,setRows] = useState([]), [ready,setReady] = useState(false);
   const [loadError,setLoadError] = useState(""), [retry,setRetry] = useState(0);
+  useEffect(()=>{
+    setTownsReady(false);
+    return onSnapshot(doc(db,"lumora_calendar",uid,"settings","towns"),
+      {includeMetadataChanges:true}, snap=>{
+        const list = snap.exists() ? snap.data().names : towns;
+        const valid = Array.isArray(list) && list.every(name=>typeof name==="string" && name.trim());
+        if (valid) setBookingTowns(list);
+        setTownsReady(valid && !snap.metadata.fromCache);
+      },()=>setTownsReady(false));
+  },[uid,retry]);
+
   const [date,setDate] = useState(()=>schedulePosition?.current?.date || today());
   const [view,setView] = useState(()=>schedulePosition?.current?.view || "اليوم");
   React.useLayoutEffect(()=>{
@@ -382,7 +595,7 @@ function CalendarBody({ uid, close, embedded=false, leaveGuard, schedulePosition
   async function act(fn, success) {
     if (lock.current || !ready) return;
     lock.current=true; setBusy(true); say("");
-    try { await fn(); setForm(null); setCheckout(null); say(success); }
+    try { const notice=await fn(); setForm(null); setCheckout(null); say(notice ?? success); }
     catch(e) { say(e.code ? "تعذّر الحفظ. افحص الاتصال والصلاحية وجرّب كمان مرة." : e.message); }
     finally { lock.current=false; setBusy(false); }
   }
@@ -402,7 +615,8 @@ function CalendarBody({ uid, close, embedded=false, leaveGuard, schedulePosition
         tx.set(ref,{...r,rev:r.rev+1,updatedAt:Date.now()});
       });
       setSection("appointments"); setDate(r.date); setView("اليوم"); find(""); setSearchOpen(false);
-    },"تم حفظ الموعد.");
+      return {kind:"saved",edited:!!r.rev,name:jobName(r),date:r.date,time:timeLabel(r)};
+    });
   }
   function deleteCancelledAppointment(r) {
     const details = jobName(r) + " · " + r.date.split("-").reverse().join("/") + " · " + timeLabel(r);
@@ -671,6 +885,14 @@ function CalendarBody({ uid, close, embedded=false, leaveGuard, schedulePosition
   }
   const paySet=(k,v)=>setCheckout(f=>({...f,[k]:v}));
   const calendarTopActions=<div className="wc-top-actions">
+    <button type="button" className="wc-settings-launch" title="إعدادات المواعيد"
+      aria-label="إعدادات المواعيد" onClick={()=>setSettingsOpen(true)}>
+      <svg aria-hidden="true" viewBox="0 0 24 24" width="19" height="19" fill="none"
+        stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+        <path d="M4 7h7m4 0h5M4 17h2m4 0h10"/>
+        <circle cx="13" cy="7" r="2"/><circle cx="8" cy="17" r="2"/>
+      </svg>
+    </button>
     <button type="button" className="wc-top-add" disabled={!ready}
       onClick={()=>edit(blank(date))}>+ موعد</button>
     <button type="button" className="wc-top-search" aria-expanded={searchOpen}
@@ -726,7 +948,7 @@ function CalendarBody({ uid, close, embedded=false, leaveGuard, schedulePosition
         </div>}
         </div>
       </details>}
-      <div className="wc-grid wc-customer-identifiers">{field("town","البلد","text",{list:"wc-towns",required:true,dir:"auto",placeholder:"اختار أو اكتب أي بلد"})}
+      <div className="wc-grid wc-customer-identifiers"><BookingTown key={form.id} value={form.town} names={bookingTowns} onChange={name=>set("town",name)}/>
         {field("number","رقم الزبون بالبلد","text",{
           inputMode:"numeric",placeholder:"0",required:true,enterKeyHint:"next",
           onKeyDown:e=>{
@@ -735,7 +957,7 @@ function CalendarBody({ uid, close, embedded=false, leaveGuard, schedulePosition
             if (e.currentTarget.reportValidity()) arrivalInput.current?.focus();
           }
         })}</div>
-      <datalist id="wc-towns">{[...new Set([...towns,...rows.map(r=>r.town)])].map(t=><option key={t}>{t}</option>)}</datalist>
+
       </section>
       <section className="wc-booking-section" aria-label="الموعد والسعر">
         <h3>الموعد والسعر</h3>
@@ -809,6 +1031,18 @@ function CalendarBody({ uid, close, embedded=false, leaveGuard, schedulePosition
         {busy ? "جارٍ التسجيل…" : loadError ? "تعذّر الاتصال بالسجل" : !ready ? "بانتظار الاتصال…" : "تأكيد وتسجيل بالدفتر"}</button></div>
       </form> : <>
       {embedded && actionHost ? createPortal(calendarTopActions,actionHost) : calendarTopActions}
+      {msg?.kind==="saved" && <div className="wc-saved-notice">
+        <span className="wc-saved-check" aria-hidden="true">✓</span>
+        <div role="status" aria-atomic="true">
+          <strong>{msg.edited ? "تم تعديل موعد" : "انحفظ موعد"} <bdi dir="auto">{msg.name}</bdi></strong>
+          <small>{local(msg.date).toLocaleDateString("ar",{weekday:"long",day:"numeric",month:"long"})}
+            {" · "}<bdi dir="ltr">{msg.time}</bdi></small>
+        </div>
+        <button type="button" aria-label="إخفاء تأكيد الحفظ" onClick={()=>say("")}>×</button>
+      </div>}
+      {settingsOpen && <CalendarTownSettings uid={uid} names={bookingTowns}
+        available={townsReady} onClose={()=>setSettingsOpen(false)}/>}
+
       
       <div className="wc-section-heading" dir="rtl">
         <h3>{inHistory ? "سجل الزيارات" : "الأدوار"}</h3>
@@ -906,13 +1140,28 @@ function CalendarBody({ uid, close, embedded=false, leaveGuard, schedulePosition
                 aria-current={isToday ? "date" : undefined}
                 aria-label={[isToday ? "اليوم" : "",dateLabel(key),
                   count ? "عدد المواعيد " + count : "ما في مواعيد"].filter(Boolean).join("، ")}
-                data-calendar-date={key} onClick={()=>openDayFromMonth(key)}>
+                aria-pressed={key===date}
+                data-calendar-date={key} onClick={()=>setDate(key)}>
                 <span className="wc-date-number">{i+1}</span>
                 <span className="wc-date-count-slot" aria-hidden="true">
                   {count>0 && <span className="wc-date-count">{count}</span>}
                 </span>
               </button>;
             })}
+          </div>
+          <div className="wc-day-preview" dir="rtl">
+            <div aria-live="polite" aria-atomic="true">
+              <strong>{local(date).toLocaleDateString("ar",{
+                weekday:"long",day:"numeric",month:"long"
+              })}</strong>
+              <small>{!ready ? "بانتظار تحديث الأدوار" :
+                activeVisits.length===0 ? "ما في أدوار" :
+                activeVisits.length===1 ? "موعد واحد" :
+                activeVisits.length===2 ? "موعدان" :
+                "عدد الأدوار: "+activeVisits.length}</small>
+            </div>
+            <button type="button" onClick={()=>openDayFromMonth(date)}
+              aria-label={"عرض أدوار "+dateLabel(date)}>عرض اليوم</button>
           </div>
           <div className="wc-month-paging" dir="rtl" role="group" aria-label="التنقل بين الشهور">
             <button type="button" onClick={()=>setDate(d=>monthStart(d,-1))}>الشهر السابق</button>
@@ -936,7 +1185,7 @@ function CalendarBody({ uid, close, embedded=false, leaveGuard, schedulePosition
           <span aria-hidden="true"> · </span><bdi dir="ltr">{msg.time}</bdi></small>
       </div>
       <button type="button" aria-label="إخفاء رسالة الإلغاء" onClick={()=>say("")}>×</button>
-    </div> : msg && <p className="wc-msg" role="status">{msg}</p>}
+    </div> : typeof msg==="string" && msg && <p className="wc-msg" role="status">{msg}</p>}
   </Surface>;
 }
 export default function WorkCalendar({embedded=false,leaveGuard,onHome,schedulePosition,actionHost}={}) {

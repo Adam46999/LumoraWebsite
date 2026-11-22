@@ -1,0 +1,27 @@
+
+.wc-launch,.wc .wc-primary,.wc nav button[aria-pressed=true]{background:#115e50;color:white;border-color:#115e50}
+.wc-launch{border-radius:12px;padding:12px 20px;font-weight:700;min-height:46px}
+.wc{box-sizing:border-box;margin:auto;padding:0 16px max(18px,env(safe-area-inset-bottom));width:min(100%,620px);height:min(90dvh,850px);max-height:100dvh;max-width:100%;overflow:auto;overscroll-behavior:contain;background:#f6f9f7;color:#19362e;border:1px solid #d1dfda;border-radius:18px}
+.wc::backdrop{background:#102820ad}
+.wc *, .wc *::before{box-sizing:border-box}
+.wc header{position:sticky;top:0;z-index:1;background:#f6f9f7;padding:12px 0;border-bottom:1px solid #d4ded9;margin-bottom:12px}
+.wc h2,.wc h3{font-weight:750}.wc h2{font-size:21px}.wc h3{margin:14px 0 7px}
+.wc button,.wc a,.wc input:not([type=checkbox]),.wc select{min-height:44px;min-width:0;border:1px solid #c6d7ce;border-radius:10px;background:white;color:inherit;padding:8px 11px;font:inherit}
+.wc button,.wc a{font-weight:650}.wc button:disabled{opacity:.48}
+.wc .wc-wide,.wc-field input,.wc-field select{width:100%}
+.wc nav,.wc-actions,.wc-controls,.wc-row{display:flex;align-items:center;gap:7px}
+.wc nav{margin:12px 0}.wc nav button,.wc-controls input{flex:1}
+.wc-controls{margin-bottom:8px}.wc-row{justify-content:space-between}
+.wc-card,.wc-day{padding:12px;background:white;border:1px solid #d3dfd8;border-radius:14px;margin:8px 0}
+.wc-card[data-next=true]{border-inline-start:4px solid #147465}
+.wc-card p{margin:5px 0}.wc-card small,.wc-day span{color:#4d665a}
+.wc-actions{flex-wrap:wrap;margin-top:8px}.wc-actions a{display:inline-flex;align-items:center;text-decoration:none}
+.wc-field{display:grid;gap:4px;margin-bottom:10px;font-weight:600}
+.wc-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.wc-grid>*{min-width:0}
+.wc fieldset{border:0;padding:0;min-width:0}.wc details{margin:10px 0}.wc summary{cursor:pointer;padding:10px 0}
+.wc-service{display:flex;justify-content:space-between;align-items:center;min-height:44px}.wc-service input:not([type=checkbox]){width:92px}
+.wc-day{width:100%;display:grid;gap:5px;text-align:start}.wc-day span{font-size:.9em}
+.wc-month{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px;text-align:center}
+.wc-month button{padding:4px}.wc-month button small{display:block;color:#115e50;font-weight:bold}
+.wc-msg{position:sticky;bottom:0;background:#edf6ee;border:1px solid #abccbc;border-radius:10px;padding:10px;margin-top:12px}
+@media(max-width:600px){.wc{width:100%;height:100dvh;border:0;border-radius:0;padding-inline:12px}.wc input,.wc select{font-size:16px}}
