@@ -1632,3 +1632,56 @@
   }
   .wc .wc-fast-booking .wc-booking-actions button {min-height:44px}
 }
+
+
+/* booking-date-time-fit-v1 */
+.wc .wc-fast-booking .wc-booking-section[aria-label="الموعد والسعر"] {
+  container: booking-times / inline-size;
+}
+
+/* التاريخ يبدأ من اليمين ويأخذ فقط المساحة اللازمة. */
+.wc .wc-fast-booking .wc-field:has(> input[type="date"]) {
+  inline-size: min(100%, 12.5rem);
+  min-inline-size: 0;
+  margin-inline: 0 auto;
+}
+
+/* نقيس مساحة قسم الموعد نفسه، بما فيها هوامش الموبايل. */
+.wc .wc-fast-booking .wc-booking-section .wc-grid:has(input[type="time"]) {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  inline-size: min(100%, 22rem);
+  min-inline-size: 0;
+  gap: 8px 12px;
+  align-items: start;
+  margin-inline: 0 auto;
+}
+.wc .wc-fast-booking .wc-grid:has(input[type="time"]) > .wc-field {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  margin: 0 0 8px;
+}
+.wc .wc-fast-booking .wc-field > input:is([type="date"],[type="time"]) {
+  box-sizing: border-box;
+  inline-size: 100%;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  min-height: 46px;
+  padding-inline: 8px;
+  font-size: 16px;
+  line-height: normal;
+  font-variant-numeric: tabular-nums;
+}
+.wc .wc-fast-booking input:is([type="date"],[type="time"])::-webkit-date-and-time-value {
+  min-width: 0;
+  margin: 0;
+}
+
+/* إذا الخانتين ما بيسعوا براحة، منعرضهم تحت بعض. */
+@container booking-times (max-width: 278px) {
+  .wc .wc-fast-booking .wc-booking-section .wc-grid:has(input[type="time"]) {
+    grid-template-columns: minmax(0, 1fr);
+    inline-size: min(100%, 12.5rem);
+    gap: 0;
+  }
+}
