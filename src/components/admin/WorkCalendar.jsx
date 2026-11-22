@@ -105,6 +105,96 @@ function MissingContactIcon({kind}) {
     <span className="wc-plus-mark">+</span>
   </span>;
 }
+const wheelHours=Array.from({length:24},(_,i)=>String(i).padStart(2,"0"));
+const wheelMinutes=["00","30"];
+const wheelStep=40;
+
+function TimeWheel({label,values,wheelRef,index,onIndex}) {
+  function choose(i) {
+    const n=Math.max(0,Math.min(values.length-1,i));
+    wheelRef.current.scrollTop=n*wheelStep;
+    onIndex(n);
+  }
+  return <div className="wc-wheel-column">
+    <span>{label}</span>
+    <div className="wc-wheel-frame">
+      <div className="wc-wheel-scroll" ref={wheelRef} role="spinbutton"
+        tabIndex={0} aria-label={label} aria-valuemin={Number(values[0])}
+        aria-valuemax={Number(values[values.length-1])} aria-valuenow={Number(values[index])}
+        aria-valuetext={values[index]}
+        onKeyDown={e=>{
+          if(!["ArrowUp","ArrowDown","Home","End"].includes(e.key)) return;
+          e.preventDefault();
+          choose(e.key==="Home"?0:e.key==="End"?values.length-1:index+(e.key==="ArrowDown"?1:-1));
+        }}
+        onScroll={e=>onIndex(Math.max(0,Math.min(values.length-1,
+          Math.round(e.currentTarget.scrollTop/wheelStep))))}>
+        {values.map((v,i)=><div key={v} aria-hidden="true" data-selected={i===index}
+          onClick={()=>choose(i)}>{v}</div>)}
+      </div>
+    </div>
+  </div>;
+}
+
+function HalfHourField({title,value,placeholder,onPick,buttonRef,optional=false,after=""}) {
+  const popup=useRef(null), hours=useRef(null), minutes=useRef(null);
+  const [h,setH]=useState(0),[m,setM]=useState(0),[error,setError]=useState("");
+  function open() {
+    const now=new Date();
+    const seed=value || after || (String(now.getHours()).padStart(2,"0")+":00");
+    let slot=Number(seed.slice(0,2))*2+(Number(seed.slice(3,5))>=30?1:0);
+    if(!value && after) slot=Math.min(47,slot+1);
+    const hi=Math.floor(slot/2),mi=slot%2;
+    setH(hi);setM(mi);setError("");
+    popup.current.showModal();
+    hours.current.scrollTop=hi*wheelStep;
+    minutes.current.scrollTop=mi*wheelStep;
+  }
+  function confirm() {
+    const hi=Math.min(23,Math.max(0,Math.round(hours.current.scrollTop/wheelStep)));
+    const mi=Math.min(1,Math.max(0,Math.round(minutes.current.scrollTop/wheelStep)));
+    const time=wheelHours[hi]+":"+wheelMinutes[mi];
+    if(after && time<=after){setError("وقت النهاية لازم يكون بعد وقت الوصول.");return;}
+    popup.current.close();onPick(time);
+  }
+  return <div className="wc-book-picker wc-book-picker-time">
+    <span className="wc-picker-label">{title}</span>
+    <button type="button" ref={buttonRef} className="wc-picker-box wc-clock-trigger"
+      data-filled={!!value} aria-haspopup="dialog" aria-label={title+"، "+(value||placeholder)} onClick={open}>
+      <span className="wc-picker-value">{value?<bdi dir="ltr">{value}</bdi>:placeholder}</span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        strokeWidth="1.7" strokeLinecap="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="9"/><path d="M12 6v6l4 2"/>
+      </svg>
+    </button>
+    <dialog ref={popup} className="wc-hour-dialog" aria-label={title}
+      onCancel={e=>{e.preventDefault();e.stopPropagation();popup.current.close();}}
+      onClick={e=>{
+        if(e.target!==e.currentTarget)return;
+        const b=e.currentTarget.getBoundingClientRect();
+        if(e.clientX<b.left||e.clientX>b.right||e.clientY<b.top||e.clientY>b.bottom)popup.current.close();
+      }}>
+      <div className="wc-wheel-title">
+        <strong>{title}</strong>
+        <bdi dir="ltr" className="wc-wheel-preview">{wheelHours[h]}:{wheelMinutes[m]}</bdi>
+      </div>
+      <div className="wc-wheel-pair" dir="rtl">
+        <TimeWheel label="الساعة" values={wheelHours} wheelRef={hours} index={h}
+          onIndex={i=>{setH(i);setError("");}}/>
+        <TimeWheel label="الدقائق" values={wheelMinutes} wheelRef={minutes} index={m}
+          onIndex={i=>{setM(i);setError("");}}/>
+      </div>
+      {error && <p role="alert">{error}</p>}
+      <div className="wc-wheel-actions">
+        <button type="button" className="wc-primary" onClick={confirm}>تم</button>
+        <button type="button" onClick={()=>popup.current.close()}>إلغاء</button>
+      </div>
+      {optional && value && <button type="button" className="wc-hour-clear"
+        onClick={()=>{popup.current.close();onPick("");}}>مسح وقت النهاية</button>}
+    </dialog>
+  </div>;
+}
+
 function QuickContactIcon({kind}) {
   if (kind==="waze") return <svg viewBox="0 0 32 32" aria-hidden="true" focusable="false">
     <rect width="32" height="32" rx="8" fill="#33CCFF"/>
@@ -140,6 +230,18 @@ function CalendarBody({ uid, close, embedded=false, leaveGuard, schedulePosition
   const [form,setForm] = useState(null), [checkout,setCheckout] = useState(null);
   const [msg,say] = useState(""), [busy,setBusy] = useState(false), [search,find] = useState("");
   const [searchOpen,setSearchOpen] = useState(false);
+  const [section,setSection] = useState("appointments");
+  const [historyFilter,setHistoryFilter] = useState("all");
+  const inHistory = section === "history";
+
+  function selectSection(value) {
+    if (value === section) return;
+    setSection(value);
+    setSearchOpen(false);
+    find("");
+    say("");
+  }
+
   const pickerOrigin=useRef(schedulePosition?.current?.pickerOrigin || null);
   const [returnDay,setReturnDay] = useState(null);
   const focusAfterReturn = useRef(null);
@@ -257,7 +359,7 @@ function CalendarBody({ uid, close, embedded=false, leaveGuard, schedulePosition
     if (draft && JSON.stringify(draft)!==initialDraft.current &&
         !window.confirm("ترجع للجدول وتترك التعديلات؟")) return;
     if (form || checkout) { setForm(null); setCheckout(null); say(""); }
-    else if (view==="اليوم" && returnDay) {
+    else if (!inHistory && view==="اليوم" && returnDay) {
       focusAfterReturn.current=returnDay;
       setDate(returnDay);
       setView("الشهر");
@@ -299,9 +401,46 @@ function CalendarBody({ uid, close, embedded=false, leaveGuard, schedulePosition
         else if (old) throw Error("الموعد محفوظ. ارجع للجدول.");
         tx.set(ref,{...r,rev:r.rev+1,updatedAt:Date.now()});
       });
-      setDate(r.date); setView("اليوم"); find(""); setSearchOpen(false);
+      setSection("appointments"); setDate(r.date); setView("اليوم"); find(""); setSearchOpen(false);
     },"تم حفظ الموعد.");
   }
+  function deleteCancelledAppointment(r) {
+    const details = jobName(r) + " · " + r.date.split("-").reverse().join("/") + " · " + timeLabel(r);
+    if (!window.confirm("حذف الموعد نهائيًا؟\n" + details +
+      "\nرح ينحذف من السجل وما بتقدر تسترجعه.")) return;
+
+    act(async () => {
+      const ref = refFor(r.id);
+      await runTransaction(db, async tx => {
+        const snapshot = await tx.get(ref);
+        if (!snapshot.exists()) throw Error("الموعد انحذف من قبل.");
+        const current = snapshot.data();
+        if (current.status !== "cancelled" || current.rev !== r.rev)
+          throw Error("حالة الموعد تغيّرت. راجع الموعد قبل الحذف.");
+        tx.delete(ref);
+      });
+    }, "تم حذف موعد " + details + " نهائيًا.");
+  }
+
+  function restoreAppointment(r) {
+    const details = jobName(r)+" · "+r.date.split("-").reverse().join("/")+" · "+timeLabel(r);
+    const question = r.date<today()
+      ? "تاريخ الموعد فات. ترجّعه بنفس تاريخه الأصلي؟"
+      : "ترجّع الموعد للجدول بنفس التاريخ والساعة؟";
+    if (!window.confirm(question+"\n"+details)) return;
+
+    act(async()=>{
+      const ref=refFor(r.id);
+      await runTransaction(db,async tx=>{
+        const old=(await tx.get(ref)).data();
+        if (!old || old.status!=="cancelled" || old.rev!==r.rev)
+          throw Error("الموعد تغيّر. راجع حالته بالجدول.");
+        tx.update(ref,{status:"booked",rev:old.rev+1,updatedAt:Date.now()});
+      });
+      go(r.date);
+    },"تم استرجاع موعد "+details);
+  }
+
   function cancel(r) {
     if (!window.confirm("تأكيد إلغاء موعد " + jobName(r) + "؟ رح يضل ظاهر بالسجل.")) return;
     act(async () => {
@@ -310,7 +449,7 @@ function CalendarBody({ uid, close, embedded=false, leaveGuard, schedulePosition
         check((await tx.get(ref)).data(),r);
         tx.update(ref,{status:"cancelled",rev:r.rev+1,updatedAt:Date.now()});
       });
-    },"تم إلغاء الموعد.");
+    } ,{kind:"cancelled",name:jobName(r),date:r.date,time:timeLabel(r)});
   }
   function finish() {
     act(async () => {
@@ -356,10 +495,17 @@ function CalendarBody({ uid, close, embedded=false, leaveGuard, schedulePosition
   const until=monthStart(date,1);
   const dayRows = byDate.get(date) || [];
   const needle = calendarSearchText(search);
-  const historyResults = useMemo(() => needle
-    ? rows.filter(r => calendarMatches(r,needle,true)).reverse()
-    : [],[rows,needle]);
-  const shown = needle ? historyResults : dayRows;
+  const searchResults = useMemo(() => {
+    if (!inHistory && !needle) return [];
+    const matches = rows.filter(r => {
+      if (inHistory) {
+        if (r.status !== "done" && r.status !== "cancelled") return false;
+        if (historyFilter !== "all" && r.status !== historyFilter) return false;
+      } else if (r.status !== "booked") return false;
+      return !needle || calendarMatches(r, needle, true);
+    });
+    return inHistory ? matches.reverse() : matches;
+  }, [rows, needle, inHistory, historyFilter]);
   const editingRow = form?.rev ? form : checkout?.r;
   const latestRow = editingRow ? rows.find(row=>row.id===editingRow.id) : null;
   const outdated = !!(ready && editingRow && (!latestRow ||
@@ -385,13 +531,13 @@ function CalendarBody({ uid, close, embedded=false, leaveGuard, schedulePosition
   const currentDay = today();
   const next = (byDate.get(currentDay) || []).find(r => r.status === "booked");
   const activeVisits = dayRows.filter(r => r.status === "booked");
-  const finishedVisits = dayRows.filter(r => r.status !== "booked");
-  const groupRows = needle ? historyResults : activeVisits;
+  const groupRows = inHistory || needle ? searchResults : activeVisits;
   const groupOpen = groupRows.length>0 && groupRows.every(r=>cardExceptions.has(r.id));
 
   function groupLabel() {
     const n=groupRows.length;
     if (needle) return "نتائج البحث ("+n+")";
+    if (inHistory) return "الزيارات ("+n+")";
     const count=n===1 ? "موعد" : n===2 ? "موعدان" :
       n+" "+(n>=3 && n<=10 ? "مواعيد" : "موعد");
     if (date<currentDay) return count+" بحاجة لمراجعة";
@@ -400,7 +546,7 @@ function CalendarBody({ uid, close, embedded=false, leaveGuard, schedulePosition
     if (n===2) return "موعدان مجدولان";
     return count;
   }
-  function go(key) { setDate(key); setView("اليوم"); find(""); setSearchOpen(false); }
+  function go(key) { setSection("appointments"); setDate(key); setView("اليوم"); find(""); setSearchOpen(false); }
   function browseCalendarMonth() {
     pickerOrigin.current=date;
     setReturnDay(null);
@@ -420,35 +566,35 @@ function CalendarBody({ uid, close, embedded=false, leaveGuard, schedulePosition
       <button type="button" className="wc-card-toggle"
         aria-expanded={expanded} aria-controls={panelId}
         onClick={()=>toggleCard(r.id)}>
-      <span className="wc-card-meta">
-        {upcoming && <span className="wc-next">الزبون الجاي</span>}
-        {r.status==="done" && <span>تم الشغل</span>}
-        {r.status==="cancelled" && <span>ملغي</span>}
-        {needle && <span>{local(r.date).toLocaleDateString("ar",{
-          day:"numeric",month:"long",year:"numeric"
-        })}</span>}
-      </span>
-      <span className="wc-card-headline">
-        <strong><bdi dir="auto">{jobName(r)}</bdi></strong>
-        <bdi className="wc-time" dir="ltr">{timeLabel(r)}</bdi>
+      {(upcoming || !active || needle) && <span className="wc-visit-meta">
+        {upcoming && <span className="wc-visit-next">الجاي</span>}
+        {r.status==="done" && <span className="wc-visit-done">تمّ الشغل</span>}
+        {r.status==="cancelled" && <span className="wc-visit-cancelled">ملغي</span>}
+        {(inHistory || needle) && <time dateTime={r.date}>
+          {local(r.date).toLocaleDateString("ar",{day:"numeric",month:"short",year:"numeric"})}
+        </time>}
+      </span>}
+      <span className="wc-visit-line" dir="rtl">
+        <bdi className="wc-visit-time" dir="ltr">{timeLabel(r)}</bdi>
+        <strong className="wc-visit-client"><bdi dir="auto">{jobName(r)}</bdi></strong>
         <svg className="wc-fold-chevron" aria-hidden="true" viewBox="0 0 20 20"
           width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="m5 8 5 5 5-5" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
       </span>
       </button>
-      <div className="wc-actions wc-contact wc-quick-contact" role="group" aria-label={"تواصل وملاحة · "+jobName(r)}>
+      {(active || (expanded && r.status==="done" && (r.location || r.phone))) && <div className="wc-actions wc-contact wc-quick-contact" role="group" aria-label={"تواصل وملاحة · "+jobName(r)}>
         {r.location ? <a className="wc-primary wc-icon-link" aria-label={"افتح موقع "+jobName(r)+" بويز"} title="ويز" href={r.location} target="_blank" rel="noreferrer"><QuickContactIcon kind="waze"/></a>
           : active ? <button className="wc-add-location" disabled={!ready || busy}
             title="أضف موقع ويز" aria-label={"أضف موقع ويز لـ "+jobName(r)}
             onClick={()=>edit(r,"location")}><MissingContactIcon kind="location"/></button>
-          : <small>الموقع بعده ناقص</small>}
+          : null}
         {r.phone && <><a className="wc-icon-link" aria-label={"واتساب "+jobName(r)} title="واتساب" href={"https://wa.me/"+r.phone.slice(1)} target="_blank" rel="noreferrer"><QuickContactIcon kind="whatsapp"/></a>
           <a className="wc-icon-link" aria-label={"اتصال بـ "+jobName(r)} title="اتصال" href={"tel:"+r.phone}><QuickContactIcon kind="phone"/></a></>}
         {!r.phone && active && <button type="button" className="wc-add-phone"
           disabled={!ready || busy} aria-label={"أضف تلفون لـ "+jobName(r)}
           title="أضف تلفون" onClick={()=>edit(r,"phone")}><MissingContactIcon kind="phone"/></button>}
-      </div>
+      </div>}
       </div>
       <div id={panelId} className="wc-card-body" hidden={!expanded}>
       {Object.keys(r.items || {}).length>0 && <ul className="wc-job-items" aria-label="الشغل المطلوب">
@@ -460,6 +606,22 @@ function CalendarBody({ uid, close, embedded=false, leaveGuard, schedulePosition
         <span>السعر المتفق عليه</span><strong><bdi dir="ltr">{money(cents(r.price))}</bdi></strong>
       </div>}
       {r.note && <p className="wc-card-note">{r.note}</p>}
+      {r.status==="cancelled" && <div className="wc-cancelled-actions" dir="rtl">
+        <button type="button" className="wc-restore-action" disabled={!ready || busy}
+          onClick={()=>restoreAppointment(r)}>
+          <svg aria-hidden="true" viewBox="0 0 24 24">
+            <path d="m14 4 5 5-5 5M19 9h-8a6 6 0 0 0 0 12"/>
+          </svg>
+          <span>استرجاع الموعد</span>
+        </button>
+        <button type="button" className="wc-delete-action" disabled={!ready || busy}
+          onClick={()=>deleteCancelledAppointment(r)}>
+          <svg aria-hidden="true" viewBox="0 0 24 24">
+            <path d="M3 6h18M9 6V4h6v2M6 6l1 14h10l1-14M10 10v6m4-6v6"/>
+          </svg>
+          <span>حذف نهائي</span>
+        </button>
+      </div>}
       {active && <div className="wc-actions wc-work">
         <button disabled={!ready || busy || r.date>today()} onClick={()=>{
           const draft={r,price:r.price,paid:"",partial:false,method:"كاش",payDate:today()};
@@ -512,8 +674,8 @@ function CalendarBody({ uid, close, embedded=false, leaveGuard, schedulePosition
     <button type="button" className="wc-top-add" disabled={!ready}
       onClick={()=>edit(blank(date))}>+ موعد</button>
     <button type="button" className="wc-top-search" aria-expanded={searchOpen}
-      aria-label={searchOpen ? "إغلاق البحث" : "بحث بالسجل"}
-      title={searchOpen ? "إغلاق البحث" : "بحث بالسجل"}
+      aria-label={searchOpen ? "إغلاق البحث" : inHistory ? "بحث بالسجل" : "بحث بالأدوار"}
+      title={searchOpen ? "إغلاق البحث" : inHistory ? "بحث بالسجل" : "بحث بالأدوار"}
       onClick={()=>{setSearchOpen(!searchOpen);find("");}}>
       <svg viewBox="0 0 24 24" width="19" height="19" fill="none"
         stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
@@ -524,9 +686,9 @@ function CalendarBody({ uid, close, embedded=false, leaveGuard, schedulePosition
   </div>;
   return <Surface ref={dialog} className="wc" data-embedded={embedded} data-form={!!(form || checkout)} dir="rtl" aria-label="مواعيد الشغل"
     onCancel={e=>{e.preventDefault();leave();}}>
-    {(!embedded || form || checkout || (view==="اليوم" && returnDay)) && <header data-admin-step="" className="wc-row"><h2>{form ? (form.rev ? "تعديل الموعد" : "موعد جديد") :
-      checkout ? "إنهاء الزيارة" : embedded && returnDay ? "مواعيد اليوم المختار" : "مواعيد الشغل"}</h2>
-      {(!embedded || form || checkout || (view==="اليوم" && returnDay)) && <button disabled={busy} onClick={leave}>{form || checkout ? "رجوع" : view==="اليوم" && returnDay ? "رجوع للتقويم" : "إغلاق"}</button>}</header>}
+    {(!embedded || form || checkout || (!inHistory && view==="اليوم" && returnDay)) && <header data-admin-step="" className="wc-row"><h2>{form ? (form.rev ? "تعديل الموعد" : "موعد جديد") :
+      checkout ? "إنهاء الزيارة" : embedded && !inHistory && returnDay ? "مواعيد اليوم المختار" : "مواعيد الشغل"}</h2>
+      {(!embedded || form || checkout || (!inHistory && view==="اليوم" && returnDay)) && <button disabled={busy} onClick={leave}>{form || checkout ? "رجوع" : !inHistory && view==="اليوم" && returnDay ? "رجوع للتقويم" : "إغلاق"}</button>}</header>}
     {loadError ? <p role="alert">{loadError} <button onClick={()=>setRetry(v=>v+1)}>إعادة المحاولة</button></p>
       : !ready && <p role="status">بانتظار الاتصال لعرض آخر التحديثات والحفظ.</p>}
     {form ? <form className="wc-fast-booking" onSubmit={e=>{e.preventDefault();save();}}>
@@ -579,8 +741,10 @@ function CalendarBody({ uid, close, embedded=false, leaveGuard, schedulePosition
         <h3>الموعد والسعر</h3>
       {bookingPicker("date","يوم الزيارة","date","اختَر التاريخ",{required:true})}
       <div className="wc-book-time-pair">
-        {bookingPicker("start","من الساعة","time","اختَر الوقت",{required:true,ref:arrivalInput})}
-        {bookingPicker("end","لغاية · اختياري","time","أضف وقت نهاية")}
+        <HalfHourField title="من الساعة" value={form.start} placeholder="اختَر الوقت"
+          buttonRef={arrivalInput} onPick={time=>set("start",time)}/>
+        <HalfHourField title="لغاية · اختياري" value={form.end} placeholder="أضف وقت نهاية"
+          optional after={form.start} onPick={time=>set("end",time)}/>
       </div>
       <div className="wc-book-price-row">
         {field("price","السعر المتفق عليه ₪","text",{inputMode:"decimal",dir:"ltr",placeholder:"0.00"})}
@@ -646,7 +810,27 @@ function CalendarBody({ uid, close, embedded=false, leaveGuard, schedulePosition
       </form> : <>
       {embedded && actionHost ? createPortal(calendarTopActions,actionHost) : calendarTopActions}
       
-      {!needle && <>
+      <div className="wc-section-heading" dir="rtl">
+        <h3>{inHistory ? "سجل الزيارات" : "الأدوار"}</h3>
+        <button type="button" className="wc-section-shortcut"
+          onClick={()=>selectSection(inHistory ? "appointments" : "history")}>
+          <svg aria-hidden="true" viewBox="0 0 24 24" width="17" height="17"
+            fill="none" stroke="currentColor" strokeWidth="1.8"
+            strokeLinecap="round" strokeLinejoin="round">
+            {inHistory ? <path d="M4 12h15m-6-6 6 6-6 6"/> : <>
+              <circle cx="12" cy="12" r="9"/>
+              <path d="M12 7v5l3 2"/>
+            </>}
+          </svg>
+          <span>{inHistory ? "رجوع للأدوار" : "السجل"}</span>
+        </button>
+      </div>
+      {inHistory && <div className="wc-record-filters" role="group" aria-label="حالة الزيارة">
+        {[["all","الكل"],["done","تمّ الشغل"],["cancelled","ملغي"]].map(([value,label]) =>
+          <button key={value} type="button" aria-pressed={historyFilter===value}
+            onClick={()=>setHistoryFilter(value)}>{label}</button>)}
+      </div>}
+      {!inHistory && !needle && <>
         <div className="wc-fixed-toolbar" dir="rtl">
           <button type="button" className="wc-calendar-toggle"
             aria-pressed={view==="الشهر"}
@@ -678,35 +862,31 @@ function CalendarBody({ uid, close, embedded=false, leaveGuard, schedulePosition
           onClick={()=>go(currentDay)}>ارجع لليوم</button>}
       </>}
       {searchOpen && <input autoFocus className="wc-wide wc-search" type="search"
-        placeholder="اسم الزبون، البلد أو التلفون" aria-label="بحث بالسجل"
+        placeholder={inHistory ? "ابحث في السجل" : "ابحث بالأدوار من كل التواريخ"}
+        aria-label={inHistory ? "بحث بالسجل" : "بحث بالأدوار من كل التواريخ"}
         value={search} onChange={e=>find(e.target.value)}/>} 
-      {needle || view==="اليوم" ? <>
-        
-        
-        <div className={needle ? undefined : "wc-swipe-day"}
-          onTouchStart={needle ? undefined : beginSwipe}
-          onTouchEnd={needle ? undefined : finishSwipe}
+      {inHistory || needle || view==="اليوم" ? <>
+        <div className={!inHistory && !needle ? "wc-swipe-day" : undefined}
+          onTouchStart={!inHistory && !needle ? beginSwipe : undefined}
+          onTouchEnd={!inHistory && !needle ? finishSwipe : undefined}
           onTouchCancel={()=>{swipeStart.current=null;}}>
-        {(needle || groupRows.length>0) && <div className="wc-list-bar">
-          <h3>{groupLabel()}</h3>
-          {groupRows.length>1 && <button type="button"
-            onClick={()=>setGroupExpanded(groupRows,!groupOpen)}>
-            {groupOpen ? "طيّ الكل" : "فتح الكل"}
-          </button>}
-        </div>}
-        {needle ? historyResults.map(card) : <>
-          
-          {activeVisits.map(card)}
-          {finishedVisits.length>0 && <details className="wc-history-fold" key={date}
-            open={activeVisits.length===0 || undefined}>
-            <summary>الزيارات المنتهية والملغاة · {finishedVisits.length}</summary>
-            {finishedVisits.map(card)}
-          </details>}
-        </>}{ready && !shown.length && <div className="wc-empty" data-empty-day={!needle} role="status">
-          <strong>{needle ? "ما لقينا موعد مطابق" : date===currentDay ? "ما في مواعيد اليوم" : "ما في مواعيد بهالتاريخ"}</strong>
-          {needle && <button type="button" onClick={()=>find("")}>مسح البحث</button>}
-          {!needle && <button type="button" onClick={()=>edit(blank(date))}>+ أضف أول موعد</button>}
-        </div>}
+          {groupRows.length>0 && <div className="wc-list-bar">
+            <h3>{groupLabel()}</h3>
+            {groupRows.length>1 && <button type="button"
+              onClick={()=>setGroupExpanded(groupRows,!groupOpen)}>
+              {groupOpen ? "طيّ الكل" : "فتح الكل"}
+            </button>}
+          </div>}
+          {groupRows.map(card)}
+          {ready && !groupRows.length && <div className="wc-empty"
+            data-empty-day={!inHistory && !needle} role="status">
+            <strong>{needle ? "ما لقينا موعد مطابق" :
+              inHistory ? (historyFilter==="done" ? "ما في زيارات منتهية" :
+                historyFilter==="cancelled" ? "ما في مواعيد ملغية" : "السجل فاضي") :
+                date===currentDay ? "ما في أدوار اليوم" : "ما في أدوار بهالتاريخ"}</strong>
+            {needle ? <button type="button" onClick={()=>find("")}>مسح البحث</button> :
+              !inHistory && <button type="button" onClick={()=>edit(blank(date))}>+ أضف موعد</button>}
+          </div>}
         </div>
       </> : <>
         <section className="wc-month-panel" aria-label="تقويم الشهر">
@@ -719,7 +899,7 @@ function CalendarBody({ uid, close, embedded=false, leaveGuard, schedulePosition
             )}
             {Array.from({length:local(shift(until,-1)).getDate()},(_,i)=>{
               const key = shift(from,i);
-              const count = (byDate.get(key) || []).filter(r=>r.status!=="cancelled").length;
+              const count = (byDate.get(key) || []).filter(r=>r.status==="booked").length;
               const isToday = key===currentDay;
               return <button type="button" className="wc-month-date" key={key}
                 data-booked={count>0} data-today={isToday}
@@ -744,7 +924,19 @@ function CalendarBody({ uid, close, embedded=false, leaveGuard, schedulePosition
           </div>
         </section></>}
     </>}
-    {msg && <p className="wc-msg" role="status">{msg}</p>}
+    {msg?.kind==="cancelled" ? <div className="wc-cancel-notice">
+      <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22"
+        fill="none" stroke="currentColor" strokeWidth="1.8">
+        <circle cx="12" cy="12" r="9"/>
+        <path d="m8 12 2.5 2.5 5.5-5.5" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+      <div role="status" aria-atomic="true">
+        <strong>تم إلغاء موعد <bdi dir="auto">{msg.name}</bdi></strong>
+        <small><bdi dir="ltr">{msg.date.split("-").reverse().join("/")}</bdi>
+          <span aria-hidden="true"> · </span><bdi dir="ltr">{msg.time}</bdi></small>
+      </div>
+      <button type="button" aria-label="إخفاء رسالة الإلغاء" onClick={()=>say("")}>×</button>
+    </div> : msg && <p className="wc-msg" role="status">{msg}</p>}
   </Surface>;
 }
 export default function WorkCalendar({embedded=false,leaveGuard,onHome,schedulePosition,actionHost}={}) {
