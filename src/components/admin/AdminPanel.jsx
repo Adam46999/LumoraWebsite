@@ -112,6 +112,7 @@ function AuthErrorNotice({ message }) {
 
 function AdminPanelInner({ onExit, gallery }) {
   const [page,setPage]=useState("calendar");
+  const [calendarActionHost,setCalendarActionHost]=useState(null);
   const leaveGuard=React.useRef(null);
   const schedulePosition=React.useRef(null);
   const goCalendar=()=>setPage("calendar");
@@ -435,16 +436,23 @@ function AdminPanelInner({ onExit, gallery }) {
       <h1>
         <span className="la-section-icon" aria-hidden="true"><SectionIcon size={22}/></span>
         <span className="la-heading-copy">
-          <span className="la-wordmark" lang="en" dir="ltr">Lumora</span>
+          <span className="sr-only">Lumora </span>
           <span className="la-section-name">{sectionLabel}</span>
         </span>
       </h1>
-      <button type="button" disabled={signingOut} onClick={leaveAdmin}>
-        {signingOut ? "جارٍ الخروج…" : "تسجيل الخروج"}
+      {page==="calendar" && <div className="la-calendar-actions" ref={setCalendarActionHost}/>}
+      <button type="button" className="la-signout" disabled={signingOut}
+          aria-label="تسجيل الخروج" title="تسجيل الخروج"
+          onClick={()=>{if(window.confirm("تسجيل الخروج من إدارة Lumora؟")) leaveAdmin();}}>
+        <svg className="la-exit-icon" viewBox="0 0 24 24" width="20" height="20"
+          fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"
+          strokeLinejoin="round" aria-hidden="true">
+          <path d="M10 4H5v16h5M10 12h11m-4-4 4 4-4 4"/>
+        </svg>
       </button>
     </header>
     <div className="la-page" key={adminUser.uid+page}>
-      {page==="calendar" && <WorkCalendar embedded leaveGuard={leaveGuard} onHome={goCalendar} schedulePosition={schedulePosition}/>}
+      {page==="calendar" && <WorkCalendar actionHost={calendarActionHost} embedded leaveGuard={leaveGuard} onHome={goCalendar} schedulePosition={schedulePosition}/>}
       {page==="finance" && <FinanceBook embedded leaveGuard={leaveGuard} onHome={goCalendar}/>}
       {page==="gallery" && <GalleryManager gallery={gallery} embedded leaveGuard={leaveGuard} onHome={goCalendar}/>}
     </div>
