@@ -480,6 +480,33 @@ function CalendarBody({ uid, close, embedded=false, leaveGuard, schedulePosition
   }
   const field=(key,title,type="text",attrs={})=><Field title={title}>
     <input type={type} value={form[key]} onChange={e=>set(key,e.target.value)} {...attrs}/></Field>;
+  function bookingPicker(key,title,type,placeholder,attrs={}) {
+    const value=form[key] || "";
+    const display=type==="date" && value
+      ? local(value).toLocaleDateString("ar",{weekday:"long",day:"numeric",month:"long",year:"numeric"})
+      : value;
+    return <label className={"wc-book-picker wc-book-picker-"+type}>
+      <span className="wc-picker-label">{title}</span>
+      <span className="wc-picker-box" data-filled={!!value}>
+        <span aria-hidden="true" className="wc-picker-value">
+          {type==="time" && value ? <bdi dir="ltr">{value}</bdi> : display || placeholder}
+        </span>
+        <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24"
+          fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round">
+          {type==="date" ? <>
+            <rect x="3" y="5" width="18" height="16" rx="3"/>
+            <path d="M7 3v4m10-4v4M3 10h18"/>
+          </> : <>
+            <circle cx="12" cy="12" r="9"/><path d="M12 6v6l4 2"/>
+          </>}
+        </svg>
+        <input type={type} aria-label={title} value={value}
+          onChange={e=>set(key,e.target.value)}
+          onClick={e=>{try { e.currentTarget.showPicker?.(); } catch {}}}
+          {...attrs}/>
+      </span>
+    </label>;
+  }
   const paySet=(k,v)=>setCheckout(f=>({...f,[k]:v}));
   const calendarTopActions=<div className="wc-top-actions">
     <button type="button" className="wc-top-add" disabled={!ready}
@@ -550,12 +577,14 @@ function CalendarBody({ uid, close, embedded=false, leaveGuard, schedulePosition
       </section>
       <section className="wc-booking-section" aria-label="الموعد والسعر">
         <h3>الموعد والسعر</h3>
-      {field("date","يوم الزيارة","date",{required:true})}
-      <div className="wc-grid">
-        {field("start","الوصول من","time",{required:true,ref:arrivalInput})}
-        {field("end","لغاية · اختياري","time")}
+      {bookingPicker("date","يوم الزيارة","date","اختَر التاريخ",{required:true})}
+      <div className="wc-book-time-pair">
+        {bookingPicker("start","من الساعة","time","اختَر الوقت",{required:true,ref:arrivalInput})}
+        {bookingPicker("end","لغاية · اختياري","time","أضف وقت نهاية")}
       </div>
-      {field("price","السعر المتفق عليه ₪","text",{inputMode:"decimal"})}
+      <div className="wc-book-price-row">
+        {field("price","السعر المتفق عليه ₪","text",{inputMode:"decimal",dir:"ltr",placeholder:"0.00"})}
+      </div>
       </section>
       <section className="wc-booking-section wc-extra-section" aria-label="الموقع والتواصل">
         <button type="button" className="wc-extra-toggle" aria-expanded={contactOpen}
