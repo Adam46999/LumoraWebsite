@@ -1,36 +1,11 @@
-// src/components/admin/AdminPanel.jsx
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-
-import { LoaderCircle, ShieldCheck } from "lucide-react";
+import React, { useCallback, useEffect, useState } from "react";
+import { CalendarDays, Wallet, Image as ImageIcon, ChevronLeft, LoaderCircle, ShieldCheck } from "lucide-react";
 import { onAuthStateChanged, signOut } from "firebase/auth";
-
 import { auth } from "../../firebase";
-
 import AdminAuthGate from "./AdminAuthGate";
 import WorkCalendar from "./WorkCalendar";
 import FinanceBook from "./FinanceBook";
 import GalleryManager from "../BefAfter/GalleryManager";
-import AdminHeader from "./AdminHeader";
-import SaveBar from "./SaveBar";
-
-import DailyTab from "./tabs/daily/DailyTab";
-import CarpetsTab from "./tabs/CarpetsTab";
-import MessagesTab from "./tabs/MessagesTab";
-
-import {
-  fetchDay,
-  getEmptyDay,
-  todayKey,
-  upsertDay,
-} from "../../services/managerDaily";
-
-import { n, uid } from "./lib/format";
 import { ToastProvider, useToast } from "./lib/toast";
 
 const ADMIN_EMAIL = (String(import.meta.env.VITE_ADMIN_EMAIL || "").trim() || "amir@lumora.example")
@@ -41,76 +16,6 @@ function normalizeEmail(value) {
   return String(value || "")
     .trim()
     .toLowerCase();
-}
-
-function normalizeTab(value) {
-  const normalized = String(value || "daily")
-    .trim()
-    .toLowerCase();
-
-  if (
-    normalized === "daily" ||
-    normalized === "carpets" ||
-    normalized === "messages"
-  ) {
-    return normalized;
-  }
-
-  return "daily";
-}
-
-function toMillis(value) {
-  if (!value) return null;
-
-  if (typeof value === "number") {
-    return value;
-  }
-
-  if (typeof value?.toMillis === "function") {
-    return value.toMillis();
-  }
-
-  if (typeof value?.seconds === "number") {
-    return value.seconds * 1000;
-  }
-
-  return null;
-}
-
-/*
-  نحول البيانات إلى نص ثابت حتى نعرف
-  إذا صار تغيير حقيقي يحتاج حفظ.
-*/
-function stableStringify(object) {
-  const seen = new WeakSet();
-
-  const normalize = (value) => {
-    if (value === null || typeof value !== "object") {
-      return value;
-    }
-
-    if (seen.has(value)) {
-      return "[Circular]";
-    }
-
-    seen.add(value);
-
-    if (Array.isArray(value)) {
-      return value.map(normalize);
-    }
-
-    const output = {};
-
-    Object.keys(value)
-      .sort()
-      .forEach((key) => {
-        output[key] = normalize(value[key]);
-      });
-
-    return output;
-  };
-
-  return JSON.stringify(normalize(object));
 }
 
 function AuthLoadingScreen() {
@@ -206,74 +111,22 @@ function AuthErrorNotice({ message }) {
 }
 
 function AdminPanelInner({ onExit, gallery }) {
+  const [page,setPage]=useState("calendar");
+  const leaveGuard=React.useRef(null);
+  const schedulePosition=React.useRef(null);
+  const goCalendar=()=>setPage("calendar");
+  function navigate(next) {
+    if (next===page || (leaveGuard.current && !leaveGuard.current())) return;
+    setPage(next);
+  }
   const toast = useToast();
-
-  /*
-    Firebase Authentication
-  */
   const [authReady, setAuthReady] = useState(false);
   const [adminUser, setAdminUser] = useState(null);
   const [authError, setAuthError] = useState("");
   const [signingOut, setSigningOut] = useState(false);
 
-  /*
-    Tabs and selected day
-  */
-  const [tab, setTab] = useState("daily");
-  const tabKey = normalizeTab(tab);
-
-  const initialDateKey = todayKey();
-
-  const [dateKey, setDateKey] = useState(initialDateKey);
-  const [day, setDay] = useState(getEmptyDay(initialDateKey));
-
-  const [reloadToken, setReloadToken] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [err, setErr] = useState("");
-
-  /*
-    Save state
-  */
-  const [saving, setSaving] = useState(false);
-  const [lastSavedAt, setLastSavedAt] = useState(null);
-  const [saveError, setSaveError] = useState(null);
-
-  /*
-    Refs تمنع مشاكل القيم القديمة داخل
-    timers وevent listeners.
-  */
-  const latestDayRef = useRef(day);
-  const latestKeyRef = useRef(dateKey);
-
-  const lastSavedSnapshotRef = useRef("");
-  const saveTimerRef = useRef(null);
-
-  /*
-    يحدد اليوم الذي اكتمل تحميله فعلًا.
-    هذا يمنع حفظ بيانات اليوم السابق
-    تحت تاريخ جديد أثناء الانتقال بين الأيام.
-  */
-  const loadedDateRef = useRef(null);
-
   const authorized = Boolean(authReady && adminUser);
 
-  const isClosed = Boolean(day?.isClosed);
-
-  useEffect(() => {
-    latestDayRef.current = day;
-  }, [day]);
-
-  useEffect(() => {
-    latestKeyRef.current = dateKey;
-  }, [dateKey]);
-
-  /*
-    مراقبة جلسة Firebase.
-
-    عند Refresh:
-    Firebase يعيد الجلسة المحفوظة،
-    وبعدها نتحقق أن البريد هو بريد الأدمن.
-  */
   useEffect(() => {
     let active = true;
 
@@ -347,276 +200,6 @@ function AdminPanelInner({ onExit, gallery }) {
     };
   }, []);
 
-  /*
-    الحفظ المركزي.
-
-    يستعمل أحدث نسخة من اليوم والتاريخ
-    بدل الاعتماد على state قديم.
-  */
-  const doSave = useCallback(async (reason = "manual") => {
-    const key = latestKeyRef.current;
-    const data = latestDayRef.current;
-
-    if (!key) {
-      return true;
-    }
-
-    /*
-        إذا اليوم لم يكتمل تحميله،
-        لا نحفظ حتى لا نكتب بيانات قديمة
-        تحت تاريخ مختلف.
-      */
-    if (loadedDateRef.current !== key) {
-      return true;
-    }
-
-    const snapshot = stableStringify(data);
-
-    if (snapshot === lastSavedSnapshotRef.current) {
-      return true;
-    }
-
-    setSaving(true);
-    setSaveError(null);
-
-    console.log("💾 SAVE START:", reason, "key=", key);
-
-    try {
-      await upsertDay(key, data);
-
-      lastSavedSnapshotRef.current = snapshot;
-
-      setLastSavedAt(Date.now());
-
-      console.log("✅ SAVE OK:", reason, "key=", key);
-
-      return true;
-    } catch (error) {
-      console.error("❌ SAVE FAIL:", reason, error);
-
-      const message = error?.message || "فشل الحفظ";
-
-      setSaveError(message);
-
-      return false;
-    } finally {
-      setSaving(false);
-    }
-  }, []);
-
-  /*
-    تحميل بيانات اليوم.
-
-    عند اكتمال التحميل نحفظ Snapshot
-    حتى لا يعمل Autosave لمجرد أننا
-    حمّلنا البيانات من Firestore.
-  */
-  useEffect(() => {
-    if (!authorized) return undefined;
-
-    let alive = true;
-
-    loadedDateRef.current = null;
-
-    if (saveTimerRef.current) {
-      window.clearTimeout(saveTimerRef.current);
-
-      saveTimerRef.current = null;
-    }
-
-    const loadSelectedDay = async () => {
-      try {
-        setLoading(true);
-        setErr("");
-        setSaveError(null);
-
-        const data = await fetchDay(dateKey);
-
-        if (!alive) return;
-
-        const nextDay = data || getEmptyDay(dateKey);
-
-        latestKeyRef.current = dateKey;
-        latestDayRef.current = nextDay;
-
-        lastSavedSnapshotRef.current = stableStringify(nextDay);
-
-        loadedDateRef.current = dateKey;
-
-        setDay(nextDay);
-      } catch (error) {
-        console.error("Failed to load manager day:", error);
-
-        if (!alive) return;
-
-        const emptyDay = getEmptyDay(dateKey);
-
-        latestKeyRef.current = dateKey;
-        latestDayRef.current = emptyDay;
-
-        lastSavedSnapshotRef.current = stableStringify(emptyDay);
-
-        loadedDateRef.current = dateKey;
-
-        setDay(emptyDay);
-        setErr("فشل تحميل بيانات اليوم");
-        toast.error("فشل تحميل بيانات اليوم");
-      } finally {
-        if (alive) {
-          setLoading(false);
-        }
-      }
-    };
-
-    loadSelectedDay();
-
-    return () => {
-      alive = false;
-    };
-  }, [authorized, dateKey, reloadToken, toast]);
-
-  /*
-    Autosave بعد 800ms من آخر تعديل.
-  */
-  useEffect(() => {
-    if (!authorized || loading || loadedDateRef.current !== dateKey) {
-      return undefined;
-    }
-
-    if (saveTimerRef.current) {
-      window.clearTimeout(saveTimerRef.current);
-    }
-
-    saveTimerRef.current = window.setTimeout(() => {
-      void doSave("autosave");
-    }, 800);
-
-    return () => {
-      if (saveTimerRef.current) {
-        window.clearTimeout(saveTimerRef.current);
-
-        saveTimerRef.current = null;
-      }
-    };
-  }, [authorized, dateKey, day, loading, doSave]);
-
-  /*
-    محاولة أخيرة عند إغلاق التبويب.
-
-    هذا Best effort فقط؛ المتصفح قد يغلق
-    قبل اكتمال طلب الشبكة.
-  */
-  useEffect(() => {
-    if (!authorized) return undefined;
-
-    const handleBeforeUnload = () => {
-      if (saveTimerRef.current) {
-        window.clearTimeout(saveTimerRef.current);
-      }
-
-      void doSave("beforeunload");
-    };
-
-    window.addEventListener("beforeunload", handleBeforeUnload);
-
-    return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-    };
-  }, [authorized, doSave]);
-
-  /*
-    إجماليات اليوم.
-  */
-  const totals = useMemo(() => {
-    const entries = Array.isArray(day.entries) ? day.entries : [];
-
-    const total = entries.reduce((sum, entry) => sum + n(entry.amount), 0);
-
-    const shopTotal = entries.reduce((sum, entry) => sum + n(entry.shop), 0);
-
-    const youTotal = total - shopTotal;
-
-    const defaultRate = n(day.defaultCarpetRatePerM2) || 15;
-
-    const carpetCustomers = Array.isArray(day.carpetCustomers)
-      ? day.carpetCustomers
-      : [];
-
-    const carpetsTotal = carpetCustomers.reduce((customersTotal, customer) => {
-      const rugs = Array.isArray(customer?.rugs) ? customer.rugs : [];
-
-      const customerTotal = rugs.reduce((rugTotal, rug) => {
-        const rate = n(rug.ratePerM2) || defaultRate;
-
-        let area = 0;
-
-        if (rug.mode === "area") {
-          area = n(rug.areaM2);
-        } else {
-          area = (n(rug.lengthCm) / 100) * (n(rug.widthCm) / 100);
-        }
-
-        return rugTotal + area * rate;
-      }, 0);
-
-      return customersTotal + customerTotal;
-    }, 0);
-
-    return {
-      total,
-      shopTotal,
-      youTotal,
-      carpetsTotal,
-    };
-  }, [day]);
-
-  const isDirty = useMemo(() => {
-    if (loadedDateRef.current !== dateKey) {
-      return false;
-    }
-
-    return stableStringify(day) !== lastSavedSnapshotRef.current;
-  }, [dateKey, day, lastSavedAt]);
-
-  const guardIfClosed = (callback) => {
-    if (isClosed) {
-      toast.info("اليوم مغلق — العرض للقراءة فقط");
-
-      return;
-    }
-
-    callback();
-  };
-
-  const addEntryFromCarpets = ({ title, customerName, amount, shop }) => {
-    guardIfClosed(() => {
-      setDay((currentDay) => ({
-        ...currentDay,
-        entries: [
-          ...(currentDay.entries || []),
-          {
-            id: uid(),
-            type: "carpet",
-            title: title || "سجاد",
-            customerName: customerName || "",
-            amount: n(amount),
-            shop: n(shop),
-            createdAt: Date.now(),
-          },
-        ],
-      }));
-
-      setTab("daily");
-
-      toast.success("تمت إضافة بند السجاد");
-    });
-  };
-
-  /*
-    بعد تسجيل الدخول بنجاح من AdminAuthGate.
-    onAuthStateChanged سيؤكد الجلسة أيضًا،
-    لكن التحديث هنا يجعل الدخول فوريًا.
-  */
   const handleAuthorized = useCallback(
     (user) => {
       const signedInEmail = normalizeEmail(user?.email);
@@ -638,114 +221,19 @@ function AdminPanelInner({ onExit, gallery }) {
     [toast],
   );
 
-  /*
-    حفظ قبل تغيير التاريخ.
-
-    إذا فشل الحفظ نبقى في اليوم الحالي
-    حتى لا يضيع التعديل.
-  */
-  const handleDateChange = useCallback(
-    async (nextDateKey) => {
-      if (!nextDateKey || nextDateKey === dateKey) {
-        return;
-      }
-
-      if (saveTimerRef.current) {
-        window.clearTimeout(saveTimerRef.current);
-
-        saveTimerRef.current = null;
-      }
-
-      const saved = await doSave("date-change");
-
-      if (!saved) {
-        toast.error("تعذر الحفظ، لذلك لم يتم تغيير اليوم.");
-
-        return;
-      }
-
-      loadedDateRef.current = null;
-      setDateKey(nextDateKey);
-    },
-    [dateKey, doSave, toast],
-  );
-
-  const handleTabChange = useCallback(
-    (nextTab) => {
-      /*
-        لا نؤخر المستخدم؛ الحفظ يعمل
-        بالخلفية لأن التبويبات لن تغير التاريخ.
-      */
-      void doSave("tab-change");
-
-      setTab(normalizeTab(nextTab));
-    },
-    [doSave],
-  );
-
-  const handleReload = useCallback(async () => {
-    if (loading) return;
-
-    if (saveTimerRef.current) {
-      window.clearTimeout(saveTimerRef.current);
-
-      saveTimerRef.current = null;
-    }
-
-    const saved = await doSave("manual-reload");
-
-    if (!saved) {
-      toast.error("تعذر الحفظ، لذلك لم يتم تحديث البيانات.");
-
-      return;
-    }
-
-    setReloadToken((current) => current + 1);
-  }, [doSave, loading, toast]);
-
-  /*
-    خروج حقيقي:
-
-    1. نحفظ التعديلات.
-    2. نسجل الخروج من Firebase.
-    3. نرجع إلى الموقع.
-  */
-  const handleExit = useCallback(async () => {
-    if (signingOut) return;
-
+  async function leaveAdmin() {
+    if (signingOut || (leaveGuard.current && !leaveGuard.current())) return;
     setSigningOut(true);
-
-    if (saveTimerRef.current) {
-      window.clearTimeout(saveTimerRef.current);
-
-      saveTimerRef.current = null;
-    }
-
-    const saved = await doSave("logout");
-
-    if (!saved) {
-      toast.error(
-        "تعذر حفظ التغييرات. لم يتم تسجيل الخروج حتى لا تضيع البيانات.",
-      );
-
-      setSigningOut(false);
-      return;
-    }
-
     try {
       await signOut(auth);
-
-      setAdminUser(null);
-
-      onExit?.();
-    } catch (error) {
-      console.error("Admin sign-out failed:", error);
-
-      toast.error("تعذر تسجيل الخروج. حاول مرة ثانية.");
-
+    } catch {
       setSigningOut(false);
+      toast.error("تعذّر تسجيل الخروج. حاول مرة ثانية.");
+      return;
     }
-  }, [doSave, onExit, signingOut, toast]);
+    setSigningOut(false);
+    onExit?.();
+  }
 
   if (!authReady) {
     return <AuthLoadingScreen />;
@@ -760,169 +248,216 @@ function AdminPanelInner({ onExit, gallery }) {
       </>
     );
   }
+  const [SectionIcon,sectionLabel] = page==="finance" ? [Wallet,"الحسابات"]
+    : page==="gallery" ? [ImageIcon,"الصور"] : [CalendarDays,"المواعيد"];
+  return <main className="la-app" dir="rtl" data-section={page}>
+    <style>{`
+      /* lumora-three-tabs-v1 */
+      .la-app {
+        block-size:100vh;block-size:100dvh;box-sizing:border-box;overflow:hidden;
+        display:flex;flex-direction:column;align-items:center;
+        background:var(--lumora-surface,#f5f7f2);color:var(--lumora-navy-900,#11152f);
+        padding-top:env(safe-area-inset-top);
+      }
+      .la-brand,.la-page,.la-tabs {width:100%;max-width:720px;box-sizing:border-box}
+      .la-brand {
+        flex:none;display:flex;align-items:center;justify-content:space-between;
+        padding:5px 16px;border-bottom:1px solid var(--lumora-border,#dfe5dc);
+      }
+      .la-brand h1 {margin:0;font-size:17px;font-weight:750}
+      .la-brand button {
+        min-height:44px;padding-inline:6px;font:inherit;font-size:13px;
+        color:var(--lumora-text-soft,#5f6878);background:transparent;border:0;
+      }
+      .la-page {flex:1;min-height:0;overflow:hidden}
+      .la-page > section[data-embedded=true] {
+        display:block;position:relative;inset:auto;margin:0;box-sizing:border-box;
+        width:100%;max-width:none;height:100%;min-height:0;max-height:none;
+        overflow:auto;overscroll-behavior:contain;border:0;border-radius:0;
+        padding-top:0;padding-bottom:12px;box-shadow:none;
+      }
+      .la-page > .wc[data-form=true] {display:flex;flex-direction:column;overflow:hidden}
+      .la-page > .wc[data-embedded=true] {padding-top:0}
+      .la-tabs {
+        flex:none;background:white;border-top:1px solid var(--lumora-border,#dfe5dc);
+        display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+        padding:4px 8px max(5px,env(safe-area-inset-bottom));gap:4px;
+      }
+      .la-tabs button {
+        min-height:52px;display:grid;justify-items:center;align-content:center;
+        gap:3px;background:transparent;border:0;border-radius:12px;
+        font-size:12px;font-weight:650;color:var(--lumora-text-soft,#5f6878);
+      }
+      .la-tabs button[aria-current=page] {
+        background:#eff6dd;color:var(--lumora-navy-900,#11152f);
+        box-shadow:inset 0 -3px var(--lumora-lime,#aedd39);
+      }
+      .la-tabs button:focus-visible,.la-brand button:focus-visible {
+        outline:2px solid var(--lumora-cyan,#1094c0);outline-offset:-2px;
+      }
 
-  return (
-    <div
-      className="
-        min-h-screen bg-slate-100
-      "
-      dir="rtl"
-    >
-      {signingOut ? (
-        <div
-          className="
-            fixed inset-0 z-[10300]
-            flex items-center justify-center
-            bg-slate-950/35 px-4
-            backdrop-blur-sm
-          "
-          role="status"
-          aria-live="polite"
-        >
-          <div
-            className="
-              flex items-center gap-3
-              rounded-2xl border border-white/20
-              bg-white px-5 py-4
-              text-sm font-extrabold
-              text-slate-800
-              shadow-[0_18px_55px_rgba(15,23,42,0.22)]
-            "
-          >
-            <LoaderCircle
-              className="
-                h-5 w-5 animate-spin
-                text-blue-600
-              "
-              aria-hidden="true"
-            />
+      /* admin-unified-header-v1 */
+      .la-app {
+        --la-ink:var(--lumora-navy-900,#11152f);
+        --la-muted:var(--lumora-text-soft,#5f6878);
+        --la-line:var(--lumora-border,#dfe5dc);
+        --la-surface:var(--lumora-surface,#f5f7f2);
+      }
+      .la-brand {
+        min-height:60px;padding:6px clamp(12px,3vw,20px);
+        background:var(--la-surface);border-bottom:1px solid var(--la-line);
+      }
+      .la-brand h1 {
+        display:flex;align-items:baseline;flex-wrap:wrap;gap:8px;
+        color:var(--la-ink);font-size:20px;line-height:1.4;font-weight:750;
+      }
+      .la-brand-name {font-size:14px;color:var(--la-muted)}
+      .la-brand-divider {font-size:14px;color:var(--la-muted);font-weight:400}
+      .la-brand button {flex-shrink:0;min-height:44px;padding-inline:8px}
+      .la-page > section[data-embedded=true] {
+        padding-inline:clamp(10px,3vw,18px);
+        padding-top:10px;background:var(--la-surface);color:var(--la-ink);
+      }
+      .la-page > section[data-embedded=true] > header[data-admin-step] {
+        position:sticky;top:0;z-index:2;
+        display:flex;align-items:center;justify-content:space-between;
+        gap:10px;min-height:52px;margin:0 0 10px;padding:4px 0 8px;
+        background:var(--la-surface);color:var(--la-ink);
+        border-bottom:1px solid var(--la-line);
+      }
+      .la-page > section[data-embedded=true] > header[data-admin-step] h2 {
+        margin:0;color:var(--la-ink);font-size:17px;font-weight:700;line-height:1.4;
+      }
+      .la-page > section[data-embedded=true] > header[data-admin-step] button {
+        flex-shrink:0;min-height:44px;padding:6px 12px;
+        border:1px solid var(--la-line);border-radius:10px;background:white;
+        color:var(--la-ink);font-size:14px;font-weight:650;
+      }
 
-            <span>جارٍ حفظ التغييرات وتسجيل الخروج...</span>
-          </div>
-        </div>
-      ) : null}
+      /* admin-section-hierarchy-v1 */
+      .la-app {
+        --la-ink:var(--lumora-navy-900,#11152f);
+        --la-muted:var(--lumora-text-soft,#5f6878);
+        --la-line:var(--lumora-border,#dfe5dc);
+        --la-bg:var(--lumora-surface,#f5f7f2);
+        --la-tint:#eaf4d4;
+        --la-accent:#405713;
+        background:var(--la-bg);color:var(--la-ink);
+      }
+      .la-app[data-section="finance"] {--la-tint:#e0f2f8;--la-accent:#18536b}
+      .la-app[data-section="gallery"] {--la-tint:#eeeafa;--la-accent:#544582}
 
-      <AdminHeader
-        tab={tabKey}
-        setTab={handleTabChange}
-        dateKey={dateKey}
-        setDateKey={handleDateChange}
-        totals={totals}
-        onReload={handleReload}
-        saving={saving}
-        isDirty={isDirty}
-        lastSavedAt={toMillis(lastSavedAt)}
-        isClosed={isClosed}
-        saveError={Boolean(saveError)}
-        onExit={handleExit}
-      />
+      .la-app .la-brand {
+        flex:none;display:flex;align-items:center;justify-content:space-between;
+        min-height:65px;padding:7px clamp(12px,3.5vw,22px);
+        gap:12px;border-bottom:1px solid var(--la-line);background:var(--la-bg);
+      }
+      .la-app .la-brand h1 {
+        display:flex;align-items:center;gap:10px;min-width:0;margin:0;
+      }
+      .la-section-icon {
+        display:grid;place-items:center;flex:0 0 40px;height:40px;
+        border-radius:13px;color:var(--la-accent);background:var(--la-tint);
+      }
+      .la-heading-copy {display:grid;justify-items:start;gap:0}
+      .la-wordmark {
+        font-size:12px;line-height:1.3;font-weight:650;color:var(--la-muted);
+      }
+      .la-section-name {
+        font-size:clamp(20px,4.8vw,25px);font-weight:800;line-height:1.35;
+        color:var(--la-ink);
+      }
+      .la-app .la-brand button {
+        flex-shrink:0;min-height:44px;padding:6px 10px;
+        color:var(--la-muted);background:transparent;
+        border:1px solid transparent;border-radius:10px;
+        font-size:13px;font-weight:600;
+      }
 
-      <main
-        className="
-          mx-auto max-w-6xl
-          space-y-4 px-4 py-5
-        "
-      >
-        <WorkCalendar />
-        <FinanceBook />
-        <GalleryManager gallery={gallery} />
-        {err ? (
-          <div
-            className="
-              rounded-2xl border
-              border-rose-200
-              bg-rose-50 p-3
-              text-sm font-bold
-              text-rose-700
-            "
-            role="alert"
-          >
-            {err}
-          </div>
-        ) : null}
+      .la-page > section[data-embedded=true] {
+        padding-inline:clamp(10px,3.5vw,22px);
+        background:var(--la-bg);color:var(--la-ink);
+      }
+      .la-page > section[data-embedded=true] > header[data-admin-step] {
+        gap:8px;min-height:50px;background:var(--la-bg);
+        border-bottom:1px solid var(--la-line);
+      }
+      .la-page > section[data-embedded=true] > header[data-admin-step] h2 {
+        color:var(--la-ink);font-size:17px;line-height:1.45;font-weight:700;
+      }
+      .la-page > section[data-embedded=true] > header[data-admin-step] button {
+        min-height:44px;padding-inline:12px;border-radius:10px;
+        color:var(--la-ink);border:1px solid var(--la-line);background:white;
+      }
 
-        {loading ? (
-          <div
-            className="
-              flex min-h-40
-              items-center justify-center
-              gap-3 rounded-2xl
-              border border-slate-200
-              bg-white p-6
-              text-sm font-extrabold
-              text-slate-600 shadow-sm
-            "
-          >
-            <LoaderCircle
-              className="
-                h-5 w-5 animate-spin
-                text-blue-600
-              "
-              aria-hidden="true"
-            />
-
-            <span>جارٍ تحميل بيانات اليوم...</span>
-          </div>
-        ) : (
-          <>
-            {tabKey === "daily" ? (
-              <DailyTab
-                entries={day.entries || []}
-                setEntries={(updater) =>
-                  guardIfClosed(() =>
-                    setDay((currentDay) => ({
-                      ...currentDay,
-                      entries:
-                        typeof updater === "function"
-                          ? updater(currentDay.entries || [])
-                          : updater,
-                    })),
-                  )
-                }
-              />
-            ) : null}
-
-            {tabKey === "carpets" ? (
-              <CarpetsTab
-                defaultRatePerM2={day.defaultCarpetRatePerM2 || 15}
-                setDefaultRatePerM2={(value) =>
-                  guardIfClosed(() =>
-                    setDay((currentDay) => ({
-                      ...currentDay,
-                      defaultCarpetRatePerM2: value,
-                    })),
-                  )
-                }
-                customers={day.carpetCustomers || []}
-                setCustomers={(updater) =>
-                  guardIfClosed(() =>
-                    setDay((currentDay) => ({
-                      ...currentDay,
-                      carpetCustomers:
-                        typeof updater === "function"
-                          ? updater(currentDay.carpetCustomers || [])
-                          : updater,
-                    })),
-                  )
-                }
-                onAddEntryFromCarpets={addEntryFromCarpets}
-              />
-            ) : null}
-
-            {tabKey === "messages" ? <MessagesTab /> : null}
-          </>
-        )}
-      </main>
-
-      <SaveBar error={saveError || null} />
+      .la-app .la-tabs {
+        flex:none;position:relative;z-index:1;
+        display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+        gap:4px;padding:4px 8px max(5px,env(safe-area-inset-bottom));
+        background:white;border-top:1px solid var(--la-line);
+        box-shadow:0 -3px 12px rgb(17 21 47 / 4%);
+      }
+      .la-app .la-tabs button {
+        display:grid;align-content:center;justify-items:center;gap:2px;
+        min-width:0;min-height:54px;padding:2px 4px;border:0;
+        background:transparent;color:var(--la-muted);box-shadow:none;
+      }
+      .la-tab-icon {
+        display:grid;place-items:center;width:46px;height:28px;
+        border-radius:12px;
+      }
+      .la-tab-label {font-size:12px;font-weight:600;line-height:1.4}
+      .la-app .la-tabs button[aria-current=page] {
+        color:var(--la-ink);background:transparent;box-shadow:none;
+      }
+      .la-tabs button[aria-current=page] .la-tab-icon {
+        background:var(--la-tint);color:var(--la-accent);
+      }
+      .la-tabs button[aria-current=page] .la-tab-icon svg {stroke-width:2.5}
+      .la-tabs button[aria-current=page] .la-tab-label {font-weight:800}
+      .la-app .la-tabs button:focus-visible,
+      .la-app .la-brand button:focus-visible {
+        outline:2px solid var(--lumora-cyan,#1094c0);outline-offset:-2px;
+      }
+      @media(hover:hover) {
+        .la-brand button:hover,.la-tabs button:not([aria-current]):hover {
+          background:var(--la-bg);color:var(--la-ink);
+        }
+      }
+      @media(max-height:540px) {
+        .la-app .la-brand {min-height:46px;padding-block:1px}
+        .la-app .la-wordmark {display:none}
+        .la-app .la-tabs button {min-height:44px;display:flex;justify-content:center;gap:4px}
+        .la-app .la-tab-icon {width:30px;height:26px}
+      }
+    `}</style>
+    <header className="la-brand">
+      <h1>
+        <span className="la-section-icon" aria-hidden="true"><SectionIcon size={22}/></span>
+        <span className="la-heading-copy">
+          <span className="la-wordmark" lang="en" dir="ltr">Lumora</span>
+          <span className="la-section-name">{sectionLabel}</span>
+        </span>
+      </h1>
+      <button type="button" disabled={signingOut} onClick={leaveAdmin}>
+        {signingOut ? "جارٍ الخروج…" : "تسجيل الخروج"}
+      </button>
+    </header>
+    <div className="la-page" key={adminUser.uid+page}>
+      {page==="calendar" && <WorkCalendar embedded leaveGuard={leaveGuard} onHome={goCalendar} schedulePosition={schedulePosition}/>}
+      {page==="finance" && <FinanceBook embedded leaveGuard={leaveGuard} onHome={goCalendar}/>}
+      {page==="gallery" && <GalleryManager gallery={gallery} embedded leaveGuard={leaveGuard} onHome={goCalendar}/>}
     </div>
-  );
+    <nav aria-label="أقسام الإدارة" className="la-tabs">
+      {[[CalendarDays,"calendar","المواعيد"],[Wallet,"finance","الحسابات"],[ImageIcon,"gallery","الصور"]]
+        .map(([Icon,key,label])=><button type="button" key={key}
+          aria-current={page===key ? "page" : undefined} onClick={()=>navigate(key)}>
+          <span className="la-tab-icon" aria-hidden="true"><Icon size={21}/></span><span className="la-tab-label">{label}</span>
+        </button>)}
+    </nav>
+  </main>;
 }
 
 export default function AdminPanel(props) {
-  return (
-    <ToastProvider>
-      <AdminPanelInner {...props} />
-    </ToastProvider>
-  );
+  return <ToastProvider><AdminPanelInner {...props}/></ToastProvider>;
 }

@@ -115,10 +115,15 @@ function QuickContactIcon({kind}) {
     <g transform="translate(4 4)" color="white">{receiver}</g>
   </svg>;
 }
-function CalendarBody({ uid, close }) {
+function CalendarBody({ uid, close, embedded=false, leaveGuard, schedulePosition }) {
+  const Surface=embedded ? "section" : "dialog";
   const [rows,setRows] = useState([]), [ready,setReady] = useState(false);
   const [loadError,setLoadError] = useState(""), [retry,setRetry] = useState(0);
-  const [date,setDate] = useState(today), [view,setView] = useState("اليوم");
+  const [date,setDate] = useState(()=>schedulePosition?.current?.date || today());
+  const [view,setView] = useState(()=>schedulePosition?.current?.view || "اليوم");
+  React.useLayoutEffect(()=>{
+    if (schedulePosition) schedulePosition.current={date,view};
+  },[schedulePosition,date,view]);
   const [form,setForm] = useState(null), [checkout,setCheckout] = useState(null);
   const [msg,say] = useState(""), [busy,setBusy] = useState(false), [search,find] = useState("");
   const [searchOpen,setSearchOpen] = useState(false);
@@ -168,10 +173,11 @@ function CalendarBody({ uid, close }) {
   },[form]);
   const lock = useRef(false), dialog = useRef(null);
   useEffect(() => {
-    const el = dialog.current;
+    if (embedded) return;
+    const el=dialog.current;
     el.showModal();
-    return () => el.close();
-  }, []);
+    return ()=>el.close();
+  },[embedded]);
   useEffect(() => {
     setReady(false); setLoadError("");
     return onSnapshot(collection(db,"lumora_calendar",uid,"appointments"),
@@ -209,6 +215,16 @@ function CalendarBody({ uid, close }) {
     go(key);
   }
 
+  React.useLayoutEffect(()=>{
+    if (!leaveGuard) return;
+    leaveGuard.current=()=>{
+      if (lock.current) return false;
+      const draft=form || checkout;
+      return !draft || JSON.stringify(draft)===initialDraft.current ||
+        window.confirm("تترك التغييرات وتنتقل من المواعيد؟");
+    };
+    return ()=>{leaveGuard.current=null;};
+  },[leaveGuard,form,checkout]);
   function leave() {
     if (lock.current) return;
     const draft=form || checkout;
@@ -413,26 +429,38 @@ function CalendarBody({ uid, close }) {
   const field=(key,title,type="text",attrs={})=><Field title={title}>
     <input type={type} value={form[key]} onChange={e=>set(key,e.target.value)} {...attrs}/></Field>;
   const paySet=(k,v)=>setCheckout(f=>({...f,[k]:v}));
-  return <dialog ref={dialog} className="wc" data-form={!!(form || checkout)} dir="rtl" aria-label="مواعيد الشغل"
+  return <Surface ref={dialog} className="wc" data-embedded={embedded} data-form={!!(form || checkout)} dir="rtl" aria-label="مواعيد الشغل"
     onCancel={e=>{e.preventDefault();leave();}}>
-    <header className="wc-row"><h2>{form ? (form.rev ? "تعديل الموعد" : "موعد جديد") :
-      checkout ? "إنهاء الزيارة" : "مواعيد الشغل"}</h2>
-      <button disabled={busy} onClick={leave}>{form || checkout ? "رجوع" : view==="اليوم" && returnDay ? "رجوع للتقويم" : "إغلاق"}</button></header>
+    {(!embedded || form || checkout || (view==="اليوم" && returnDay)) && <header data-admin-step="" className="wc-row"><h2>{form ? (form.rev ? "تعديل الموعد" : "موعد جديد") :
+      checkout ? "إنهاء الزيارة" : embedded && returnDay ? "مواعيد اليوم المختار" : "مواعيد الشغل"}</h2>
+      {(!embedded || form || checkout || (view==="اليوم" && returnDay)) && <button disabled={busy} onClick={leave}>{form || checkout ? "رجوع" : view==="اليوم" && returnDay ? "رجوع للتقويم" : "إغلاق"}</button>}</header>}
     {loadError ? <p role="alert">{loadError} <button onClick={()=>setRetry(v=>v+1)}>إعادة المحاولة</button></p>
       : !ready && <p role="status">بانتظار الاتصال لعرض آخر التحديثات والحفظ.</p>}
     {form ? <form onSubmit={e=>{e.preventDefault();save();}}>
       <fieldset className="wc-form-scroll" disabled={busy}>
       <section className="wc-booking-section" aria-label="الزبون">
         <h3>الزبون</h3>
-      {!form.rev && people.size>0 && <div className="wc-customer-picker">
-        <Field title="زبون راجع؟">
+      {!form.rev && people.size>0 && <details className="wc-returning-option"
+        onToggle={e=>{
+          const section=e.currentTarget;
+          if (section.open) section.querySelector('input[type="search"]')?.focus();
+          else setCustomerQuery("");
+        }}>
+        <summary>زبون راجع؟</summary>
+        <div className="wc-customer-picker">
+        <Field title="ابحث عن زبون سابق">
           <input type="search" value={customerQuery} placeholder="ابحث بالبلد، رقم الزبون أو التلفون"
             onChange={e=>setCustomerQuery(e.target.value)} />
         </Field>
         {customerNeedle && <div className="wc-customer-results">
           {customerMatches.slice(0,6).map(name=>{
             const p=people.get(name);
-            return <button type="button" key={name} onClick={()=>{
+            return <button type="button" key={name} onClick={e=>{
+              const section=e.currentTarget.closest("details");
+              if (section) {
+                section.open=false;
+                section.querySelector("summary")?.focus();
+              }
               setForm(f=>({...f,town:p.town,number:p.number,phone:p.phone || "",location:p.location || ""}));
               setCustomerQuery(""); say("");
             }}><bdi dir="auto">{name}</bdi><bdi dir="ltr">{p.phone}</bdi></button>;
@@ -440,7 +468,8 @@ function CalendarBody({ uid, close }) {
           {customerMatches.length>6 && <small>في نتائج إضافية. اكتب كمان حرف أو رقم.</small>}
           {!customerMatches.length && <small>ما لقينا زبون مطابق. فيك تسجّله بخانات البلد والرقم تحت.</small>}
         </div>}
-      </div>}
+        </div>
+      </details>}
       <div className="wc-grid">{field("town","البلد","text",{list:"wc-towns",required:true,dir:"auto",placeholder:"اختار أو اكتب أي بلد"})}
         {field("number","رقم الزبون بالبلد","text",{inputMode:"numeric",placeholder:"0",required:true})}</div>
       <datalist id="wc-towns">{[...new Set([...towns,...rows.map(r=>r.town)])].map(t=><option key={t}>{t}</option>)}</datalist>
@@ -456,7 +485,7 @@ function CalendarBody({ uid, close }) {
       </section>
       <section className="wc-booking-section" aria-label="الموقع والتواصل">
         <h3>الموقع والتواصل</h3>
-      {field("location","موقع البيت · رابط ويز","text",{dir:"ltr",ref:locationInput,placeholder:"https://www.waze.com/…"})}
+      {field("location","رابط ويز · اختياري","text",{dir:"ltr",ref:locationInput,placeholder:"https://www.waze.com/…"})}
       {field("phone","تلفون الزبون · اختياري","tel",{dir:"ltr"})}
       </section>
       <section className="wc-booking-section" aria-label="تفاصيل الشغل">
@@ -617,11 +646,12 @@ function CalendarBody({ uid, close }) {
         </section></>}
     </>}
     {msg && <p className="wc-msg" role="status">{msg}</p>}
-  </dialog>;
+  </Surface>;
 }
-export default function WorkCalendar() {
+export default function WorkCalendar({embedded=false,leaveGuard,onHome,schedulePosition}={}) {
   const [open,show]=useState(false);
   const uid=auth.currentUser?.uid;
+  if (embedded) return uid ? <CalendarBody uid={uid} close={onHome} embedded leaveGuard={leaveGuard} schedulePosition={schedulePosition}/> : null;
   return <><button type="button" className="wc-launch" onClick={()=>show(true)}>مواعيد الشغل</button>
     {open && uid && <CalendarBody key={uid} uid={uid} close={()=>show(false)}/>}</>;
 }

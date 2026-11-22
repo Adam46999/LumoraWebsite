@@ -144,9 +144,10 @@ function newRow(f) {
   };
 }
 
-export default function FinanceBook() {
+export default function FinanceBook({embedded=false,leaveGuard,onHome}={}) {
+  const Surface=embedded ? "section" : "dialog";
   const dialog = useRef(null), lock = useRef(false);
-  const [open, show] = useState(false), [rows, records] = useState([]);
+  const [open, show] = useState(embedded), [rows, records] = useState([]);
   const [status, state] = useState("loading"), [retry, refresh] = useState(0);
   const [date, day] = useState(today), [view, tab] = useState("اليوم"), [search, find] = useState("");
   const [form, edit] = useState(null), [busy, working] = useState(false), [msg, say] = useState("");
@@ -169,15 +170,20 @@ export default function FinanceBook() {
   }, [open, uid, retry]);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open || embedded) return;
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => { document.body.style.overflow = previous; };
   }, [open]);
 
+  React.useLayoutEffect(()=>{
+    if (!leaveGuard) return;
+    leaveGuard.current=()=>!lock.current && (!form || window.confirm("تترك النموذج وتنتقل من الدفتر؟"));
+    return ()=>{leaveGuard.current=null;};
+  },[leaveGuard,form]);
   function close() {
     if (lock.current || (form && !window.confirm("ترك النموذج بدون حفظ؟"))) return;
-    edit(null); say(""); show(false); dialog.current.close();
+    edit(null); say(""); if (embedded) { if (!form) onHome(); else if (dialog.current) dialog.current.scrollTop=0; return; } show(false); dialog.current.close();
   }
   function set(key, value) { say(""); edit(old => ({ ...old, [key]: value })); }
   function start(f) { edit(f); say(""); dialog.current.scrollTop = 0; }
@@ -266,18 +272,20 @@ export default function FinanceBook() {
     + uid + '";\n}';
 
   return <>
-    <button type="button" className={main + " w-full"} onClick={() => {
+    {!embedded && <button type="button" className={main + " w-full"} onClick={() => {
       setArea("entries"); show(true); dialog.current.showModal();
-    }}>دفتر آدم وأمير</button>
+    }}>دفتر آدم وأمير</button>}
 
-    <dialog ref={dialog} dir="rtl" aria-label="دفتر آدم وأمير"
+    <Surface data-embedded={embedded} ref={dialog} dir="rtl" aria-label="دفتر آدم وأمير"
       onCancel={e => { e.preventDefault(); close(); }}
       className="finance-mobile-v2 fb-layout-3 fixed inset-0 m-0 h-[100dvh] max-h-[100dvh] w-full max-w-full overflow-y-auto overscroll-contain bg-white px-4 pb-6 pt-3 backdrop:bg-black/50 sm:m-auto sm:h-auto sm:max-h-[92dvh] sm:max-w-2xl sm:rounded-2xl sm:p-5">
 
-      <header className="mb-3 flex items-center justify-between">
-        <h2 className="text-lg font-bold">دفتر آدم وأمير</h2>
-        <button className={btn} disabled={busy} onClick={close}>إغلاق</button>
-      </header>
+      {(!embedded || form) && <header data-admin-step="" className="mb-3 flex items-center justify-between">
+        <h2 className="text-lg font-bold">{embedded && form
+          ? (kinds[form.kind] || ({pay:"تسجيل دفعة",voidPay:"تصحيح دفعة",void:"تصحيح قيد"}[form.kind]) || "تفاصيل العملية")
+          : "دفتر آدم وأمير"}</h2>
+        <button className={btn} disabled={busy} onClick={close}>{embedded && form ? "رجوع" : "إغلاق"}</button>
+      </header>}
 
       {status !== "ready" && <div role="status">
         {status === "denied" ? "يلزم تفعيل صلاحية الدفتر." :
@@ -499,6 +507,6 @@ export default function FinanceBook() {
           }}>نسخ قاعدة المدير</button>
         </details>
       </>}
-    </dialog>
+    </Surface>
   </>;
 }

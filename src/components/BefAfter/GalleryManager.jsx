@@ -1,3 +1,4 @@
+import { useLayoutEffect as useGalleryLayoutEffect } from "react";
 import React, { useRef, useState } from "react";
 import { auth } from "../../firebase";
 import { preparePhoto, savePair, saveGalleryOrder } from "./gallery";
@@ -39,7 +40,8 @@ function galleryRules(uid) {
   ].join("\n");
 }
 
-export default function GalleryManager({ gallery }) {
+export default function GalleryManager({ gallery,embedded=false,leaveGuard,onHome }) {
+  const Surface=embedded ? "section" : "dialog";
   const dialog = useRef(null);
   const locked = useRef(false);
   const [pair, setPair] = useState(null);
@@ -86,11 +88,16 @@ export default function GalleryManager({ gallery }) {
     if (dialog.current) dialog.current.scrollTop = 0;
   }
 
+  useGalleryLayoutEffect(()=>{
+    if (!leaveGuard) return;
+    leaveGuard.current=()=>!locked.current && (!dirty || window.confirm("تترك تغييرات الصور وتنتقل؟"));
+    return ()=>{leaveGuard.current=null;};
+  },[leaveGuard,dirty]);
   function back() {
     if (locked.current) return;
     if (dirty && !window.confirm("ترك التغييرات بدون حفظ؟")) return;
     if (pair || order) edit(null);
-    else dialog.current.close();
+    else if (embedded) onHome(); else dialog.current.close();
   }
 
   async function run(label, work) {
@@ -154,23 +161,23 @@ export default function GalleryManager({ gallery }) {
   }
 
   return <>
-    <button type="button" className={primary + " w-full"} onClick={() => {
+    {!embedded && <button type="button" className={primary + " w-full"} onClick={() => {
       edit(null);
       dialog.current.showModal();
     }}>
       إدارة صور قبل وبعد
-    </button>
+    </button>}
 
-    <dialog ref={dialog} dir="rtl" aria-label="إدارة صور قبل وبعد"
+    <Surface data-embedded={embedded} ref={dialog} dir="rtl" aria-label="إدارة صور قبل وبعد"
       onCancel={event => { event.preventDefault(); back(); }}
       className="fixed inset-0 m-auto max-h-[92dvh] w-[96vw] max-w-2xl overflow-auto overscroll-contain rounded-2xl bg-white p-4 backdrop:bg-black/50">
 
-      <header className="mb-4 flex items-center justify-between gap-2">
+      {(!embedded || pair || order) && <header data-admin-step="" className="mb-4 flex items-center justify-between gap-2">
         <h2 className="text-lg font-bold">{order ? "ترتيب الصور" : pair ? "معاينة المقارنة" : "صور قبل وبعد"}</h2>
         <button type="button" disabled={!!busy} className={button} onClick={back}>
           {pair || order ? "رجوع" : "إغلاق"}
         </button>
-      </header>
+      </header>}
 
       {!ready && <div role="status" className="mb-3 rounded-xl bg-amber-50 p-3">
         {gallery.status === "loading" ? "جارٍ تحميل المعرض…" :
@@ -265,6 +272,6 @@ export default function GalleryManager({ gallery }) {
           </button>)}
         </div>
       </>}
-    </dialog>
+    </Surface>
   </>;
 }

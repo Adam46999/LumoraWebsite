@@ -915,3 +915,50 @@
   outline: 3px solid var(--cal-cyan);
   outline-offset: 2px;
 }
+
+
+/* calendar-customer-disclosure-v1 */
+.wc .wc-booking-section[aria-label="الزبون"] {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:baseline;
+}
+.wc .wc-booking-section[aria-label="الزبون"] > h3 {
+  grid-area:1 / 1;
+  margin:0 0 8px;
+}
+.wc .wc-booking-section[aria-label="الزبون"] > .wc-grid,
+.wc .wc-booking-section[aria-label="الزبون"] > datalist {
+  grid-column:1 / -1;
+}
+.wc .wc-booking-section > .wc-returning-option {
+  grid-area:1 / 2;
+  margin:0 0 4px;
+}
+.wc .wc-returning-option > summary {
+  width:fit-content;
+  margin-inline-start:auto;
+  min-height:44px;
+  display:flex;
+  align-items:center;
+  gap:5px;
+  padding:4px 6px;
+  border-radius:7px;
+  list-style:none;
+  color:var(--wc-secondary);
+  font-size:13px;
+  font-weight:600;
+  cursor:pointer;
+}
+.wc .wc-returning-option > summary::-webkit-details-marker {display:none}
+.wc .wc-returning-option > summary::after {
+  content:"";
+  width:6px;height:6px;
+  border-right:1.5px solid currentColor;
+  border-bottom:1.5px solid currentColor;
+  transform:rotate(45deg);
+}
+.wc .wc-booking-section > .wc-returning-option[open] {grid-column:1 / -1}
+.wc .wc-returning-option[open] > summary::after {transform:rotate(225deg)}
+.wc .wc-returning-option[open] > summary {color:var(--cal-navy)}
+.wc .wc-returning-option .wc-customer-picker {padding-top:3px}
