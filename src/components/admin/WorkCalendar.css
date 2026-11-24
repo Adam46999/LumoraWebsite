@@ -3796,3 +3796,109 @@ dialog.wc-town-sheet {
         min-height: 60px !important;
     }
 }
+
+/* lumora-day-header-polish-v1 */
+
+/* Wrap the day summary in a cleaner card */
+.wc .wc-list-bar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+
+  margin: 10px 0 14px;
+  padding: 14px 14px 12px;
+
+  border: 1px solid #e4e8ef;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 4px 14px rgba(24, 32, 56, 0.04);
+}
+
+/* Day title / date block */
+.wc .wc-list-bar h3 {
+  margin: 0;
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+
+  color: #182038;
+  font-size: 20px;
+  font-weight: 850;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+
+.wc .wc-list-bar h3 small {
+  display: block;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 750;
+  line-height: 1.4;
+  color: #5f6d82;
+}
+
+/* "Return to today" button */
+.wc .wc-period-reset {
+  flex-shrink: 0;
+  min-height: 42px;
+  padding: 0 13px;
+
+  border: 1px solid #d9e0ea;
+  border-radius: 999px;
+  background: #f8fafc;
+
+  color: #516074;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+
+  box-shadow: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.wc .wc-period-reset:hover {
+  background: #f1f5f9;
+}
+
+.wc .wc-period-reset:active {
+  background: #eaf0f5;
+  transform: scale(.98);
+}
+
+.wc .wc-period-reset:focus-visible {
+  outline: 2px solid #2f6d47;
+  outline-offset: 3px;
+}
+
+/* Better spacing for the day list container */
+.wc .wc-swipe-day {
+  display: grid;
+  gap: 8px;
+}
+
+/* Mobile tuning */
+@media (max-width: 430px) {
+  .wc .wc-list-bar {
+    padding: 12px;
+    gap: 10px;
+    border-radius: 16px;
+  }
+
+  .wc .wc-list-bar h3 {
+    font-size: 18px;
+    line-height: 1.35;
+  }
+
+  .wc .wc-list-bar h3 small {
+    font-size: 12px;
+  }
+
+  .wc .wc-period-reset {
+    min-height: 38px;
+    padding: 0 11px;
+    font-size: 12px;
+  }
+}

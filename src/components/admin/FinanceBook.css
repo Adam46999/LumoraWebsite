@@ -413,3 +413,388 @@
   .fb-layout-3 .fb-total-line { padding: 12px; }
   .fb-layout-3 .fb-statement dl > div { padding: 9px 11px; }
 }
+
+/* lumora-financial-link-v2 */
+.fb-appointment-link-v2 {
+  display: grid;
+  gap: 5px;
+  margin: 12px 0;
+  padding: 13px;
+  border: 1px solid #dce7df;
+  border-radius: 14px;
+  background: #f2f8f4;
+  color: #254632;
+  font-size: 13px;
+  line-height: 1.7;
+}
+.fb-appointment-link-v2 strong {
+  font-weight: 800;
+}
+.fb-appointment-link-v2 small {
+  overflow-wrap: anywhere;
+  color: #617669;
+  font-size: 11px;
+}
+
+/* lumora-finance-mobile-clarity-v1 */
+
+.finance-mobile-v2.fb-layout-3 {
+  --finance-ink: #182038;
+  --finance-muted: #687589;
+  --finance-line: #e3e9eb;
+  --finance-bg: #f6f8f5;
+  --finance-green: #286c4b;
+
+  box-sizing: border-box;
+  min-width: 0;
+  overflow-x: hidden;
+  background: var(--finance-bg);
+  color: var(--finance-ink);
+  padding-bottom: max(110px,env(safe-area-inset-bottom));
+  scroll-padding-top: 16px;
+}
+
+/* More room and clearer hierarchy */
+.finance-mobile-v2.fb-layout-3 > header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--finance-line);
+}
+
+.finance-mobile-v2.fb-layout-3 > header h2 {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 800;
+  line-height: 1.35;
+  color: var(--finance-ink);
+}
+
+.finance-mobile-v2.fb-layout-3 > header button {
+  min-height: 44px;
+  padding-inline: 14px;
+  border-radius: 12px;
+  background: white;
+}
+
+/* Primary everyday actions */
+.finance-mobile-v2.fb-layout-3 .fb-actions {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 11px;
+  margin: 0 0 18px;
+}
+
+.finance-mobile-v2.fb-layout-3 .fb-actions button {
+  min-width: 0;
+  min-height: 58px;
+  padding: 12px 10px;
+  border-radius: 15px;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.4;
+  box-shadow: none;
+  touch-action: manipulation;
+}
+
+/* Keep secondary financial actions secondary */
+.finance-mobile-v2.fb-layout-3 > details {
+  margin-block: 0 18px;
+}
+
+.finance-mobile-v2.fb-layout-3 > details > summary {
+  min-height: 45px;
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--finance-muted);
+}
+
+/* Day / month / outstanding selector */
+.finance-mobile-v2.fb-layout-3 nav[aria-label="فترة العرض"] {
+  display: grid;
+  grid-template-columns: repeat(3,minmax(0,1fr));
+  gap: 4px;
+  padding: 5px;
+  margin: 8px 0 18px;
+  border-radius: 15px;
+  background: #e9eeeb;
+}
+
+.finance-mobile-v2.fb-layout-3
+nav[aria-label="فترة العرض"] button {
+  min-width: 0;
+  min-height: 46px;
+  padding: 7px 3px;
+  border: 0;
+  border-radius: 11px;
+  background: transparent;
+  color: #596a65;
+  font-size: 14px;
+  font-weight: 750;
+  box-shadow: none;
+}
+
+.finance-mobile-v2.fb-layout-3
+nav[aria-label="فترة العرض"] button[aria-pressed="true"] {
+  background: white !important;
+  color: #182038 !important;
+  box-shadow: 0 2px 7px rgba(24,32,56,.07);
+}
+
+/* Date filter */
+.finance-mobile-v2.fb-layout-3
+label:has(input[type="date"]),
+.finance-mobile-v2.fb-layout-3
+label:has(input[type="month"]) {
+  min-width: 0;
+}
+
+.finance-mobile-v2.fb-layout-3
+input[type="date"],
+.finance-mobile-v2.fb-layout-3
+input[type="month"] {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 48px;
+  margin-top: 7px;
+  border-radius: 12px;
+  border: 1px solid var(--finance-line);
+  background: #fff;
+  font-size: 16px;
+}
+
+/* Financial summary: clear main number */
+.finance-mobile-v2.fb-layout-3 .fb-statement {
+  margin: 6px 0 20px;
+  border: 1px solid #dce5df;
+  border-radius: 19px;
+  background: #fff;
+  box-shadow: 0 4px 16px rgba(24,32,56,.035);
+}
+
+.finance-mobile-v2.fb-layout-3 .fb-total-line {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 18px 17px;
+  border-inline-start-width: 3px;
+}
+
+.finance-mobile-v2.fb-layout-3 .fb-total-line h3 {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.finance-mobile-v2.fb-layout-3 .fb-total-line bdi {
+  font-size: clamp(28px,7.5vw,36px);
+  font-weight: 800;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+/* Partner shares */
+.finance-mobile-v2.fb-layout-3 .fb-statement dl {
+  grid-template-columns: repeat(2,minmax(0,1fr));
+}
+
+.finance-mobile-v2.fb-layout-3 .fb-statement dl > div {
+  min-width: 0;
+  padding: 15px 13px;
+}
+
+.finance-mobile-v2.fb-layout-3 .fb-statement dt {
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.5;
+}
+
+.finance-mobile-v2.fb-layout-3 .fb-statement dd {
+  margin-top: 7px;
+}
+
+.finance-mobile-v2.fb-layout-3 .fb-shares dd bdi {
+  font-size: clamp(17px,4.7vw,22px);
+  font-weight: 800;
+}
+
+.finance-mobile-v2.fb-layout-3 .fb-flow {
+  background: #fafbf9;
+}
+
+.finance-mobile-v2.fb-layout-3 .fb-flow dd bdi {
+  font-size: clamp(15px,4vw,18px);
+}
+
+/* Operations / reports navigation */
+.finance-mobile-v2.fb-layout-3 .fb-sections {
+  gap: 5px;
+  margin: 16px 0 14px;
+  padding: 5px;
+  border: 0;
+  border-radius: 14px;
+  background: #e9eeeb;
+}
+
+.finance-mobile-v2.fb-layout-3 .fb-sections button {
+  min-width: 0;
+  min-height: 47px;
+  border: 0 !important;
+  border-radius: 10px;
+  background: transparent !important;
+  color: #5b6b65;
+  font-size: 14px;
+  font-weight: 750;
+}
+
+.finance-mobile-v2.fb-layout-3
+.fb-sections button[aria-pressed="true"] {
+  color: #182038 !important;
+  background: #fff !important;
+  box-shadow: 0 2px 7px rgba(24,32,56,.065);
+}
+
+/* Search */
+.finance-mobile-v2.fb-layout-3 .fb-search {
+  width: 100%;
+  min-height: 50px;
+  margin: 0 0 15px;
+  padding: 11px 15px;
+  border: 1px solid var(--finance-line);
+  border-radius: 13px;
+  background: #fff;
+  color: var(--finance-ink);
+  font-size: 16px;
+}
+
+/* Each financial operation is a readable independent card */
+.finance-mobile-v2.fb-layout-3 .fb-record {
+  margin-block: 0 11px;
+  overflow: hidden;
+  border: 1px solid var(--finance-line);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(24,32,56,.025);
+}
+
+.finance-mobile-v2.fb-layout-3 .fb-record > summary {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) auto;
+  grid-template-areas:
+    "kind arrow"
+    "name amount"
+    "state state";
+  align-items: center;
+  gap: 6px 12px;
+  min-height: 90px;
+  padding: 15px 13px;
+  list-style: none;
+  cursor: pointer;
+}
+
+.finance-mobile-v2.fb-layout-3 .fb-record .fb-kind {
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.finance-mobile-v2.fb-layout-3 .fb-record .fb-title {
+  min-width: 0;
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.finance-mobile-v2.fb-layout-3 .fb-record .fb-amount {
+  font-size: 18px;
+  font-weight: 800;
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.finance-mobile-v2.fb-layout-3 .fb-record .fb-state {
+  width: fit-content;
+  max-width: 100%;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.finance-mobile-v2.fb-layout-3 .fb-record[open] {
+  border-color: #bdd5c7;
+  box-shadow: 0 4px 14px rgba(24,32,56,.055);
+}
+
+/* Reports: comfortable expandable sections */
+.finance-mobile-v2.fb-layout-3 .fb-reports {
+  gap: 12px;
+}
+
+.finance-mobile-v2.fb-layout-3 .fb-reports > details {
+  border: 1px solid var(--finance-line);
+  border-radius: 15px;
+  background: #fff;
+  padding-inline: 15px;
+}
+
+.finance-mobile-v2.fb-layout-3
+.fb-reports > details > summary {
+  min-height: 54px;
+  font-size: 14px;
+}
+
+/* Forms stay easy to touch */
+.finance-mobile-v2.fb-layout-3 fieldset.space-y-3 {
+  padding: 16px;
+  border-radius: 17px;
+  border-color: var(--finance-line);
+}
+
+.finance-mobile-v2.fb-layout-3
+fieldset.space-y-3 input:not([type="checkbox"]),
+.finance-mobile-v2.fb-layout-3
+fieldset.space-y-3 select {
+  min-height: 48px;
+  font-size: 16px;
+}
+
+.finance-mobile-v2.fb-layout-3 button:focus-visible,
+.finance-mobile-v2.fb-layout-3 input:focus-visible {
+  outline: 2px solid #347451;
+  outline-offset: 2px;
+}
+
+@media(max-width:380px) {
+  .finance-mobile-v2.fb-layout-3 {
+    padding-inline: 12px;
+  }
+
+  .finance-mobile-v2.fb-layout-3 .fb-actions {
+    gap: 8px;
+  }
+
+  .finance-mobile-v2.fb-layout-3 .fb-statement dl > div {
+    padding-inline: 10px;
+  }
+
+  .finance-mobile-v2.fb-layout-3 .fb-record > summary {
+    padding: 13px 10px;
+    gap: 5px 8px;
+  }
+
+  .finance-mobile-v2.fb-layout-3 .fb-record .fb-amount {
+    font-size: 16px;
+  }
+}
+
+@media(prefers-reduced-motion:reduce) {
+  .finance-mobile-v2.fb-layout-3 button {
+    transition: none;
+  }
+}

@@ -460,11 +460,19 @@ export default function FinanceBook({embedded=false,leaveGuard,onHome}={}) {
                 <span className="fb-state paid">مسدّد</span>)}
           </summary>
           <p>{r.date} · {r.category} {r.note}</p>
+          {/* lumora-financial-link-v2 */}
+{r.appointmentId && <div className="fb-appointment-link-v2">
+  <strong>مرتبط بموعد شغل</strong>
+  <span>هذا القيد ناتج عن إنهاء موعد من جدول الأدوار.</span>
+  <small dir="ltr">ID: {r.appointmentId}</small>
+  <span>القيد محفوظ في دفتر الحسابات، لكن المطابقة المستقلة مع الموعد لم تُفحص هنا.</span>
+</div>}
           {r.reason && <p>سبب الإلغاء: {r.reason}</p>}
           {r.lines.map((l, i) => <p key={i}>{l.type} · {l.qty} {l.unit}</p>)}
           {!isInvoice(r) && <p>من {wallets[r.wallet]} إلى {wallets[r.to]}</p>}
           {r.payments.map(p => <div className="my-2" key={p.id}>
-            {p.date} · {money(p.amount)} · {wallets[p.wallet]} {p.cancelled ? "· ملغاة: " + p.reason : ""}
+            {p.date} · {money(p.amount)} · {wallets[p.wallet]}
+            {p.method ? " · " + (p.method==="تحويل" ? "تحويل بنكي" : p.method) : ""} {p.cancelled ? "· ملغاة: " + p.reason : ""}
             {!r.cancelled && !p.cancelled && <button disabled={!ready} className={btn}
               onClick={() => action(r, "voidPay", p.id)}>تصحيح دفعة</button>}
           </div>)}
