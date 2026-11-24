@@ -1,6 +1,7 @@
 import { useLayoutEffect as useGalleryLayoutEffect } from "react";
 import React, { useRef, useState } from "react";
 import { auth } from "../../firebase";
+import ServiceImagesManager from "./ServiceImagesManager";
 import { preparePhoto, savePair, saveGalleryOrder } from "./gallery";
 
 const button = "min-h-12 rounded-xl border px-4 py-2 font-bold disabled:opacity-50";
@@ -42,6 +43,8 @@ function galleryRules(uid) {
 
 export default function GalleryManager({ gallery,embedded=false,leaveGuard,onHome }) {
   const Surface=embedded ? "section" : "dialog";
+  const [imageTab,setImageTab] = useState("services");
+  const [serviceDirty,setServiceDirty] = useState(false);
   const dialog = useRef(null);
   const locked = useRef(false);
   const [pair, setPair] = useState(null);
@@ -51,7 +54,7 @@ export default function GalleryManager({ gallery,embedded=false,leaveGuard,onHom
   const ready = gallery.status === "ready";
   const [order, setOrder] = useState(null);
   const orderChanged = !!order && order.ids.some((id, index) => id !== order.initial[index]);
-  const dirty = orderChanged || Object.keys(changes).length > 0;
+  const dirty = orderChanged || Object.keys(changes).length > 0 || serviceDirty;
 
   function startOrdering() {
     const ids = gallery.pairs.map(item => item.id);
@@ -173,13 +176,35 @@ export default function GalleryManager({ gallery,embedded=false,leaveGuard,onHom
       className="fixed inset-0 m-auto max-h-[92dvh] w-[96vw] max-w-2xl overflow-auto overscroll-contain rounded-2xl bg-white p-4 backdrop:bg-black/50">
 
       {(!embedded || pair || order) && <header data-admin-step="" className="mb-4 flex items-center justify-between gap-2">
-        <h2 className="text-lg font-bold">{order ? "ترتيب الصور" : pair ? "معاينة المقارنة" : "صور قبل وبعد"}</h2>
+        <h2 className="text-lg font-bold">{imageTab==="services" ? "صور الخدمات" : order ? "ترتيب الصور" : pair ? "معاينة المقارنة" : "صور قبل وبعد"}</h2>
         <button type="button" disabled={!!busy} className={button} onClick={back}>
           {pair || order ? "رجوع" : "إغلاق"}
         </button>
       </header>}
 
-      {!ready && <div role="status" className="mb-3 rounded-xl bg-amber-50 p-3">
+      <nav className="mb-4 grid grid-cols-2 gap-2 rounded-2xl bg-[#edf2ee] p-1"
+        aria-label="إدارة صور الموقع">
+        <button type="button" aria-pressed={imageTab==="services"}
+          className={"min-h-12 rounded-xl px-2 text-sm font-bold " +
+            (imageTab==="services" ? "bg-white text-[#182038] shadow-sm" : "text-slate-600")}
+          onClick={()=>{
+            if(imageTab==="services")return;
+            if(dirty && !window.confirm("تترك التغييرات بدون حفظ؟"))return;
+            edit(null);setImageTab("services");
+          }}>صور الخدمات</button>
+        <button type="button" aria-pressed={imageTab==="gallery"}
+          className={"min-h-12 rounded-xl px-2 text-sm font-bold " +
+            (imageTab==="gallery" ? "bg-white text-[#182038] shadow-sm" : "text-slate-600")}
+          onClick={()=>{
+            if(imageTab==="gallery")return;
+            if(dirty && !window.confirm("تترك التغييرات بدون حفظ؟"))return;
+            setImageTab("gallery");
+          }}>قبل وبعد</button>
+      </nav>
+
+      {imageTab==="services"
+        ? <ServiceImagesManager onDirtyChange={setServiceDirty}/>
+        : <>      {!ready && <div role="status" className="mb-3 rounded-xl bg-amber-50 p-3">
         {gallery.status === "loading" ? "جارٍ تحميل المعرض…" :
           <>
             <p>{gallery.status === "denied" ? "المعرض بحاجة لتفعيل الصلاحيات." : "تعذّر الاتصال بالمعرض."}</p>
@@ -271,6 +296,7 @@ export default function GalleryManager({ gallery,embedded=false,leaveGuard,onHom
             </span>
           </button>)}
         </div>
+      </>}
       </>}
     </Surface>
   </>;

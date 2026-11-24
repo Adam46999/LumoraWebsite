@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { ClipboardList, MessageCircle, Plus } from "lucide-react";
 
 import { services } from "./servicesData";
+import { useServiceImages } from "./serviceImages";
 import ServiceCard from "./ServiceCard";
 import OrderBuilderModal from "./OrderBuilderModal";
 import { useLanguage } from "../../context/LanguageContext";
@@ -56,6 +57,7 @@ const getOrderWhatsAppNumber = (order) => {
 
 export default function Services() {
   const { lang, isRTL } = useLanguage();
+  const { records: serviceImages } = useServiceImages();
 
   const [titleVisible, setTitleVisible] = useState(false);
 
@@ -285,7 +287,7 @@ export default function Services() {
                   icon={service.icon}
                   titleKey={service.titleKey}
                   descriptionKey={service.descriptionKey}
-                  image={service.image}
+                  image={serviceImages[service.id]?.image || service.image}
                   priority={service.priority}
                   onClick={
                     available ? () => openOrderBuilder(service.id) : undefined
