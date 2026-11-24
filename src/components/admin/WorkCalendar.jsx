@@ -436,13 +436,14 @@ function CalendarBody({ uid, close, embedded=false, leaveGuard, schedulePosition
   },[uid,retry]);
 
   const [date,setDate] = useState(()=>schedulePosition?.current?.date || today());
-  const [view,setView] = useState(()=>schedulePosition?.current?.view || "اليوم");
+  const [view,setView] = useState(()=>"الشهر");
   React.useLayoutEffect(()=>{
     if (schedulePosition) schedulePosition.current={date,view,pickerOrigin:pickerOrigin.current};
   },[schedulePosition,date,view]);
   const [form,setForm] = useState(null), [checkout,setCheckout] = useState(null);
   const [msg,say] = useState(""), [busy,setBusy] = useState(false), [search,find] = useState("");
   const [searchOpen,setSearchOpen] = useState(false);
+  const [actionMenuOpen,setActionMenuOpen] = useState(false);
   const [section,setSection] = useState("appointments");
   const [historyFilter,setHistoryFilter] = useState("all");
   const inHistory = section === "history";
@@ -893,18 +894,7 @@ function CalendarBody({ uid, close, embedded=false, leaveGuard, schedulePosition
         <circle cx="13" cy="7" r="2"/><circle cx="8" cy="17" r="2"/>
       </svg>
     </button>
-    <button type="button" className="wc-top-add" disabled={!ready}
-      onClick={()=>edit(blank(date))}>+ موعد</button>
-    <button type="button" className="wc-top-search" aria-expanded={searchOpen}
-      aria-label={searchOpen ? "إغلاق البحث" : inHistory ? "بحث بالسجل" : "بحث بالأدوار"}
-      title={searchOpen ? "إغلاق البحث" : inHistory ? "بحث بالسجل" : "بحث بالأدوار"}
-      onClick={()=>{setSearchOpen(!searchOpen);find("");}}>
-      <svg viewBox="0 0 24 24" width="19" height="19" fill="none"
-        stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-        {searchOpen ? <path d="m6 6 12 12M18 6 6 18"/> :
-          <><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></>}
-      </svg>
-    </button>
+    
   </div>;
   return <Surface ref={dialog} className="wc" data-embedded={embedded} data-form={!!(form || checkout)} dir="rtl" aria-label="مواعيد الشغل"
     onCancel={e=>{e.preventDefault();leave();}}>
@@ -1084,7 +1074,7 @@ function CalendarBody({ uid, close, embedded=false, leaveGuard, schedulePosition
               {date===currentDay ? <small>اليوم</small> :
                 date===shift(currentDay,1) ? <small>بكرا</small> :
                 date===shift(currentDay,2) ? <small>بعد بكرا</small> : null}
-              <bdi dir="ltr">{date.split("-").reverse().join("/")}</bdi>
+              <strong className="wc-open-day-label">{dateLabel(date)}</strong><small className="wc-open-day-count">{activeVisits.length === 0 ? "ما في أدوار" : activeVisits.length === 1 ? "موعد واحد" : "عدد الأدوار: " + activeVisits.length}</small>
             </span>
             <button type="button" onClick={()=>setDate(d=>shift(d,1))}>اليوم التالي</button>
           </div> : <div className="wc-month-caption">
@@ -1119,7 +1109,7 @@ function CalendarBody({ uid, close, embedded=false, leaveGuard, schedulePosition
                 historyFilter==="cancelled" ? "ما في مواعيد ملغية" : "السجل فاضي") :
                 date===currentDay ? "ما في أدوار اليوم" : "ما في أدوار بهالتاريخ"}</strong>
             {needle ? <button type="button" onClick={()=>find("")}>مسح البحث</button> :
-              !inHistory && <button type="button" onClick={()=>edit(blank(date))}>+ أضف موعد</button>}
+              !inHistory && null}
           </div>}
         </div>
       </> : <>
@@ -1140,28 +1130,14 @@ function CalendarBody({ uid, close, embedded=false, leaveGuard, schedulePosition
                 aria-current={isToday ? "date" : undefined}
                 aria-label={[isToday ? "اليوم" : "",dateLabel(key),
                   count ? "عدد المواعيد " + count : "ما في مواعيد"].filter(Boolean).join("، ")}
-                aria-pressed={key===date}
-                data-calendar-date={key} onClick={()=>setDate(key)}>
+                data-selected={key===date}
+                data-calendar-date={key} onClick={()=>openDayFromMonth(key)}>
                 <span className="wc-date-number">{i+1}</span>
                 <span className="wc-date-count-slot" aria-hidden="true">
                   {count>0 && <span className="wc-date-count">{count}</span>}
                 </span>
               </button>;
             })}
-          </div>
-          <div className="wc-day-preview" dir="rtl">
-            <div aria-live="polite" aria-atomic="true">
-              <strong>{local(date).toLocaleDateString("ar",{
-                weekday:"long",day:"numeric",month:"long"
-              })}</strong>
-              <small>{!ready ? "بانتظار تحديث الأدوار" :
-                activeVisits.length===0 ? "ما في أدوار" :
-                activeVisits.length===1 ? "موعد واحد" :
-                activeVisits.length===2 ? "موعدان" :
-                "عدد الأدوار: "+activeVisits.length}</small>
-            </div>
-            <button type="button" onClick={()=>openDayFromMonth(date)}
-              aria-label={"عرض أدوار "+dateLabel(date)}>عرض اليوم</button>
           </div>
           <div className="wc-month-paging" dir="rtl" role="group" aria-label="التنقل بين الشهور">
             <button type="button" onClick={()=>setDate(d=>monthStart(d,-1))}>الشهر السابق</button>
@@ -1186,6 +1162,67 @@ function CalendarBody({ uid, close, embedded=false, leaveGuard, schedulePosition
       </div>
       <button type="button" aria-label="إخفاء رسالة الإلغاء" onClick={()=>say("")}>×</button>
     </div> : typeof msg==="string" && msg && <p className="wc-msg" role="status">{msg}</p>}
+    
+    
+    {!form && !checkout && !settingsOpen && <div
+      className="wc-unified-action-menu"
+      dir="rtl">
+
+      {actionMenuOpen && <>
+        <button
+          type="button"
+          className="wc-menu-backdrop"
+          aria-label="إغلاق قائمة الإجراءات"
+          onClick={()=>setActionMenuOpen(false)}
+        />
+
+        <div className="wc-menu-options">
+          <button
+            type="button"
+            className="wc-menu-option"
+            disabled={!ready || busy}
+            onClick={()=>{
+              setActionMenuOpen(false);
+              edit(blank(date));
+            }}>
+            <span className="wc-menu-label">إضافة موعد</span>
+            <span className="wc-menu-option-icon" aria-hidden="true">+</span>
+          </button>
+
+          <button
+            type="button"
+            className="wc-menu-option"
+            onClick={()=>{
+              setActionMenuOpen(false);
+              setSearchOpen(v=>!v);
+              find("");
+            }}>
+            <span className="wc-menu-label">
+              {searchOpen ? "إغلاق البحث" : "بحث بالأدوار"}
+            </span>
+            <span className="wc-menu-option-icon" aria-hidden="true">
+              {searchOpen ? "×" :
+                <svg width="22" height="22" viewBox="0 0 24 24"
+                  fill="none" stroke="currentColor"
+                  strokeWidth="2" strokeLinecap="round">
+                  <circle cx="10.5" cy="10.5" r="6.5"/>
+                  <path d="m16 16 5 5"/>
+                </svg>}
+            </span>
+          </button>
+        </div>
+      </>}
+
+      <button
+        type="button"
+        className="wc-menu-main"
+        aria-label={actionMenuOpen ? "إغلاق الإجراءات" : "فتح إجراءات المواعيد"}
+        aria-expanded={actionMenuOpen}
+        aria-haspopup="true"
+        onClick={()=>setActionMenuOpen(v=>!v)}>
+        <span aria-hidden="true">{actionMenuOpen ? "×" : "+"}</span>
+      </button>
+    </div>}
   </Surface>;
 }
 export default function WorkCalendar({embedded=false,leaveGuard,onHome,schedulePosition,actionHost}={}) {
