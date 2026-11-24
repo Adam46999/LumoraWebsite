@@ -1078,15 +1078,33 @@ function CalendarBody({ uid, close, embedded=false, leaveGuard, schedulePosition
           setCheckout(draft);
           say(""); dialog.current.scrollTop=0;
         }}>تم الشغل</button>
-        <details className="wc-manage">
+        {/* lumora-appointment-actions-icons-v1 */}
+<details className="wc-manage">
           <summary>إدارة الموعد</summary>
-          <div>
+          <div className="wc-manage-choice-grid">
             <button type="button" disabled={!ready || busy}
-    onClick={()=>beginPostpone(r)}>تأجيل الموعد</button>
-<button disabled={!ready || busy} onClick={()=>edit(r)}>
-  تعديل الموعد
-</button>
-            <button className="wc-cancel" disabled={!ready || busy} onClick={()=>cancel(r)}>إلغاء الموعد</button>
+    onClick={()=>beginPostpone(r)} data-action="postpone"><span className="wc-manage-choice-icon"><svg aria-hidden="true" viewBox="0 0 24 24"
+      width="21" height="21" fill="none" stroke="currentColor"
+      strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="5" width="18" height="16" rx="3"/>
+      <path d="M7 3v4m10-4v4M3 10h18"/>
+      <circle cx="15.5" cy="16" r="3.5" fill="currentColor"
+        stroke="none" opacity=".12"/>
+      <path d="M15.5 13.5v2.5l1.5 1"/>
+    </svg></span><span className="wc-manage-choice-label">تأجيل الموعد</span></button>
+<button disabled={!ready || busy} onClick={()=>edit(r)} data-action="edit"><span className="wc-manage-choice-icon"><svg aria-hidden="true" viewBox="0 0 24 24"
+      width="21" height="21" fill="none" stroke="currentColor"
+      strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 20h9"/>
+      <path d="M16 4a2.2 2.2 0 0 1 3.1 3.1L9 17.2 5 18l.8-4L16 4Z"/>
+      <path d="m14.5 5.5 4 4"/>
+    </svg></span><span className="wc-manage-choice-label">تعديل الموعد</span></button>
+            <button className="wc-cancel" disabled={!ready || busy} onClick={()=>cancel(r)} data-action="cancel"><span className="wc-manage-choice-icon"><svg aria-hidden="true" viewBox="0 0 24 24"
+      width="21" height="21" fill="none" stroke="currentColor"
+      strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 7h16M10 3h4l1 4H9l1-4Z"/>
+      <path d="m6 7 1 13h10l1-13M10 11v5m4-5v5"/>
+    </svg></span><span className="wc-manage-choice-label">إلغاء الموعد</span></button>
           </div>
         </details>
       </div>}
@@ -1512,7 +1530,20 @@ function CalendarBody({ uid, close, embedded=false, leaveGuard, schedulePosition
           onTouchEnd={!inHistory && !needle ? finishSwipe : undefined}
           onTouchCancel={()=>{swipeStart.current=null;}}>
           {groupRows.length>0 && <div className="wc-list-bar">
-            <h3>{groupLabel()}</h3>
+            <h3 className={date===currentDay && !needle && !inHistory
+  ? "wc-remaining-title" : undefined}>
+  {date===currentDay && !needle && !inHistory ? <>
+    <span className="wc-remaining-number"
+      aria-hidden="true">{groupRows.length}</span>
+    <span className="wc-remaining-copy">
+      <strong>
+        {groupRows.length===1 ? "موعد متبقّي" :
+          "مواعيد متبقّية"}
+      </strong>
+      <small>اليوم</small>
+    </span>
+  </> : groupLabel()}
+</h3>
             {groupRows.length>1 && <button type="button"
               onClick={()=>setGroupExpanded(groupRows,!groupOpen)}>
               {groupOpen ? "طيّ الكل" : "فتح الكل"}

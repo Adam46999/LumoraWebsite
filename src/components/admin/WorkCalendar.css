@@ -3902,3 +3902,576 @@ dialog.wc-town-sheet {
     font-size: 12px;
   }
 }
+
+
+/* lumora-appointment-actions-icons-v1 */
+
+.wc .wc-manage .wc-manage-choice-grid {
+  display:grid !important;
+  grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  gap:9px !important;
+  padding:8px 0 3px;
+  align-items:stretch;
+}
+
+.wc .wc-manage .wc-manage-choice-grid > button {
+  box-sizing:border-box;
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap:8px !important;
+  width:100% !important;
+  min-width:0;
+  min-height:88px !important;
+  margin:0 !important;
+  padding:12px 7px !important;
+  border:1px solid #e1e7e9 !important;
+  border-radius:15px !important;
+  background:#fff !important;
+  color:#26334b !important;
+  box-shadow:none !important;
+  font-size:13px !important;
+  font-weight:750 !important;
+  line-height:1.35;
+  text-align:center;
+  cursor:pointer;
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+}
+
+.wc .wc-manage .wc-manage-choice-icon {
+  width:35px;
+  height:35px;
+  display:grid;
+  place-items:center;
+  flex-shrink:0;
+  border-radius:11px;
+  background:#f0f4f6;
+  color:#405b70;
+}
+
+.wc .wc-manage [data-action="postpone"]
+.wc-manage-choice-icon {
+  background:#ebf4ed;
+  color:#37704e;
+}
+
+.wc .wc-manage .wc-manage-choice-label {
+  display:block;
+  font-size:13px;
+  font-weight:800;
+  white-space:normal;
+}
+
+.wc .wc-manage .wc-manage-choice-grid >
+button[data-action="cancel"] {
+  grid-column:1 / -1;
+  flex-direction:row !important;
+  min-height:51px !important;
+  gap:9px !important;
+  border-color:#f0d7d4 !important;
+  background:#fff8f7 !important;
+  color:#a43b33 !important;
+}
+
+.wc .wc-manage [data-action="cancel"]
+.wc-manage-choice-icon {
+  width:28px;
+  height:28px;
+  background:transparent;
+  color:#a43b33;
+}
+
+.wc .wc-manage .wc-manage-choice-grid >
+button:active:not(:disabled) {
+  transform:scale(.98);
+  background:#f4f7f6 !important;
+}
+
+.wc .wc-manage .wc-manage-choice-grid >
+button:focus-visible {
+  outline:2px solid #407b57;
+  outline-offset:3px;
+}
+
+.wc .wc-manage .wc-manage-choice-grid >
+button:disabled {
+  opacity:.45;
+  cursor:not-allowed;
+}
+
+@media(max-width:360px) {
+  .wc .wc-manage .wc-manage-choice-grid {
+    gap:7px !important;
+  }
+  .wc .wc-manage .wc-manage-choice-grid > button {
+    min-height:82px !important;
+    padding:10px 5px !important;
+  }
+  .wc .wc-manage .wc-manage-choice-label {
+    font-size:12px;
+  }
+}
+
+
+/* lumora-remaining-appointments-v1 */
+
+/* Today's remaining appointments */
+.wc .wc-list-bar:has(.wc-remaining-title) {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+
+  min-height: 76px;
+  margin: 10px 0 14px !important;
+  padding: 12px 14px !important;
+
+  background: #ffffff;
+  border: 1px solid #e5e9e4;
+  border-radius: 17px;
+  box-shadow: 0 3px 12px rgba(24,32,56,.035);
+}
+
+.wc .wc-list-bar .wc-remaining-title {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 13px !important;
+
+  min-width: 0;
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 1.3;
+}
+
+.wc .wc-remaining-number {
+  display: grid;
+  place-items: center;
+  flex: 0 0 54px;
+
+  width: 54px;
+  height: 54px;
+
+  border-radius: 14px;
+  background: #fff1dc;
+  color: #97621b;
+
+  font-size: 27px;
+  font-weight: 850;
+  font-variant-numeric: tabular-nums;
+}
+
+.wc .wc-remaining-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 5px;
+  min-width: 0;
+}
+
+.wc .wc-remaining-copy strong {
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1.4;
+  color: #182038;
+}
+
+.wc .wc-remaining-copy small {
+  font-size: 13px;
+  font-weight: 650;
+  color: #657386;
+}
+
+/* Existing expand / collapse button */
+.wc .wc-list-bar:has(.wc-remaining-title) > button {
+  flex-shrink: 0;
+  min-height: 44px;
+  border-radius: 11px;
+  font-size: 12px;
+  touch-action: manipulation;
+}
+
+@media (max-width: 390px) {
+  .wc .wc-list-bar:has(.wc-remaining-title) {
+    padding: 11px !important;
+    gap: 8px !important;
+  }
+
+  .wc .wc-list-bar .wc-remaining-title {
+    gap: 10px !important;
+  }
+
+  .wc .wc-remaining-number {
+    flex-basis: 48px;
+    width: 48px;
+    height: 48px;
+    font-size: 25px;
+  }
+
+  .wc .wc-remaining-copy strong {
+    font-size: 15px;
+  }
+}
+
+/* lumora-remaining-compact-v2 */
+
+/* Compact remaining appointments indicator */
+.wc .wc-list-bar:has(.wc-remaining-title) {
+    min-height: 0 !important;
+    margin: 7px 0 11px !important;
+    padding: 8px 11px !important;
+
+    border: 1px solid #e6e9e5 !important;
+    border-radius: 12px !important;
+    background: #fafbf9 !important;
+
+    box-shadow: none !important;
+}
+
+.wc .wc-list-bar .wc-remaining-title {
+    gap: 9px !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    font-size: 14px !important;
+}
+
+/* Smaller number */
+.wc .wc-remaining-number {
+    display: grid !important;
+    place-items: center !important;
+
+    flex: 0 0 34px !important;
+    width: 34px !important;
+    height: 34px !important;
+
+    border-radius: 10px !important;
+    background: #f8ead3 !important;
+    color: #95651f !important;
+
+    font-size: 19px !important;
+    font-weight: 800 !important;
+}
+
+/* Single-line description */
+.wc .wc-remaining-copy {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 0 !important;
+}
+
+.wc .wc-remaining-copy strong {
+    font-size: 14px !important;
+    font-weight: 750 !important;
+    line-height: 1.4 !important;
+    color: #344256 !important;
+}
+
+/* Today is already shown in the date header */
+.wc .wc-remaining-copy small {
+    display: none !important;
+}
+
+@media (max-width: 390px) {
+    .wc .wc-list-bar:has(.wc-remaining-title) {
+        padding: 7px 10px !important;
+    }
+
+    .wc .wc-remaining-number {
+        flex-basis: 32px !important;
+        width: 32px !important;
+        height: 32px !important;
+        font-size: 18px !important;
+    }
+}
+
+/* lumora-calendar-unified-ux-v1 */
+
+/* One coherent visual language for the appointment dashboard */
+.wc[data-embedded="true"] {
+  --ux-ink: #182038;
+  --ux-muted: #687587;
+  --ux-line: #e5e9e6;
+  --ux-surface: #ffffff;
+  --ux-soft: #f4f7f3;
+  --ux-green: #40784e;
+}
+
+/* Reduce the visual competition between page headings */
+.wc[data-embedded="true"] > .wc-row {
+  align-items: center;
+  gap: 10px;
+  padding-block: 10px;
+}
+
+.wc[data-embedded="true"] > .wc-row h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.wc[data-embedded="true"] > .wc-row > button {
+  min-height: 44px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 750;
+}
+
+/* Calendar / day toolbar */
+.wc .wc-fixed-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  margin: 10px 0 8px;
+}
+
+.wc .wc-day-strip {
+  display: grid !important;
+  grid-template-columns:
+    minmax(78px,1fr)
+    minmax(0,1.65fr)
+    minmax(78px,1fr);
+  align-items: center;
+  gap: 7px !important;
+  width: 100%;
+  min-width: 0;
+}
+
+.wc .wc-day-strip > button {
+  width: 100%;
+  min-width: 0;
+  min-height: 46px;
+  padding: 8px 6px;
+  border: 1px solid var(--ux-line);
+  border-radius: 12px;
+  background: #fff;
+  color: #344256;
+  font-size: 12px;
+  font-weight: 750;
+  line-height: 1.35;
+  box-shadow: none;
+  touch-action: manipulation;
+}
+
+.wc .wc-day-strip > button:active {
+  background: #edf3ee;
+}
+
+/* Date information should not look like another large card */
+.wc .wc-day-strip .wc-selected-date {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 3px !important;
+  min-width: 0;
+  margin: 0 !important;
+  padding: 4px 2px !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  text-align: center;
+}
+
+.wc .wc-day-strip .wc-selected-date > small:first-child {
+  font-size: 11px !important;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--ux-muted);
+}
+
+.wc .wc-day-strip .wc-open-day-label {
+  font-size: clamp(14px,3.5vw,16px) !important;
+  font-weight: 850 !important;
+  line-height: 1.45 !important;
+  color: var(--ux-ink);
+  overflow-wrap: normal;
+  white-space: normal;
+}
+
+.wc .wc-day-strip .wc-open-day-count {
+  margin: 0 !important;
+  padding: 0 !important;
+  min-height: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: var(--ux-muted) !important;
+  font-size: 11px !important;
+  font-weight: 650 !important;
+}
+
+/* Avoid repeating the count where the remaining indicator exists */
+.wc:has(.wc-remaining-title)
+  .wc-day-strip .wc-open-day-count {
+  display: none !important;
+}
+
+/* Day sections and secondary controls */
+.wc .wc-period-reset {
+  min-height: 40px;
+  padding: 7px 12px;
+  border: 1px solid #dbe4dd;
+  border-radius: 12px;
+  background: #f3f7f3;
+  color: #416c4b;
+  font-size: 12px;
+  font-weight: 750;
+  box-shadow: none;
+}
+
+/* The remaining count is secondary information, not a hero card */
+.wc .wc-list-bar:has(.wc-remaining-title) {
+  min-height: 0 !important;
+  margin: 6px 0 12px !important;
+  padding: 7px 10px !important;
+  border: 1px solid var(--ux-line) !important;
+  border-radius: 12px !important;
+  background: #f7f9f6 !important;
+  box-shadow: none !important;
+}
+
+.wc .wc-list-bar .wc-remaining-title {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 8px !important;
+  margin: 0 !important;
+  font-size: 13px !important;
+}
+
+.wc .wc-remaining-number {
+  flex: 0 0 32px !important;
+  display: grid;
+  place-items: center;
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 9px !important;
+  background: #f5e9d4 !important;
+  color: #95621f !important;
+  font-size: 18px !important;
+  font-weight: 800 !important;
+}
+
+.wc .wc-remaining-copy strong {
+  color: #4a5568 !important;
+  font-size: 13px !important;
+  font-weight: 750 !important;
+}
+
+/* The appointment card deserves the main visual priority */
+.wc .wc-swipe-day {
+  gap: 10px;
+}
+
+.wc .wc-card {
+  min-width: 0;
+  margin: 0 0 9px;
+  border: 1px solid #e2e8e3;
+  border-radius: 15px;
+  background: var(--ux-surface);
+  box-shadow: 0 3px 12px rgba(24,32,56,.045);
+  overflow: hidden;
+}
+
+.wc .wc-card-top {
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+}
+
+.wc .wc-card-toggle {
+  min-width: 0;
+  min-height: 65px;
+  padding: 10px 12px;
+  touch-action: manipulation;
+}
+
+.wc .wc-visit-line {
+  min-width: 0;
+  gap: 8px;
+  align-items: center;
+}
+
+.wc .wc-visit-client {
+  min-width: 0;
+  font-size: 16px !important;
+  font-weight: 800 !important;
+  line-height: 1.4;
+  color: var(--ux-ink);
+  overflow-wrap: anywhere;
+}
+
+.wc .wc-visit-time {
+  flex-shrink: 0;
+  font-size: 17px !important;
+  font-weight: 850 !important;
+  line-height: 1.3;
+  color: var(--ux-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.wc .wc-visit-next {
+  border-radius: 8px;
+  background: #eaf2de;
+  color: #45662e;
+  font-size: 11px;
+  font-weight: 750;
+}
+
+/* Keep quick actions visually secondary */
+.wc .wc-quick-contact {
+  gap: 6px;
+  align-items: center;
+}
+
+.wc .wc-quick-contact button,
+.wc .wc-quick-contact a {
+  touch-action: manipulation;
+}
+
+/* Clear keyboard focus throughout the relevant controls */
+.wc .wc-fixed-toolbar button:focus-visible,
+.wc .wc-card-toggle:focus-visible,
+.wc .wc-period-reset:focus-visible {
+  outline: 2px solid #40784e;
+  outline-offset: 2px;
+}
+
+@media (max-width:390px) {
+  .wc .wc-fixed-toolbar {
+    gap: 5px;
+  }
+
+  .wc .wc-day-strip {
+    grid-template-columns:
+      minmax(70px,1fr)
+      minmax(0,1.5fr)
+      minmax(70px,1fr);
+    gap: 4px !important;
+  }
+
+  .wc .wc-day-strip > button {
+    font-size: 11px;
+    padding-inline: 3px;
+  }
+
+  .wc .wc-day-strip .wc-open-day-label {
+    font-size: 13px !important;
+  }
+
+  .wc .wc-visit-client {
+    font-size: 14px !important;
+  }
+
+  .wc .wc-visit-time {
+    font-size: 16px !important;
+  }
+}
