@@ -419,6 +419,72 @@ function CalendarTownSettings({uid,names,available,onClose}) {
 
 function CalendarBody({ uid, close, embedded=false, leaveGuard, schedulePosition, actionHost }) {
   const Surface=embedded ? "section" : "dialog";
+  // lumora-draggable-fab-toast-v1
+  const fabMove=useRef(null);
+  const fabIgnoreClick=useRef(false);
+  const [fabPosition,setFabPosition]=useState(()=>{
+    try {
+      const saved=JSON.parse(localStorage.getItem("lumora-calendar-fab-v1"));
+      return Number.isFinite(saved?.x)&&Number.isFinite(saved?.y)
+        ? saved : null;
+    } catch { return null; }
+  });
+
+  const clampFab=(x,y)=>({
+    x:Math.max(10,Math.min(x,window.innerWidth-74)),
+    y:Math.max(85,Math.min(y,window.innerHeight-154))
+  });
+
+  useEffect(()=>{
+    if(!fabPosition) return;
+    const resize=()=>setFabPosition(p=>{
+      if(!p) return p;
+      const n=clampFab(p.x,p.y);
+      return p.x===n.x&&p.y===n.y ? p : n;
+    });
+    window.addEventListener("resize",resize);
+    resize();
+    return ()=>window.removeEventListener("resize",resize);
+  },[]);
+
+  function fabPointerDown(e) {
+    if(e.button!==0 || actionMenuOpen ||
+       !e.target.closest('[aria-haspopup="true"]')) return;
+    const button=e.target.closest('[aria-haspopup="true"]');
+    const rect=button.getBoundingClientRect();
+    fabMove.current={
+      pointerId:e.pointerId,
+      startX:e.clientX,startY:e.clientY,
+      x:rect.left,y:rect.top,
+      moved:false
+    };
+    fabIgnoreClick.current=false;
+    try {e.currentTarget.setPointerCapture(e.pointerId);} catch {}
+  }
+  function fabPointerMove(e) {
+    const s=fabMove.current;
+    if(!s || s.pointerId!==e.pointerId) return;
+    const dx=e.clientX-s.startX,dy=e.clientY-s.startY;
+    if(!s.moved && Math.hypot(dx,dy)<9) return;
+    s.moved=true;
+    fabIgnoreClick.current=true;
+    setFabPosition(clampFab(s.x+dx,s.y+dy));
+  }
+  function fabPointerEnd(e) {
+    const s=fabMove.current;
+    if(!s || s.pointerId!==e.pointerId) return;
+    fabMove.current=null;
+    if(!s.moved) return;
+    const pos=clampFab(
+      s.x+e.clientX-s.startX,
+      s.y+e.clientY-s.startY
+    );
+    setFabPosition(pos);
+    try {localStorage.setItem("lumora-calendar-fab-v1",
+      JSON.stringify(pos));} catch {}
+    setActionMenuOpen(false);
+  }
+
   const [bookingTowns,setBookingTowns] = useState(towns);
   const [townsReady,setTownsReady] = useState(false);
   const [settingsOpen,setSettingsOpen] = useState(false);
@@ -441,8 +507,40 @@ function CalendarBody({ uid, close, embedded=false, leaveGuard, schedulePosition
     if (schedulePosition) schedulePosition.current={date,view,pickerOrigin:pickerOrigin.current};
   },[schedulePosition,date,view]);
   const [form,setForm] = useState(null), [checkout,setCheckout] = useState(null);
+  // lumora-dedicated-postpone-v2
+  const [postpone,setPostpone] = useState(null);
+  const [postponeMonth,setPostponeMonth] = useState(null);
   const [msg,say] = useState(""), [busy,setBusy] = useState(false), [search,find] = useState("");
   const [searchOpen,setSearchOpen] = useState(false);
+
+  useEffect(()=>{
+    if(msg?.kind!=="postponed" || !msg.id ||
+       view!=="اليوم" || date!==msg.date) return;
+
+    const frame=requestAnimationFrame(()=>{
+      const cards=dialog.current?.querySelectorAll(
+        ".wc-card[data-postponed='true']"
+      );
+      const card=cards?.[0];
+      if(!card) return;
+
+      const rect=card.getBoundingClientRect();
+      const topLimit=130;
+      const bottomLimit=window.innerHeight-105;
+
+      if(rect.top>bottomLimit || rect.bottom<topLimit) {
+        card.scrollIntoView({
+          behavior:window.matchMedia(
+            "(prefers-reduced-motion: reduce)"
+          ).matches ? "auto" : "smooth",
+          block:"nearest"
+        });
+      }
+    });
+
+    return ()=>cancelAnimationFrame(frame);
+  },[msg,date,view,rows]);
+
   const [actionMenuOpen,setActionMenuOpen] = useState(false);
   const [section,setSection] = useState("appointments");
   const [historyFilter,setHistoryFilter] = useState("all");
@@ -561,7 +659,7 @@ function CalendarBody({ uid, close, embedded=false, leaveGuard, schedulePosition
     if (!leaveGuard) return;
     leaveGuard.current=()=>{
       if (lock.current) return false;
-      const draft=form || checkout;
+      const draft=form || checkout || postpone;
       return !draft || JSON.stringify(draft)===initialDraft.current ||
         window.confirm("تترك التغييرات وتنتقل من المواعيد؟");
     };
@@ -583,6 +681,141 @@ function CalendarBody({ uid, close, embedded=false, leaveGuard, schedulePosition
       say("");
     } else close();
   }
+
+  function beginPostpone(r) {
+    if (!ready || busy || r.status !== "booked") return;
+
+    setPostpone({
+      original:r,
+      date:r.date,
+      start:r.start
+    });
+
+    setPostponeMonth(monthStart(r.date));
+    setSearchOpen(false);
+    say("");
+    dialog.current?.scrollTo?.({top:0});
+  }
+
+  function savePostpone() {
+    if (!postpone || busy || !ready) return;
+
+    act(async()=>{
+      const p=postpone;
+      const old=p.original;
+
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(p.date) ||
+          dayKey(local(p.date))!==p.date)
+        throw Error("اختار تاريخ صحيح.");
+
+      if (!/^([01]\d|2[0-3]):(00|30)$/.test(p.start || ""))
+        throw Error("اختار ساعة صحيحة من العجلة.");
+
+      if (p.date<today())
+        throw Error("ما بنقدر نأجّل لتاريخ فات.");
+
+      if (p.date===old.date && p.start===old.start)
+        throw Error("اختار موعد مختلف عن القديم.");
+
+      const minutes=t=>{
+        const [h,m]=t.split(":").map(Number);
+        return h*60+m;
+      };
+
+      if (p.date===today()) {
+        const nowParts=new Intl.DateTimeFormat("en-GB",{
+          timeZone:"Asia/Jerusalem",
+          hour:"2-digit",minute:"2-digit",hourCycle:"h23"
+        }).formatToParts(new Date());
+
+        const value=k=>Number(nowParts.find(x=>x.type===k).value);
+        const currentMinute=value("hour")*60+value("minute");
+
+        if (minutes(p.start)<=currentMinute)
+          throw Error("اختار ساعة لسه ما مرقت.");
+      }
+
+      const oldDuration=old.end
+        ? minutes(old.end)-minutes(old.start) : 0;
+
+      if (oldDuration<0)
+        throw Error("وقت نهاية الموعد القديم غير صحيح.");
+
+      const finishMinute=minutes(p.start)+oldDuration;
+
+      if (finishMinute>=1440)
+        throw Error("نهاية الموعد بتتجاوز نهاية اليوم.");
+
+      const newEnd=old.end
+        ? String(Math.floor(finishMinute/60)).padStart(2,"0")+
+          ":"+String(finishMinute%60).padStart(2,"0")
+        : "";
+
+      const candidateEnd=newEnd
+        ? minutes(newEnd) : minutes(p.start)+30;
+
+      const conflict=rows.some(r=>{
+        if (r.id===old.id || r.status!=="booked" ||
+            r.date!==p.date) return false;
+
+        const start=minutes(r.start);
+        const end=r.end ? minutes(r.end) : start+30;
+
+        return minutes(p.start)<end && start<candidateEnd;
+      });
+
+      if (conflict)
+        throw Error("في دور ثاني بنفس الوقت. اختار وقت غيره.");
+
+      await runTransaction(db,async tx=>{
+        const ref=refFor(old.id);
+        const latest=(await tx.get(ref)).data();
+
+        check(latest,old);
+
+        const history=Array.isArray(latest.reschedules)
+          ? latest.reschedules : [];
+
+        tx.update(ref,{
+          date:p.date,
+          start:p.start,
+          end:newEnd,
+          reschedules:[...history,{
+            fromDate:latest.date,
+            fromStart:latest.start,
+            fromEnd:latest.end || "",
+            toDate:p.date,
+            toStart:p.start,
+            toEnd:newEnd,
+            at:Date.now()
+          }],
+          rev:latest.rev+1,
+          updatedAt:Date.now()
+        });
+      });
+
+      setCardExceptions(previous=>{
+        const next=new Set(previous);
+        next.add(old.id);
+        return next;
+      });
+
+      setPostpone(null);
+      setPostponeMonth(null);
+      setDate(p.date);
+      setView("اليوم");
+      setSection("appointments");
+
+      return {
+        kind:"postponed",
+        id:old.id,
+        name:jobName(old),
+        date:p.date,
+        time:p.start
+      };
+    });
+  }
+
   function edit(r, focusField = null) {
     setContactOpen(Boolean(focusField || r.phone || r.location));
     setJobOpen(Boolean(r.note || Object.keys(r.items || {}).length));
@@ -688,7 +921,7 @@ function CalendarBody({ uid, close, embedded=false, leaveGuard, schedulePosition
           rev:1,cancelled:false,lastOp:entryId,appointmentId:r.id});
         tx.update(ref,{status:"done",entryId,price:String(total/100),rev:r.rev+1,updatedAt:Date.now()});
       });
-    },"تم إنهاء الزيارة وتسجيل الشغل بالدفتر المالي.");
+    },"تم إنهاء الموعد وحفظ قيد الشغل والقبض في دفتر الحسابات.");
   }
   const {people,byDate} = useMemo(() => {
     const people = new Map(), byDate = new Map();
@@ -776,7 +1009,8 @@ function CalendarBody({ uid, close, embedded=false, leaveGuard, schedulePosition
     const upcoming = next?.id === r.id;
     const expanded = cardExceptions.has(r.id) ? !cardsOpen : cardsOpen;
     const panelId = "wc-appointment-details-" + r.id;
-    return <article className="wc-card" key={r.id} data-next={upcoming} data-status={r.status}>
+    return <article className="wc-card" key={r.id} data-next={upcoming} data-status={r.status}
+      data-postponed={msg?.kind==="postponed" && msg.id===r.id}>
       <div className="wc-card-top">
       <button type="button" className="wc-card-toggle"
         aria-expanded={expanded} aria-controls={panelId}
@@ -847,7 +1081,11 @@ function CalendarBody({ uid, close, embedded=false, leaveGuard, schedulePosition
         <details className="wc-manage">
           <summary>إدارة الموعد</summary>
           <div>
-            <button disabled={!ready || busy} onClick={()=>edit(r)}>تعديل الموعد</button>
+            <button type="button" disabled={!ready || busy}
+    onClick={()=>beginPostpone(r)}>تأجيل الموعد</button>
+<button disabled={!ready || busy} onClick={()=>edit(r)}>
+  تعديل الموعد
+</button>
             <button className="wc-cancel" disabled={!ready || busy} onClick={()=>cancel(r)}>إلغاء الموعد</button>
           </div>
         </details>
@@ -896,14 +1134,111 @@ function CalendarBody({ uid, close, embedded=false, leaveGuard, schedulePosition
     </button>
     
   </div>;
-  return <Surface ref={dialog} className="wc" data-embedded={embedded} data-form={!!(form || checkout)} dir="rtl" aria-label="مواعيد الشغل"
+  return <Surface ref={dialog} className="wc" data-embedded={embedded} data-form={!!(form || checkout || postpone)} dir="rtl" aria-label="مواعيد الشغل"
     onCancel={e=>{e.preventDefault();leave();}}>
-    {(!embedded || form || checkout || (!inHistory && view==="اليوم" && returnDay)) && <header data-admin-step="" className="wc-row"><h2>{form ? (form.rev ? "تعديل الموعد" : "موعد جديد") :
+    {(!embedded || form || checkout || postpone || (!inHistory && view==="اليوم" && returnDay)) && <header data-admin-step="" className="wc-row"><h2>{postpone ? "تأجيل موعد" : form ? (form.rev ? "تعديل الموعد" : "موعد جديد") :
       checkout ? "إنهاء الزيارة" : embedded && !inHistory && returnDay ? "مواعيد اليوم المختار" : "مواعيد الشغل"}</h2>
-      {(!embedded || form || checkout || (!inHistory && view==="اليوم" && returnDay)) && <button disabled={busy} onClick={leave}>{form || checkout ? "رجوع" : !inHistory && view==="اليوم" && returnDay ? "رجوع للتقويم" : "إغلاق"}</button>}</header>}
+      {(!embedded || form || checkout || (!inHistory && view==="اليوم" && returnDay)) && <button disabled={busy} onClick={()=>{if(postpone){setPostpone(null);setPostponeMonth(null);say("");}else leave();}}>{form || checkout || postpone ? "رجوع" : !inHistory && view==="اليوم" && returnDay ? "رجوع للتقويم" : "إغلاق"}</button>}</header>}
     {loadError ? <p role="alert">{loadError} <button onClick={()=>setRetry(v=>v+1)}>إعادة المحاولة</button></p>
       : !ready && <p role="status">بانتظار الاتصال لعرض آخر التحديثات والحفظ.</p>}
-    {form ? <form className="wc-fast-booking" onSubmit={e=>{e.preventDefault();save();}}>
+    
+{postpone ? <section className="wc-postpone-v2" dir="rtl">
+  <div className="wc-postpone-info">
+    <strong>تأجيل موعد <bdi dir="auto">{jobName(postpone.original)}</bdi></strong>
+    <span>الموعد القديم: {dateLabel(postpone.original.date)}،
+      الساعة <bdi dir="ltr">{postpone.original.start}</bdi></span>
+  </div>
+
+  <h3>اختر اليوم الجديد</h3>
+
+  <div className="wc-postpone-month-nav">
+    <button type="button"
+      onClick={()=>setPostponeMonth(d=>monthStart(d,-1))}>
+      الشهر السابق
+    </button>
+    <strong>{local(postponeMonth).toLocaleDateString("ar",{
+      month:"long",year:"numeric"
+    })}</strong>
+    <button type="button"
+      onClick={()=>setPostponeMonth(d=>monthStart(d,1))}>
+      الشهر التالي
+    </button>
+  </div>
+
+  <div className="wc-postpone-grid">
+    {["الأحد","الإثنين","الثلاثاء","الأربعاء",
+      "الخميس","الجمعة","السبت"].map(name=>
+      <span key={name} className="wc-postpone-weekday">{name}</span>
+    )}
+
+    {Array.from({length:local(postponeMonth).getDay()},(_,i)=>
+      <span key={"gap"+i} aria-hidden="true"/>
+    )}
+
+    {Array.from({
+      length:local(shift(monthStart(postponeMonth,1),-1)).getDate()
+    },(_,i)=>{
+      const key=shift(postponeMonth,i);
+
+      return <button type="button" key={key}
+        className="wc-postpone-day"
+        disabled={key<today()}
+        data-selected={key===postpone.date}
+        data-old={key===postpone.original.date}
+        data-today={key===today()}
+        aria-pressed={key===postpone.date}
+        aria-label={dateLabel(key)}
+        onClick={()=>{
+          setPostpone(p=>({...p,date:key}));
+          say("");
+        }}>
+        <strong>{i+1}</strong>
+        {key===postpone.original.date &&
+          <small>قديم</small>}
+        {key===postpone.date &&
+          key!==postpone.original.date &&
+          <small>جديد</small>}
+      </button>;
+    })}
+  </div>
+
+  <div className="wc-postpone-time">
+    <h3>اختر الساعة الجديدة</h3>
+    <HalfHourField
+      title="الساعة والدقائق"
+      value={postpone.start}
+      placeholder="اختار الوقت"
+      onPick={value=>{
+        setPostpone(p=>({...p,start:value}));
+        say("");
+      }}/>
+  </div>
+
+  <div className="wc-postpone-result">
+    <span>الموعد الجديد</span>
+    <strong>{dateLabel(postpone.date)}،
+      الساعة <bdi dir="ltr">{postpone.start}</bdi></strong>
+  </div>
+
+  <div className="wc-postpone-buttons">
+    <button type="button" className="wc-primary"
+      disabled={!ready || busy ||
+        (postpone.date===postpone.original.date &&
+         postpone.start===postpone.original.start)}
+      onClick={savePostpone}>
+      {busy ? "جارٍ حفظ التأجيل…" : "حفظ التأجيل"}
+    </button>
+
+    <button type="button" disabled={busy}
+      onClick={()=>{
+        setPostpone(null);
+        setPostponeMonth(null);
+        say("");
+      }}>
+      رجوع بدون حفظ
+    </button>
+  </div>
+</section> : form ? <form className="wc-fast-booking" onSubmit={e=>{e.preventDefault();save();}}>
       <fieldset className="wc-form-scroll" disabled={busy}>
       <section className="wc-booking-section" aria-label="الزبون">
         <h3>الزبون</h3>
@@ -1003,14 +1338,64 @@ function CalendarBody({ uid, close, embedded=false, leaveGuard, schedulePosition
       <fieldset className="wc-form-scroll" disabled={busy}><h3 dir="auto">{jobName(checkout.r)}</h3>
       <Field title="سعر الشغلة النهائي ₪"><input required inputMode="decimal" value={checkout.price}
         onChange={e=>paySet("price",e.target.value)}/></Field>
-      <Field title="طريقة القبض"><select value={checkout.method} onChange={e=>paySet("method",e.target.value)}>
-        <option>كاش</option><option>تحويل</option></select></Field>
-      <label><input type="checkbox" checked={checkout.partial} onChange={e=>paySet("partial",e.target.checked)}/>
-        قبضنا جزء أو لسه ما قبضنا</label>
-      {checkout.partial && <Field title="المبلغ المقبوض ₪"><input inputMode="decimal" placeholder="0"
-        value={checkout.paid} onChange={e=>paySet("paid",e.target.value)}/></Field>}
-      <Field title="يوم القبض"><input type="date" min={checkout.r.date} max={today()} value={checkout.payDate}
-        onChange={e=>paySet("payDate",e.target.value)}/></Field>
+      <div className="wc-checkout-primary">
+        <strong className="wc-checkout-section-title">كيف دفع الزبون؟</strong>
+        <div className="wc-checkout-methods" role="group" aria-label="طريقة القبض">
+          {["كاش","تحويل"].map(method=><button
+            type="button"
+            key={method}
+            className="wc-checkout-method"
+            aria-pressed={checkout.method===method}
+            onClick={()=>paySet("method",method)}>
+            <span aria-hidden="true">{method==="كاش" ? "💵" : "🏦"}</span>
+            <strong>{method==="كاش" ? "كاش" : "تحويل بنكي"}</strong>
+          </button>)}
+        </div>
+        <div className="wc-checkout-receipt" role="status">
+          <span>القبض المعتمد</span>
+          <strong>{checkout.partial ? "دفع غير كامل" : "المبلغ كامل"}</strong>
+        </div>
+        <p className="wc-checkout-wallet-note">
+  الكاش والتحويل البنكي الاثنين بينسجّلوا في الصندوق.
+  طريقة القبض بتنحفظ مع الدفعة حتى تقدر تراجعها بالدفتر.
+</p>
+      </div>
+
+      <div className="wc-finance-preview-v2" role="note">
+  <strong>شو رح يصير عند التأكيد؟</strong>
+  <span>
+    رح ينتهي الموعد، وينحفظ قيد الشغل بالدفتر،
+    ورح يتسجّل القبض في الصندوق.
+  </span>
+  <span>
+    طريقة الدفع: <b>{checkout.method}</b>
+    {" · "}
+    {checkout.partial ? "الدفع غير كامل" : "المبلغ كامل"}
+  </span>
+  <small>
+    التسجيل النهائي بصير مع إنهاء الموعد بنفس عملية الحفظ.
+  </small>
+</div>
+      <details className="wc-checkout-extra">
+        <summary>خيارات إضافية · دفع جزئي أو تغيير التاريخ</summary>
+        <div className="wc-checkout-extra-body">
+          <label className="wc-checkout-partial">
+            <input type="checkbox" checked={checkout.partial}
+              onChange={e=>paySet("partial",e.target.checked)}/>
+            <span>الزبون ما دفع المبلغ كامل</span>
+          </label>
+          {checkout.partial && <Field title="المبلغ المقبوض فعليًا ₪">
+            <input inputMode="decimal" placeholder="0"
+              value={checkout.paid}
+              onChange={e=>paySet("paid",e.target.value)}/>
+          </Field>}
+          <Field title="تاريخ القبض">
+            <input type="date" min={checkout.r.date} max={today()}
+              value={checkout.payDate}
+              onChange={e=>paySet("payDate",e.target.value)}/>
+          </Field>
+        </div>
+      </details>
       </fieldset>
       <div className="wc-submit">
         {outdated && !busy && <div className="wc-stale" role="status">
@@ -1018,7 +1403,7 @@ function CalendarBody({ uid, close, embedded=false, leaveGuard, schedulePosition
           <button type="button" onClick={reloadVisit}>تحميل آخر نسخة</button>
         </div>}
         <button className="wc-primary wc-wide" disabled={!ready || busy || outdated}>
-        {busy ? "جارٍ التسجيل…" : loadError ? "تعذّر الاتصال بالسجل" : !ready ? "بانتظار الاتصال…" : "تأكيد وتسجيل بالدفتر"}</button></div>
+        {busy ? "جارٍ التسجيل…" : loadError ? "تعذّر الاتصال بالسجل" : !ready ? "بانتظار الاتصال…" : "إنهاء الشغل وتسجيل الحسابات"}</button></div>
       </form> : <>
       {embedded && actionHost ? createPortal(calendarTopActions,actionHost) : calendarTopActions}
       {msg?.kind==="saved" && <div className="wc-saved-notice">
@@ -1089,6 +1474,38 @@ function CalendarBody({ uid, close, embedded=false, leaveGuard, schedulePosition
         placeholder={inHistory ? "ابحث في السجل" : "ابحث بالأدوار من كل التواريخ"}
         aria-label={inHistory ? "بحث بالسجل" : "بحث بالأدوار من كل التواريخ"}
         value={search} onChange={e=>find(e.target.value)}/>} 
+
+      {/* lumora-postpone-confirmation-v1 */}
+      {msg?.kind==="postponed" &&
+        !inHistory && !needle && view==="اليوم" &&
+        date===msg.date && (
+        <section className="wc-postpone-confirm"
+          dir="rtl" role="status" aria-live="polite">
+          <span className="wc-postpone-confirm-check"
+            aria-hidden="true">✓</span>
+
+          <div className="wc-postpone-confirm-content">
+            <strong>تم تأجيل الموعد</strong>
+            <span>
+              <bdi dir="auto">{msg.name}</bdi>
+            </span>
+            <small>
+              {dateLabel(msg.date)}
+              {" · "}
+              <bdi dir="ltr">{msg.time}</bdi>
+            </small>
+            <span className="wc-postpone-confirm-hint">
+              تفاصيل الموعد الجديد مفتوحة تحت
+            </span>
+          </div>
+
+          <button type="button"
+            className="wc-postpone-confirm-close"
+            aria-label="إغلاق تأكيد التأجيل"
+            onClick={()=>say("")}>×</button>
+        </section>
+      )}
+
       {inHistory || needle || view==="اليوم" ? <>
         <div className={!inHistory && !needle ? "wc-swipe-day" : undefined}
           onTouchStart={!inHistory && !needle ? beginSwipe : undefined}
@@ -1130,7 +1547,7 @@ function CalendarBody({ uid, close, embedded=false, leaveGuard, schedulePosition
                 aria-current={isToday ? "date" : undefined}
                 aria-label={[isToday ? "اليوم" : "",dateLabel(key),
                   count ? "عدد المواعيد " + count : "ما في مواعيد"].filter(Boolean).join("، ")}
-                data-selected={key===date}
+                data-selected={key===date} data-today={key===today()}
                 data-calendar-date={key} onClick={()=>openDayFromMonth(key)}>
                 <span className="wc-date-number">{i+1}</span>
                 <span className="wc-date-count-slot" aria-hidden="true">
@@ -1164,9 +1581,25 @@ function CalendarBody({ uid, close, embedded=false, leaveGuard, schedulePosition
     </div> : typeof msg==="string" && msg && <p className="wc-msg" role="status">{msg}</p>}
     
     
-    {!form && !checkout && !settingsOpen && <div
+    {!form && !checkout && !postpone && !settingsOpen && <div
       className="wc-unified-action-menu"
-      dir="rtl">
+      dir="rtl"
+      data-draggable-position={Boolean(fabPosition)}
+      style={fabPosition ? {
+        "--fab-x":clampFab(fabPosition.x,fabPosition.y).x+"px",
+        "--fab-y":clampFab(fabPosition.x,fabPosition.y).y+"px"
+      } : undefined}
+      onPointerDown={fabPointerDown}
+      onPointerMove={fabPointerMove}
+      onPointerUp={fabPointerEnd}
+      onPointerCancel={()=>{fabMove.current=null;}}
+      onClickCapture={e=>{
+        if(fabIgnoreClick.current){
+          fabIgnoreClick.current=false;
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      }}>
 
       {actionMenuOpen && <>
         <button
