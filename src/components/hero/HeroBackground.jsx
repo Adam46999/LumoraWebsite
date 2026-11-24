@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import sofaImage from "../../assets/hero1.jpg";
+import { useHeroImages } from "./heroImages";
 import carpetImage from "../../assets/hero3.jpg";
 
 const HERO_IMAGES = [
@@ -18,6 +19,7 @@ const HERO_IMAGES = [
 ];
 
 export default function HeroBackground() {
+  const { records: heroImages } = useHeroImages();
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const prefersReducedMotion = useMemo(() => {
@@ -61,7 +63,7 @@ export default function HeroBackground() {
         return (
           <img
             key={image.id}
-            src={image.src}
+            src={heroImages[image.id === "sofa" ? "hero-sofa" : "hero-carpet"]?.image || image.src}
             alt=""
             draggable={false}
             loading={index === 0 ? "eager" : "lazy"}

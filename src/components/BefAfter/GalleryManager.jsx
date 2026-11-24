@@ -2,6 +2,7 @@ import { useLayoutEffect as useGalleryLayoutEffect } from "react";
 import React, { useRef, useState } from "react";
 import { auth } from "../../firebase";
 import ServiceImagesManager from "./ServiceImagesManager";
+import HeroImagesManager from "./HeroImagesManager";
 import { preparePhoto, savePair, saveGalleryOrder } from "./gallery";
 
 const button = "min-h-12 rounded-xl border px-4 py-2 font-bold disabled:opacity-50";
@@ -44,6 +45,7 @@ function galleryRules(uid) {
 export default function GalleryManager({ gallery,embedded=false,leaveGuard,onHome }) {
   const Surface=embedded ? "section" : "dialog";
   const [imageTab,setImageTab] = useState("services");
+  const [heroDirty, setHeroDirty] = useState(false);
   const [serviceDirty,setServiceDirty] = useState(false);
   const dialog = useRef(null);
   const locked = useRef(false);
@@ -54,7 +56,7 @@ export default function GalleryManager({ gallery,embedded=false,leaveGuard,onHom
   const ready = gallery.status === "ready";
   const [order, setOrder] = useState(null);
   const orderChanged = !!order && order.ids.some((id, index) => id !== order.initial[index]);
-  const dirty = orderChanged || Object.keys(changes).length > 0 || serviceDirty;
+  const dirty = (orderChanged || Object.keys(changes).length > 0 || serviceDirty) || heroDirty;
 
   function startOrdering() {
     const ids = gallery.pairs.map(item => item.id);
@@ -182,7 +184,7 @@ export default function GalleryManager({ gallery,embedded=false,leaveGuard,onHom
         </button>
       </header>}
 
-      <nav className="mb-4 grid grid-cols-2 gap-2 rounded-2xl bg-[#edf2ee] p-1"
+      <nav className="mb-4 grid grid-cols-3 gap-1 rounded-2xl bg-[#edf2ee] p-1"
         aria-label="إدارة صور الموقع">
         <button type="button" aria-pressed={imageTab==="services"}
           className={"min-h-12 rounded-xl px-2 text-sm font-bold " +
@@ -200,11 +202,22 @@ export default function GalleryManager({ gallery,embedded=false,leaveGuard,onHom
             if(dirty && !window.confirm("تترك التغييرات بدون حفظ؟"))return;
             setImageTab("gallery");
           }}>قبل وبعد</button>
-      </nav>
+              <button type="button"
+          aria-pressed={imageTab === "hero"}
+          className={"min-h-12 rounded-xl px-2 text-sm font-bold " +
+            (imageTab === "hero" ? "bg-white text-[#182038] shadow-sm" : "text-slate-600")}
+          onClick={() => {
+            if (imageTab === "hero") return;
+            if (dirty && !window.confirm("تترك التغييرات بدون حفظ؟")) return;
+            setImageTab("hero");
+          }}>
+          صور الهيرو
+        </button>
+</nav>
 
       {imageTab==="services"
         ? <ServiceImagesManager onDirtyChange={setServiceDirty}/>
-        : <>      {!ready && <div role="status" className="mb-3 rounded-xl bg-amber-50 p-3">
+        : imageTab === "hero" ? <HeroImagesManager onDirtyChange={setHeroDirty}/> : <>      {!ready && <div role="status" className="mb-3 rounded-xl bg-amber-50 p-3">
         {gallery.status === "loading" ? "جارٍ تحميل المعرض…" :
           <>
             <p>{gallery.status === "denied" ? "المعرض بحاجة لتفعيل الصلاحيات." : "تعذّر الاتصال بالمعرض."}</p>
